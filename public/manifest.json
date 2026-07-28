@@ -1,0 +1,26 @@
+{
+  "short_name": "MANIKANDAN LATHE",
+  "name": "MANIKANDAN LATHE - Precision Engineering & Fabrication",
+  "icons": [
+    {
+      "src": "/assets/logo.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/logo.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "description": "MANIKANDAN LATHE - Heavy Machine Works, Windows Grill, Gates, Doors, Kalappai, Industrial & Custom Fabrication Works in Kallimandhayam.",
+  "categories": ["industrial", "manufacturing", "business", "shopping"]
+}

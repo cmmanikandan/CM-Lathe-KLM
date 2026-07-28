@@ -1,0 +1,52 @@
+/* Production Print & PDF Stylesheet for MANIKANDAN LATHE Invoice System */
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+
+  html, body {
+    background: white !important;
+    color: #111111 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Hide interactive UI elements from browser print */
+  .no-print,
+  .invoice-toolbar,
+  button,
+  header,
+  nav,
+  aside {
+    display: none !important;
+  }
+
+  /* Page break rules */
+  .avoid-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .invoice-a4-container {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 0 !important;
+  }
+
+  .invoice-thermal-container {
+    width: 80mm !important;
+    margin: 0 auto !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 2mm !important;
+  }
+}
