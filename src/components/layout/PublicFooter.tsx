@@ -20,7 +20,7 @@ export const PublicFooter: React.FC = () => {
               <p className="text-[#F97316] font-mono font-bold text-[11px]">25+ Years Industrial Lathe Experience</p>
             </div>
             <p className="text-gray-400 text-xs leading-relaxed">
-              MANIKANDAN LATHE is Kallimandhayam’s pioneer lathe turning, tractor kalappai & architectural CNC laser gate fabrication workshop in Dindigul District, Tamil Nadu.
+              MANIKANDAN LATHE is Kallimandhayam's pioneer lathe turning, tractor kalappai & architectural CNC laser gate fabrication shop in Dindigul District, Tamil Nadu.
             </p>
             <div className="flex items-center gap-2 pt-1">
               <a
@@ -43,9 +43,7 @@ export const PublicFooter: React.FC = () => {
               <li><Link to="/" className="hover:text-white transition-colors">Home Landing</Link></li>
               <li><Link to="/products" className="hover:text-white transition-colors">Product Catalog</Link></li>
               <li><Link to="/services" className="hover:text-white transition-colors">Services Provided</Link></li>
-              <li><Link to="/gallery" className="hover:text-white transition-colors">Completed Works Gallery</Link></li>
-              <li><Link to="/pwa-demo" className="text-[#F97316] font-extrabold hover:underline flex items-center gap-1">📱 PWA App Demo & Install</Link></li>
-              <li><Link to="/about" className="hover:text-white transition-colors">About Factory & Owner</Link></li>
+              <li><Link to="/about" className="hover:text-white transition-colors">About Shop & Owner</Link></li>
               <li><Link to="/contact" className="hover:text-white transition-colors">Contact Workshop</Link></li>
               <li><Link to="/login" className="hover:text-white transition-colors">Customer Portal Login</Link></li>
             </ul>
@@ -54,15 +52,15 @@ export const PublicFooter: React.FC = () => {
           {/* Col 3: Services Provided */}
           <div className="space-y-3 font-heading">
             <h4 className="font-extrabold text-xs uppercase tracking-wider text-[#F97316]">
-              Our Fabrication Works
+              Core Services
             </h4>
             <ul className="space-y-2 text-xs font-medium text-gray-300">
               <li>Tractor Kalappai & Cultivator Tines</li>
-              <li>SS 304 & MS Architectural Main Safety Gates</li>
+              <li>Rust-Proof Stainless Steel Main Safety Gates</li>
               <li>Heavy Shaft Turning & Lathe Grinding</li>
               <li>Custom Steel Security Windows Grill</li>
-              <li>Safety Steel Doors & Industrial Furniture</li>
-              <li>Agricultural Machinery Repairs</li>
+              <li>Roofing Sheet Fitting & Truss Works</li>
+              <li>Electric Welding & Emergency Repairs</li>
             </ul>
           </div>
 
@@ -97,10 +95,6 @@ export const PublicFooter: React.FC = () => {
         <div className="pt-6 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-400 gap-4">
           <p>© {new Date().getFullYear()} MANIKANDAN LATHE. Owner: Chellamuthu K. All rights reserved.</p>
           <div className="flex items-center gap-4 font-mono text-[11px]">
-            <Link to="/pwa-demo" className="text-[#F97316] font-bold hover:underline flex items-center gap-1">
-              📱 Live PWA Demo App
-            </Link>
-            <span>•</span>
             <span>Kallimandhayam, Dindigul - 624616</span>
           </div>
         </div>

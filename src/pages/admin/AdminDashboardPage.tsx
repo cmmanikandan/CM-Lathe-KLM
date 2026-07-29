@@ -38,6 +38,11 @@ export const AdminDashboardPage: React.FC = () => {
   const pendingBalanceTotal = orders.reduce((sum, o) => sum + o.remainingBalance, 0);
   const todayOrders = orders.filter((o) => new Date(o.createdAt).toDateString() === new Date().toDateString()).length;
 
+  // Inventory & Sales Metrics
+  const lowStockProducts = products.filter((p) => (p.stock || 0) <= 5);
+  const totalProductsCount = products.length;
+  const totalQuantitySold = orders.reduce((sum, o) => sum + o.items.reduce((isum, item) => isum + item.quantity, 0), 0);
+
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-[#111111] pb-24">
       
@@ -143,6 +148,66 @@ export const AdminDashboardPage: React.FC = () => {
             </p>
           </div>
 
+        </div>
+
+        {/* ── LOW STOCK ALERT BANNER & INVENTORY METRICS ── */}
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            
+            <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs border-l-4 border-l-purple-600">
+              <span className="text-xs font-mono text-purple-700 font-bold uppercase block">Total Catalog Products</span>
+              <h3 className="font-heading font-black text-2xl text-purple-900 mt-1">{totalProductsCount}</h3>
+              <p className="text-[11px] text-gray-500 font-mono">Active machinery & gates in shop</p>
+            </div>
+
+            <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs border-l-4 border-l-teal-600">
+              <span className="text-xs font-mono text-teal-700 font-bold uppercase block">Total Units Sold</span>
+              <h3 className="font-heading font-black text-2xl text-teal-900 mt-1">{totalQuantitySold} Units</h3>
+              <p className="text-[11px] text-gray-500 font-mono">Cumulative quantity sales</p>
+            </div>
+
+            <div className={`p-5 rounded-2xl border shadow-xs border-l-4 ${lowStockProducts.length > 0 ? 'bg-amber-50 border-amber-300 border-l-red-600' : 'bg-white border-gray-200 border-l-emerald-600'}`}>
+              <span className="text-xs font-mono text-amber-900 font-bold uppercase block flex items-center gap-1">
+                <AlertTriangle size={14} className={lowStockProducts.length > 0 ? 'text-red-600' : 'text-gray-400'} /> Low Stock Warning
+              </span>
+              <h3 className={`font-heading font-black text-2xl mt-1 ${lowStockProducts.length > 0 ? 'text-red-600' : 'text-emerald-700'}`}>
+                {lowStockProducts.length > 0 ? `${lowStockProducts.length} Items Low Stock` : 'All Products In Stock'}
+              </h3>
+              <p className="text-[11px] text-gray-500 font-mono">Stock threshold &le; 5 units</p>
+            </div>
+
+          </div>
+
+          {/* Low Stock Items Detail List */}
+          {lowStockProducts.length > 0 && (
+            <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="font-heading font-black text-sm text-red-700 flex items-center gap-2 uppercase tracking-wider">
+                  <AlertTriangle size={18} className="text-red-600" /> Low Stock Inventory Alert ({lowStockProducts.length} Items)
+                </h4>
+                <Link to="/admin/products" className="text-xs font-bold text-[#F97316] hover:underline font-mono">
+                  Manage Catalog Stock &rarr;
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {lowStockProducts.map((p) => (
+                  <div key={p.id} className="bg-white p-3 rounded-xl border border-amber-200 flex items-center gap-3">
+                    <img src={p.images[0]} alt={p.name} className="w-12 h-12 rounded-lg object-contain bg-gray-50 border shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <h5 className="font-heading font-bold text-xs text-[#111111] truncate">{p.name}</h5>
+                      <div className="flex items-center justify-between text-[11px] mt-0.5">
+                        <span className="font-mono text-gray-500">₹{p.price.toLocaleString('en-IN')}</span>
+                        <span className="bg-red-100 text-red-700 font-mono font-black text-[10px] px-2 py-0.5 rounded-full border border-red-200">
+                          {p.stock} left
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Action Shortcuts Grid */}

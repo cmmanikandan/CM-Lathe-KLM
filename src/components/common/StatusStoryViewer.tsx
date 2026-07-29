@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StatusStory } from '../../types';
-import { X, Eye, MessageCircle, ChevronLeft, ChevronRight, Heart, Download, Share2, Pause, Play } from 'lucide-react';
+import { X, Eye, MessageCircle, ChevronLeft, ChevronRight, Heart, Share2, Pause, Play } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
 
 interface StatusStoryViewerProps {
@@ -139,37 +139,40 @@ export const StatusStoryViewer: React.FC<StatusStoryViewerProps> = ({
     window.open(`https://wa.me/919659286268?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  // Download Status Media Feature
-  const handleDownloadStatus = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const link = document.createElement('a');
-    link.href = currentStory.mediaUrl;
-    link.download = `MANIKANDAN_LATHE_Status_${currentStory.id}.jpg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+
+
+  const getRemainingTimeText = (createdAt?: string) => {
+    if (!createdAt) return '24h Live Story';
+    const createdTime = new Date(createdAt).getTime();
+    if (isNaN(createdTime)) return '24h Live Story';
+    const expiryTime = createdTime + 24 * 60 * 60 * 1000;
+    const remainingMs = expiryTime - Date.now();
+    if (remainingMs <= 0) return 'Expiring soon';
+    const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+    const mins = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${mins}m remaining`;
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md select-none animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md select-none animate-fade-in p-2 sm:p-4">
       
       {/* Story Window Frame */}
       <div 
-        className="relative w-full max-w-md h-[90vh] max-h-[840px] bg-[#111111] rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between border border-gray-800"
+        className="relative w-full max-w-md h-[92vh] max-h-[840px] bg-[#0A0A0A] rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between border border-gray-800"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
         
-        {/* Background Media */}
-        <div className="absolute inset-0 z-0">
+        {/* Background Media Container (Properly Bounded & Centered) */}
+        <div className="absolute inset-0 z-0 bg-[#050505] flex items-center justify-center p-4">
           <img
             src={currentStory.mediaUrl}
             alt={currentStory.title}
-            className="w-full h-full object-cover"
+            className="max-w-full max-h-[65vh] object-contain rounded-2xl shadow-2xl transition-transform duration-300"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none" />
         </div>
 
         {/* Top Progress & Info Header */}
@@ -196,32 +199,24 @@ export const StatusStoryViewer: React.FC<StatusStoryViewerProps> = ({
                 <span className="inline-block bg-[#F97316] text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">
                   {currentStory.tag}
                 </span>
-                <p className="text-white/70 text-[10px] font-mono mt-0.5">
-                  {isPaused ? '⏸ Paused' : '24h Live Workshop Status'}
+                <p className="text-amber-400 text-[10px] font-mono font-bold mt-0.5 flex items-center gap-1">
+                  ⏱️ {getRemainingTimeText(currentStory.createdAt)}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              {/* DOWNLOAD STATUS BUTTON */}
-              <button
-                onClick={handleDownloadStatus}
-                title="Download Status Media"
-                className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center backdrop-blur-md transition-all active:scale-90"
-              >
-                <Download size={18} />
-              </button>
 
-              {/* CRITICAL ACCESSIBLE CLOSE (X) BUTTON (48x48px Minimum Touch Area) */}
+              {/* CLOSE BUTTON */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   onClose();
                 }}
                 title="Close Story Viewer"
-                className="w-12 h-12 rounded-full bg-black/60 hover:bg-[#F97316] text-white flex items-center justify-center backdrop-blur-md transition-all cursor-pointer z-50 border border-white/20 active:scale-90"
+                className="w-10 h-10 rounded-full bg-black/60 hover:bg-[#F97316] text-white flex items-center justify-center backdrop-blur-md transition-all cursor-pointer z-50 border border-white/20 active:scale-90"
               >
-                <X size={22} />
+                <X size={20} />
               </button>
             </div>
           </div>
@@ -251,21 +246,21 @@ export const StatusStoryViewer: React.FC<StatusStoryViewerProps> = ({
           </button>
         )}
 
-        {/* Bottom Title & WhatsApp Reaction Action Row */}
-        <div className="relative z-30 p-6 space-y-4">
+        {/* Bottom Title & WhatsApp Action Row */}
+        <div className="relative z-30 p-5 space-y-3">
           <div className="space-y-1">
-            <h3 className="text-white font-heading font-black text-xl leading-tight">
+            <h3 className="text-white font-heading font-black text-lg sm:text-xl leading-tight">
               {currentStory.title}
             </h3>
             {currentStory.subtitle && (
-              <p className="text-gray-200 text-xs">
+              <p className="text-gray-300 text-xs">
                 {currentStory.subtitle}
               </p>
             )}
           </div>
 
           <div className="flex items-center justify-between pt-2 border-t border-white/20">
-            <div className="flex items-center gap-3 text-white">
+            <div className="flex items-center gap-2 text-white">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -275,16 +270,16 @@ export const StatusStoryViewer: React.FC<StatusStoryViewerProps> = ({
                   liked ? 'text-red-500 bg-white/20' : 'text-white/80 hover:text-white'
                 }`}
               >
-                <Heart size={20} className={liked ? 'fill-red-500' : ''} />
+                <Heart size={18} className={liked ? 'fill-red-500' : ''} />
               </button>
-              <span className="text-xs font-mono text-gray-300">{currentStory.seenCount + (liked ? 1 : 0)} views</span>
+              <span className="text-xs font-mono text-gray-300">👁️ {currentStory.seenCount + (liked ? 1 : 0)} views</span>
             </div>
 
             <button
               onClick={handleWhatsAppReply}
-              className="flex items-center gap-2 bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-heading font-black px-4 py-2.5 rounded-xl shadow-lg transition-transform active:scale-95 cursor-pointer"
+              className="flex items-center gap-1.5 bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-heading font-black px-3.5 py-2 rounded-xl shadow-lg transition-transform active:scale-95 cursor-pointer shrink-0"
             >
-              <MessageCircle size={16} /> Reply to Chellamuthu K
+              <MessageCircle size={15} /> Reply to Chellamuthu K
             </button>
           </div>
         </div>

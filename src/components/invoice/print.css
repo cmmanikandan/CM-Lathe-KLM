@@ -3,7 +3,7 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 8mm;
+    margin: 5mm;
   }
 
   html, body {
@@ -14,6 +14,28 @@
     margin: 0 !important;
     padding: 0 !important;
     box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  /* Reset fixed modal overlays during print so print output is clean */
+  .fixed.inset-0 {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  .max-h-\[95vh\],
+  .max-w-4xl,
+  .overflow-y-auto {
+    max-height: none !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: white !important;
   }
 
   /* Hide interactive UI elements from browser print */
@@ -22,7 +44,9 @@
   button,
   header,
   nav,
-  aside {
+  aside,
+  form,
+  .sidebar {
     display: none !important;
   }
 

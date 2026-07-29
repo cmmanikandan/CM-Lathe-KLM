@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOrders } from '../../context/OrderContext';
+import { useRefunds } from '../../context/RefundContext';
 import { Order } from '../../types';
 import { AdminPOSReceiptModal } from '../../components/common/AdminPOSReceiptModal';
 import { PDFInvoiceModal } from '../../components/common/PDFInvoiceModal';
@@ -17,6 +18,13 @@ import {
   Copy,
   FileText,
   FileBox,
+  RotateCcw,
+  ShoppingCart,
+  Hammer,
+  Table as TableIcon,
+  LayoutGrid,
+  Trash2,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface AdminTodayOfflineOrdersPageProps {
@@ -27,27 +35,37 @@ export const AdminTodayOfflineOrdersPage: React.FC<AdminTodayOfflineOrdersPagePr
   showAllSources = false,
 }) => {
   const navigate = useNavigate();
-  const { orders, getDraftOrders } = useOrders();
+  const { orders, getDraftOrders, deleteOrder, bulkDeleteOrders, addPaymentToOrder, updateOrderDiscount } = useOrders();
+  const { createRefund } = useRefunds();
 
+  const [activeTab, setActiveTab] = useState<'POS_BILL' | 'FABRICATION_ORDER'>('POS_BILL');
   const [searchTerm, setSearchTerm] = useState('');
   const [receiptOrder, setReceiptOrder] = useState<Order | null>(null);
   const [pdfOrder, setPdfOrder] = useState<Order | null>(null);
+  const [deletingOrder, setDeletingOrder] = useState<Order | null>(null);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
 
-  // Draft orders count for top-right button
+  // Draft orders count for top button
   const drafts = getDraftOrders();
   const draftCount = drafts.length;
 
-  // Filter today's POS counter sales
-  const todayStr = new Date().toISOString().split('T')[0];
-  const todayOfflineOrders = orders.filter(
-    (o) =>
-      o.createdAt.startsWith(todayStr) &&
-      (showAllSources ? true : Boolean(o.isOfflineOrder))
+  // Filter offline POS bills vs Fabrication orders
+  const offlineOrders = orders.filter((o) => Boolean(o.isOfflineOrder));
+
+  const posOrders = offlineOrders.filter(
+    (o) => o.orderType === 'Quick Order' || (o.orderType as string) === 'POS' || o.notes?.toLowerCase().includes('pos') || o.items.some((i: any) => i.isPosItem)
   );
 
-  const totalSalesToday = todayOfflineOrders.reduce((sum, o) => sum + o.finalPrice, 0);
+  const fabOrders = offlineOrders.filter(
+    (o) => o.orderType !== 'Quick Order' && (o.orderType as string) !== 'POS' && !o.notes?.toLowerCase().includes('pos') && !o.items.some((i: any) => i.isPosItem)
+  );
 
-  const filteredOrders = todayOfflineOrders.filter((o) => {
+  const currentList = activeTab === 'POS_BILL' ? posOrders : fabOrders;
+
+  const totalSalesToday = posOrders.reduce((sum, o) => sum + o.finalPrice, 0);
+
+  const filteredOrders = currentList.filter((o) => {
     const searchLower = searchTerm.toLowerCase();
     return (
       o.orderNumber.toLowerCase().includes(searchLower) ||
@@ -56,23 +74,74 @@ export const AdminTodayOfflineOrdersPage: React.FC<AdminTodayOfflineOrdersPagePr
     );
   });
 
+  const handleRefund = async (ord: Order) => {
+    const payMode = ord.paymentHistory?.[0]?.mode || 'Cash';
+    if (confirm(`Initiate return & full refund for POS Bill #${ord.orderNumber}? (Amount: ₹${ord.finalPrice.toLocaleString('en-IN')})`)) {
+      await createRefund({
+        orderId: ord.id,
+        orderNumber: ord.orderNumber,
+        customerName: ord.customerName,
+        customerPhone: ord.customerPhone,
+        originalPaymentAmount: ord.finalPrice,
+        originalPaymentMode: payMode,
+        refundAmount: ord.finalPrice,
+        refundType: 'Full Refund',
+        reason: 'Customer Cancelled',
+        refundMethod: payMode === 'Cash' ? 'Cash' : 'Razorpay',
+        createdBy: 'Owner Admin',
+      });
+      alert(`Refund initiated for #${ord.orderNumber}! Recorded in Refund Management & Payment Ledger.`);
+      navigate('/admin/refunds');
+    }
+  };
+
+  const handleMarkPaid = async (ord: Order) => {
+    const input = prompt(
+      `Enter payment amount to collect for Order #${ord.orderNumber}:\n(Total Billed: ₹${ord.finalPrice}, Current Balance Due: ₹${ord.remainingBalance})`,
+      ord.remainingBalance > 0 ? String(ord.remainingBalance) : String(ord.finalPrice)
+    );
+    if (!input) return;
+    const amt = parseFloat(input);
+    if (isNaN(amt) || amt <= 0) {
+      alert('Invalid payment amount.');
+      return;
+    }
+    const mode = confirm('Click OK for Cash Payment, or Cancel for UPI/Online Payment') ? 'Cash' : 'UPI';
+    await addPaymentToOrder(ord.id, amt, mode, 'Owner Admin', `POS-PAY-${Date.now()}`);
+    alert(`Payment of ₹${amt} successfully recorded as ${mode}! Balance updated.`);
+  };
+
+  const handleReduceAmount = async (ord: Order) => {
+    const input = prompt(
+      `Enter extra discount amount to REDUCE from Order #${ord.orderNumber}:\n(Current Total Billed: ₹${ord.finalPrice}, Current Remaining Balance: ₹${ord.remainingBalance})`,
+      '100'
+    );
+    if (!input) return;
+    const disc = parseFloat(input);
+    if (isNaN(disc) || disc <= 0) {
+      alert('Invalid discount amount.');
+      return;
+    }
+    await updateOrderDiscount(ord.id, disc);
+    alert(`Successfully applied ₹${disc} extra discount! Updated total billed & remaining balance.`);
+  };
+
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-[#111111] pb-24 font-sans space-y-6">
       
-      {/* Top Banner */}
+      {/* Top Banner Header */}
       <div className="bg-[#111111] text-white py-8 px-4 sm:px-6 border-b border-gray-800">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <span className="text-[#F97316] font-mono font-bold text-xs uppercase tracking-widest flex items-center gap-1.5">
-              <Zap size={16} /> POS SOFTWARE • TODAY'S WALK-IN SALES
+              <Zap size={16} /> OFFLINE & WORKSHOP ORDERS
             </span>
             <h1 className="font-heading font-black text-2xl text-white mt-1">
-              TODAY'S COUNTER BILLS ({todayOfflineOrders.length})
+              OFFLINE ORDER MANAGEMENT
             </h1>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Top-Right Draft Orders Badge (hidden if count === 0) */}
             {draftCount > 0 && (
               <button
                 onClick={() => navigate('/admin/offline-orders/drafts')}
@@ -97,188 +166,504 @@ export const AdminTodayOfflineOrdersPage: React.FC<AdminTodayOfflineOrdersPagePr
         {/* Metric Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 font-mono text-xs">
           <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs border-l-4 border-l-[#111111]">
-            <span className="text-[10px] text-gray-500 font-bold uppercase block">Today's POS Sales Count</span>
-            <h3 className="font-heading font-black text-2xl text-[#111111] mt-0.5">{todayOfflineOrders.length}</h3>
+            <span className="text-[10px] text-gray-500 font-bold uppercase block">POS Counter Sales</span>
+            <h3 className="font-heading font-black text-2xl text-[#111111] mt-0.5">{posOrders.length} Bills</h3>
           </div>
 
           <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs border-l-4 border-l-emerald-600">
-            <span className="text-[10px] text-emerald-800 font-bold uppercase block">Total Revenue Collected Today</span>
+            <span className="text-[10px] text-emerald-800 font-bold uppercase block">POS Sales Collected Revenue</span>
             <h3 className="font-heading font-black text-2xl text-emerald-700 mt-0.5">
               ₹{totalSalesToday.toLocaleString('en-IN')}
             </h3>
           </div>
 
           <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs border-l-4 border-l-blue-600 col-span-2 sm:col-span-1">
-            <span className="text-[10px] text-blue-800 font-bold uppercase block">Payment Fulfillment</span>
-            <h3 className="font-heading font-black text-base text-blue-700 mt-0.5">100% FULLY PAID ✓</h3>
+            <span className="text-[10px] text-blue-800 font-bold uppercase block">Advanced Fabrication Orders</span>
+            <h3 className="font-heading font-black text-2xl text-blue-700 mt-0.5">{fabOrders.length} Orders</h3>
           </div>
         </div>
 
-        {/* Search Input */}
-        <div className="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs">
+        {/* PAGE LINK TABS & SEARCH BAR */}
+        <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs space-y-4">
+          
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-gray-100 pb-3">
+            {/* 2 Page Link Tabs */}
+            <div className="flex items-center gap-2 w-full sm:w-auto bg-gray-100 p-1 rounded-xl">
+              <button
+                onClick={() => setActiveTab('POS_BILL')}
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-xs font-heading font-black transition-all ${
+                  activeTab === 'POS_BILL'
+                    ? 'bg-[#111111] text-white shadow-md'
+                    : 'text-gray-600 hover:text-black hover:bg-gray-200'
+                }`}
+              >
+                <TableIcon size={16} className={activeTab === 'POS_BILL' ? 'text-[#F97316]' : ''} />
+                POS Bill (Table View) ({posOrders.length})
+              </button>
+
+              <button
+                onClick={() => setActiveTab('FABRICATION_ORDER')}
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-xs font-heading font-black transition-all ${
+                  activeTab === 'FABRICATION_ORDER'
+                    ? 'bg-[#111111] text-white shadow-md'
+                    : 'text-gray-600 hover:text-black hover:bg-gray-200'
+                }`}
+              >
+                <LayoutGrid size={16} className={activeTab === 'FABRICATION_ORDER' ? 'text-[#F97316]' : ''} />
+                Advanced Fabrication Order (Card View) ({fabOrders.length})
+              </button>
+            </div>
+
+            <span className="text-xs font-mono text-gray-500 font-bold hidden md:inline">
+              {activeTab === 'POS_BILL' ? '📊 Displaying POS Bills in Table Format' : '🖼️ Displaying Fabrication Orders in Card Format'}
+            </span>
+          </div>
+
           <div className="relative">
             <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search Today's Order #, Customer Name, or Phone..."
+              placeholder="Search Order #, Customer Name, or Phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-gray-50 hover:bg-white focus:bg-white text-xs p-3 pl-10 rounded-xl border border-gray-300 font-medium text-gray-900 outline-none focus:border-[#F97316]"
             />
           </div>
+
         </div>
 
-        {/* COMPACT TODAY'S POS CARDS GRID */}
-        {filteredOrders.length === 0 ? (
-          <div className="bg-white p-12 rounded-2xl border border-gray-200 text-center max-w-md mx-auto space-y-3">
-            <Clock size={40} className="mx-auto text-gray-300" />
-            <h3 className="font-heading font-bold text-base text-[#111111]">No Sales Today Yet</h3>
-            <p className="text-xs text-gray-500">Click "+ New POS Billing" to make your first counter sale today.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredOrders.map((ord) => {
-              const cleanPhone = ord.customerPhone.replace(/\D/g, '').slice(-10);
-              const baseUrl = window.location.origin;
-              const invoiceUrl = `${baseUrl}/invoice/${ord.id}`;
-              const receiptUrl = `${baseUrl}/r/${ord.id}`;
-              const trackUrl = `${baseUrl}/customer/orders/${ord.id}`;
-              const invoiceNum = `INV-${ord.orderNumber.replace(/\D/g, '') || '2026-0899'}`;
-
-              const waTextMessage = `🧾 *MANIKANDAN LATHE*
-
-Hello ${ord.customerName},
-
-Thank you for choosing MANIKANDAN LATHE.
-
-*Order No:*
-#${ord.orderNumber}
-
-*Invoice:*
-${invoiceNum}
-
-*Amount Paid:*
-₹${ord.finalPrice.toLocaleString('en-IN')}
-
-*Payment:*
-${ord.paymentHistory?.[0]?.mode || 'Cash'}
-
-*Status:*
-✅ Fully Paid
-
-Your invoice & receipt links are attached below.
-
-📄 *View & Download Invoice:*
-${invoiceUrl}
-
-🧾 *View & Download Thermal Receipt:*
-${receiptUrl}
-
-🚚 *Track Order:*
-${trackUrl}
-
-If you have any questions, please contact us.
-📞 +91 96592 86268
-
-Thank You.`;
-
-              const waUrl = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(waTextMessage)}`;
-              const payMode = ord.paymentHistory?.[0]?.mode || 'Cash';
-
-              return (
-                <div
-                  key={ord.id}
-                  onClick={() => setReceiptOrder(ord)}
-                  className="bg-white rounded-[22px] border border-gray-200 hover:border-[#F97316] hover:shadow-md transition-all p-4 space-y-3 font-sans cursor-pointer group flex flex-col justify-between"
+        {/* TAB 1: POS BILL — TABLE FORMAT */}
+        {activeTab === 'POS_BILL' && (
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden space-y-2">
+            
+            {/* Bulk Action Bar */}
+            {selectedOrderIds.length > 0 && (
+              <div className="bg-red-50 border-b border-red-200 p-3 px-4 flex items-center justify-between font-sans">
+                <span className="text-xs font-bold text-red-800">
+                  {selectedOrderIds.length} POS Bill(s) selected
+                </span>
+                <button
+                  onClick={async () => {
+                    if (confirm(`Permanently delete ${selectedOrderIds.length} selected POS bills?`)) {
+                      await bulkDeleteOrders(selectedOrderIds);
+                      setSelectedOrderIds([]);
+                    }
+                  }}
+                  className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 cursor-pointer"
                 >
-                  {/* Top Row: Order #, Time & Status */}
-                  <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-heading font-black text-base text-[#111111] group-hover:text-[#F97316] transition-colors">
-                        #{ord.orderNumber}
-                      </span>
-                      <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[9px] font-mono font-bold px-1.5 py-0.2 rounded uppercase">
-                        COMPLETED ✓
-                      </span>
+                  <Trash2 size={13} /> Delete Selected ({selectedOrderIds.length})
+                </button>
+              </div>
+            )}
+
+            {filteredOrders.length === 0 ? (
+              <div className="p-12 text-center max-w-md mx-auto space-y-3">
+                <ShoppingCart size={40} className="mx-auto text-gray-300" />
+                <h3 className="font-heading font-bold text-base text-[#111111]">No POS Bills Found</h3>
+                <p className="text-xs text-gray-500">Click "+ New POS Billing" to generate a instant POS counter bill.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs font-sans">
+                  <thead>
+                    <tr className="bg-gray-900 text-white font-mono text-[11px] uppercase border-b border-gray-800">
+                      <th className="p-3.5 w-10 text-center">
+                        <input
+                          type="checkbox"
+                          checked={filteredOrders.length > 0 && selectedOrderIds.length === filteredOrders.length}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedOrderIds(filteredOrders.map((o) => o.id));
+                            } else {
+                              setSelectedOrderIds([]);
+                            }
+                          }}
+                          className="rounded border-gray-600 text-[#F97316] focus:ring-[#F97316] cursor-pointer"
+                        />
+                      </th>
+                      <th className="p-3.5">Bill #</th>
+                      <th className="p-3.5">Date & Time</th>
+                      <th className="p-3.5">Customer Name & Phone</th>
+                      <th className="p-3.5">Items Billed</th>
+                      <th className="p-3.5 text-right">Total Product Amount</th>
+                      <th className="p-3.5 text-right">Paid Amount</th>
+                      <th className="p-3.5 text-right">Balance Due</th>
+                      <th className="p-3.5 text-center">Payment Method</th>
+                      <th className="p-3.5 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {filteredOrders.map((ord) => {
+                      const isSelected = selectedOrderIds.includes(ord.id);
+                      const cleanPhone = ord.customerPhone.replace(/\D/g, '').slice(-10);
+                      const baseUrl = window.location.origin;
+                      const invoiceUrl = `${baseUrl}/invoice/${ord.id}`;
+                      const payMode = ord.paymentHistory?.[0]?.mode || 'Cash';
+
+                      const waTextMessage = `🧾 *MANIKANDAN LATHE* POS Bill #${ord.orderNumber}\nAmount Paid: ₹${ord.advancePaid.toLocaleString('en-IN')}\nBalance: ₹${ord.remainingBalance.toLocaleString('en-IN')}\nPayment: ${payMode}\nInvoice: ${invoiceUrl}`;
+                      const waUrl = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(waTextMessage)}`;
+
+                      return (
+                        <tr key={ord.id} className={`hover:bg-amber-50/50 transition-colors ${isSelected ? 'bg-amber-50' : ''}`}>
+                          <td className="p-3.5 text-center">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => {
+                                setSelectedOrderIds((prev) =>
+                                  prev.includes(ord.id) ? prev.filter((id) => id !== ord.id) : [...prev, ord.id]
+                                );
+                              }}
+                              className="rounded border-gray-300 text-[#F97316] focus:ring-[#F97316] cursor-pointer"
+                            />
+                          </td>
+                          <td className="p-3.5 font-heading font-black text-sm text-[#111111]">
+                            #{ord.orderNumber}
+                          </td>
+                          <td className="p-3.5 font-mono text-gray-500 text-[11px]">
+                            <div>{new Date(ord.createdAt).toLocaleDateString('en-IN')}</div>
+                            <div className="text-[10px] text-gray-400">
+                              {new Date(ord.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                          </td>
+                          <td className="p-3.5">
+                            <div className="font-bold text-gray-900">{ord.customerName}</div>
+                            <div className="font-mono text-gray-500 text-[11px]">{ord.customerPhone}</div>
+                          </td>
+                          <td className="p-3.5 font-mono text-gray-700 max-w-xs truncate">
+                            {ord.items.map((i) => `${i.productName} (${i.quantity})`).join(', ')}
+                          </td>
+                          <td className="p-3.5 text-right font-mono font-bold text-gray-900">
+                            ₹{ord.finalPrice.toLocaleString('en-IN')}
+                          </td>
+                          <td className="p-3.5 text-right font-mono font-bold text-emerald-700">
+                            ₹{ord.advancePaid.toLocaleString('en-IN')}
+                          </td>
+                          <td className="p-3.5 text-right font-mono font-bold">
+                            {ord.remainingBalance > 0 ? (
+                              <span className="text-red-600 font-black">₹{ord.remainingBalance.toLocaleString('en-IN')}</span>
+                            ) : (
+                              <span className="text-emerald-700 font-black">0 (Paid ✓)</span>
+                            )}
+                          </td>
+                          <td className="p-3.5 text-center">
+                            <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-mono font-bold px-2 py-0.5 rounded-md">
+                              {payMode}
+                            </span>
+                          </td>
+                          <td className="p-3.5 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              {ord.remainingBalance > 0 ? (
+                                <button
+                                  onClick={() => handleMarkPaid(ord)}
+                                  className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] rounded-lg flex items-center gap-1 cursor-pointer shadow-xs"
+                                  title="Mark Paid / Add Payment"
+                                >
+                                  <CreditCard size={12} /> Pay Balance
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleMarkPaid(ord)}
+                                  className="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[11px] rounded-lg cursor-pointer"
+                                  title="Update Paid Amount"
+                                >
+                                  ✓ Paid
+                                </button>
+                              )}
+
+                              <button
+                                onClick={() => handleReduceAmount(ord)}
+                                className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 font-bold text-[11px] rounded-lg flex items-center gap-1 cursor-pointer"
+                                title="Reduce Amount / Give Discount Anytime"
+                              >
+                                🏷️ Reduce
+                              </button>
+
+                              <button
+                                onClick={() => setReceiptOrder(ord)}
+                                className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs rounded-lg flex items-center gap-1 cursor-pointer"
+                                title="Print POS Thermal Receipt"
+                              >
+                                <Printer size={13} /> Bill
+                              </button>
+
+                              <button
+                                onClick={() => setPdfOrder(ord)}
+                                className="px-2 py-1 bg-[#111111] hover:bg-black text-white font-bold text-xs rounded-lg flex items-center gap-1 cursor-pointer"
+                                title="Print A4 Tax Invoice"
+                              >
+                                <FileText size={13} /> Invoice
+                              </button>
+
+                              <a
+                                href={waUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-2 py-1 bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-xs rounded-lg flex items-center gap-1 cursor-pointer"
+                                title="WhatsApp Customer"
+                              >
+                                <MessageCircle size={13} />
+                              </a>
+
+                              <button
+                                onClick={() => handleRefund(ord)}
+                                className="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold text-xs rounded-lg flex items-center gap-1 cursor-pointer"
+                                title="Refund POS Bill"
+                              >
+                                <RotateCcw size={13} />
+                              </button>
+
+                              <button
+                                onClick={() => setDeletingOrder(ord)}
+                                className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs rounded-lg flex items-center gap-1 cursor-pointer"
+                                title="Delete POS Bill"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 2: ADVANCED FABRICATION ORDER — CARD FORMAT */}
+        {activeTab === 'FABRICATION_ORDER' && (
+          <div className="space-y-4">
+            {filteredOrders.length === 0 ? (
+              <div className="bg-white p-12 rounded-2xl border border-gray-200 text-center max-w-md mx-auto space-y-3">
+                <Hammer size={40} className="mx-auto text-gray-300" />
+                <h3 className="font-heading font-bold text-base text-[#111111]">No Fabrication Orders</h3>
+                <p className="text-xs text-gray-500">Go to Advanced Fabrication to create custom manufacturing orders.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredOrders.map((ord) => {
+                  const cleanPhone = ord.customerPhone.replace(/\D/g, '').slice(-10);
+                  const baseUrl = window.location.origin;
+                  const trackUrl = `${baseUrl}/customer/orders/${ord.id}`;
+
+                  const waTextMessage = `🛠️ *MANIKANDAN LATHE* Fabrication Order #${ord.orderNumber}\nTotal: ₹${ord.finalPrice.toLocaleString('en-IN')}\nStatus: ${ord.status}\nTrack: ${trackUrl}`;
+                  const waUrl = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(waTextMessage)}`;
+
+                  return (
+                    <div
+                      key={ord.id}
+                      onClick={() => navigate(`/admin/orders/${ord.id}`)}
+                      className="bg-white rounded-[22px] border border-gray-200 hover:border-[#F97316] hover:shadow-md transition-all p-4 space-y-3 font-sans cursor-pointer group flex flex-col justify-between"
+                    >
+                      <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-heading font-black text-base text-[#111111] group-hover:text-[#F97316] transition-colors">
+                            #{ord.orderNumber}
+                          </span>
+                          <span className="bg-blue-100 text-blue-800 border border-blue-300 text-[9px] font-mono font-bold px-1.5 py-0.2 rounded uppercase">
+                            {ord.status.replace('_', ' ')}
+                          </span>
+                        </div>
+
+                        <span className="text-[10px] font-mono text-gray-400">
+                          {new Date(ord.createdAt).toLocaleDateString('en-IN')}
+                        </span>
+                      </div>
+
+                      <div className="space-y-0.5">
+                        <h4 className="font-heading font-bold text-xs text-gray-900 truncate">
+                          {ord.customerName}
+                        </h4>
+                        <p className="text-[11px] font-mono text-gray-500">{ord.customerPhone}</p>
+                      </div>
+
+                      <div className="text-[11px] text-gray-600 line-clamp-1 bg-gray-50 p-2 rounded-xl font-mono">
+                        {ord.items.map((i) => i.productName).join(', ')}
+                      </div>
+
+                      <div className="flex justify-between items-center text-xs font-mono border-t border-b border-gray-100 py-2">
+                        <div>
+                          <span className="text-[10px] text-gray-400 block">Advance Paid</span>
+                          <strong className="text-emerald-700">₹{ord.advancePaid.toLocaleString('en-IN')}</strong>
+                        </div>
+
+                        <div className="text-right">
+                          <span className="text-[10px] text-gray-400 block">Balance Due</span>
+                          <strong className={ord.remainingBalance > 0 ? 'text-red-600 font-black' : 'text-emerald-700 font-black'}>
+                            {ord.remainingBalance > 0 ? `₹${ord.remainingBalance.toLocaleString('en-IN')}` : 'Paid ✓'}
+                          </strong>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-4 gap-1 pt-1" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => setPdfOrder(ord)}
+                          className="py-1.5 bg-[#111111] hover:bg-black text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <FileText size={13} /> Bill
+                        </button>
+
+                        <a
+                          href={waUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="py-1.5 bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <MessageCircle size={13} /> WA
+                        </a>
+
+                        <button
+                          onClick={() => navigate(`/admin/orders/${ord.id}`)}
+                          className="py-1.5 bg-[#F97316] hover:bg-[#EA580C] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <ChevronRight size={14} /> Open
+                        </button>
+
+                        <button
+                          onClick={() => setDeletingOrder(ord)}
+                          className="py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs rounded-xl flex items-center justify-center cursor-pointer"
+                          title="Delete Order"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
                     </div>
-
-                    <span className="text-[10px] font-mono text-gray-400">
-                      {new Date(ord.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-
-                  {/* Customer Info */}
-                  <div className="space-y-0.5">
-                    <h4 className="font-heading font-bold text-xs text-gray-900 truncate">
-                      {ord.customerName}
-                    </h4>
-                    <p className="text-[11px] font-mono text-gray-500">{ord.customerPhone}</p>
-                  </div>
-
-                  {/* Items summary */}
-                  <div className="text-[11px] text-gray-600 line-clamp-1 bg-gray-50 p-2 rounded-xl font-mono">
-                    {ord.items.map((i) => `${i.productName} (${i.quantity})`).join(', ')}
-                  </div>
-
-                  {/* Price & Payment Mode */}
-                  <div className="flex justify-between items-center text-xs font-mono border-t border-b border-gray-100 py-2">
-                    <div>
-                      <span className="text-[10px] text-gray-400 block">Payment Method</span>
-                      <strong className="text-[#F97316]">{payMode}</strong>
-                    </div>
-
-                    <div className="text-right">
-                      <span className="text-[10px] text-gray-400 block">Total Billed</span>
-                      <strong className="text-base text-emerald-700 font-black">
-                        ₹{ord.finalPrice.toLocaleString('en-IN')}
-                      </strong>
-                    </div>
-                  </div>
-
-                  {/* Quick Actions Bar */}
-                  <div className="grid grid-cols-4 gap-1.5 pt-1" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      onClick={() => setReceiptOrder(ord)}
-                      className="py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs rounded-xl flex items-center justify-center gap-1 cursor-pointer"
-                      title="View POS Thermal Receipt"
-                    >
-                      <Printer size={13} /> Bill
-                    </button>
-
-                    <button
-                      onClick={() => setPdfOrder(ord)}
-                      className="py-1.5 bg-[#111111] hover:bg-black text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 cursor-pointer"
-                      title="Print A4 Tax Invoice"
-                    >
-                      <FileText size={13} /> A4
-                    </button>
-
-                    <a
-                      href={waUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="py-1.5 bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 cursor-pointer"
-                      title="WhatsApp Customer"
-                    >
-                      <MessageCircle size={13} /> WA
-                    </a>
-
-                    <button
-                      onClick={() => navigate('/admin/offline-orders/quick')}
-                      className="py-1.5 bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs rounded-xl flex items-center justify-center gap-1 cursor-pointer"
-                      title="Duplicate POS Sale"
-                    >
-                      <Copy size={13} /> Sale
-                    </button>
-                  </div>
-
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
       </div>
+
+      {/* ── CUSTOM DELETE ORDER CONFIRMATION CARD MODAL ── */}
+      {deletingOrder && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-[26px] border-2 border-red-200 shadow-2xl max-w-md w-full p-6 space-y-5 font-sans">
+            
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <div className="flex items-center gap-2 text-red-600 font-heading font-black text-base uppercase tracking-wide">
+                <div className="p-2 bg-red-100 rounded-xl text-red-600">
+                  <Trash2 size={20} />
+                </div>
+                Delete Order Confirmation
+              </div>
+              <button
+                onClick={() => setDeletingOrder(null)}
+                className="text-gray-400 hover:text-black font-bold p-1 rounded-lg transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-2.5 text-xs font-sans">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 font-mono">Order Number:</span>
+                <strong className="font-heading font-black text-sm text-[#111111]">#{deletingOrder.orderNumber}</strong>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 font-mono">Customer Name:</span>
+                <strong className="font-bold text-gray-900">{deletingOrder.customerName}</strong>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 font-mono">Customer Mobile:</span>
+                <span className="font-mono text-gray-700">{deletingOrder.customerPhone}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 font-mono">Items Billed:</span>
+                <span className="font-mono text-gray-800 truncate max-w-[200px]">
+                  {deletingOrder.items.map((i) => `${i.productName} (${i.quantity})`).join(', ')}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                <span className="text-gray-500 font-mono">Total Billed:</span>
+                <strong className="font-mono font-black text-sm text-emerald-700">₹{deletingOrder.finalPrice.toLocaleString('en-IN')}</strong>
+              </div>
+            </div>
+
+            <div className="bg-red-50 border border-red-200 p-3.5 rounded-xl text-xs text-red-900 font-bold flex items-start gap-2.5">
+              <AlertTriangle size={18} className="text-red-600 shrink-0 mt-0.5" />
+              <span>Are you sure you want to permanently delete POS Bill <strong>#{deletingOrder.orderNumber}</strong>? This record will be permanently deleted from system database and cannot be recovered.</span>
+            </div>
+
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                onClick={() => setDeletingOrder(null)}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-heading font-black text-xs py-3.5 rounded-xl transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={async () => {
+                  await deleteOrder(deletingOrder.id);
+                  setDeletingOrder(null);
+                }}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-heading font-black text-xs py-3.5 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+              >
+                <Trash2 size={16} /> Delete Permanently
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* ── BULK DELETE CONFIRMATION CARD MODAL ── */}
+      {isBulkDeleting && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-[26px] border-2 border-red-200 shadow-2xl max-w-md w-full p-6 space-y-5 font-sans">
+            
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <div className="flex items-center gap-2 text-red-600 font-heading font-black text-base uppercase tracking-wide">
+                <div className="p-2 bg-red-100 rounded-xl text-red-600">
+                  <Trash2 size={20} />
+                </div>
+                Bulk Delete Confirmation
+              </div>
+              <button
+                onClick={() => setIsBulkDeleting(false)}
+                className="text-gray-400 hover:text-black font-bold p-1 rounded-lg transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="bg-red-50 border border-red-200 p-4 rounded-2xl text-xs text-red-900 font-bold space-y-2">
+              <div className="flex items-center gap-2 text-red-700 font-black text-sm">
+                <AlertTriangle size={18} /> Permanently Delete {selectedOrderIds.length} Selected POS Bills?
+              </div>
+              <p className="text-gray-700 font-normal">
+                You are about to permanently remove {selectedOrderIds.length} selected POS bills from the system database. This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                onClick={() => setIsBulkDeleting(false)}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-heading font-black text-xs py-3.5 rounded-xl transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={async () => {
+                  await bulkDeleteOrders(selectedOrderIds);
+                  setSelectedOrderIds([]);
+                  setIsBulkDeleting(false);
+                }}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-heading font-black text-xs py-3.5 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+              >
+                <Trash2 size={16} /> Delete Selected ({selectedOrderIds.length})
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {/* POS Receipt Modal */}
       <AdminPOSReceiptModal

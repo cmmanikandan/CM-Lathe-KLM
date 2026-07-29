@@ -7,7 +7,7 @@ interface InvoiceThermalProps {
 }
 
 export const InvoiceThermal: React.FC<InvoiceThermalProps> = ({ order, containerRef }) => {
-  const invoiceNumber = `ML-INV-${order.orderNumber.replace(/\D/g, '') || Date.now().toString().slice(-4)}`;
+  const invoiceNumber = order.orderNumber.startsWith('INV-') ? order.orderNumber : `INV-${order.orderNumber}`;
   const dateStr = new Date(order.createdAt).toLocaleString('en-IN', {
     day: '2-digit',
     month: 'short',
@@ -16,6 +16,7 @@ export const InvoiceThermal: React.FC<InvoiceThermalProps> = ({ order, container
     minute: '2-digit',
   });
 
+  const payMode = order.paymentHistory?.[0]?.mode || 'Cash';
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(
     `MANIKANDAN LATHE #${order.orderNumber} Total: Rs.${order.finalPrice}`
   )}`;
@@ -37,7 +38,7 @@ export const InvoiceThermal: React.FC<InvoiceThermalProps> = ({ order, container
         <h2 className="font-heading font-black text-sm uppercase text-black">MANIKANDAN LATHE</h2>
         <p className="text-[9px] font-bold">Kallimandhayam, Dindigul - 624614</p>
         <p className="text-[9px]">Ph: +91 96592 86268</p>
-        <p className="text-[9px]">GSTIN: 33AAAPM9281K1Z5</p>
+        <p className="text-[9px]">manikandanlatheklm@gmail.com</p>
       </div>
 
       {/* Invoice Meta */}
@@ -61,6 +62,10 @@ export const InvoiceThermal: React.FC<InvoiceThermalProps> = ({ order, container
         <div className="flex justify-between">
           <span>Phone:</span>
           <span>{order.customerPhone}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Payment:</span>
+          <strong>{payMode}</strong>
         </div>
       </div>
 
@@ -91,7 +96,7 @@ export const InvoiceThermal: React.FC<InvoiceThermalProps> = ({ order, container
           <span>₹{order.basePrice || order.finalPrice}</span>
         </div>
         {order.reducedAmount > 0 && (
-          <div className="flex justify-between">
+          <div className="flex justify-between text-green-700">
             <span>Discount:</span>
             <span>- ₹{order.reducedAmount}</span>
           </div>
@@ -101,13 +106,20 @@ export const InvoiceThermal: React.FC<InvoiceThermalProps> = ({ order, container
           <span>₹{order.finalPrice.toLocaleString('en-IN')}</span>
         </div>
         <div className="flex justify-between font-bold text-green-800">
-          <span>Paid:</span>
+          <span>Paid Amount:</span>
           <span>₹{order.advancePaid.toLocaleString('en-IN')}</span>
         </div>
-        <div className="flex justify-between font-bold text-red-600">
-          <span>Balance:</span>
-          <span>₹{order.remainingBalance.toLocaleString('en-IN')}</span>
-        </div>
+        {order.remainingBalance > 0 ? (
+          <div className="flex justify-between font-bold text-red-600">
+            <span>Balance Due:</span>
+            <span>₹{order.remainingBalance.toLocaleString('en-IN')}</span>
+          </div>
+        ) : (
+          <div className="flex justify-between font-bold text-emerald-700">
+            <span>Status:</span>
+            <span>FULLY PAID ✓</span>
+          </div>
+        )}
       </div>
 
       {/* Footer & QR Code */}

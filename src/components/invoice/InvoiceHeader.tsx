@@ -11,7 +11,7 @@ export const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({ order, qrCodeUrl }
   const isPaidFull = order.remainingBalance <= 0;
   const isPartial = order.advancePaid > 0 && order.remainingBalance > 0;
 
-  const invoiceNumber = `ML-INV-${order.orderNumber.replace(/\D/g, '') || Date.now().toString().slice(-4)}`;
+  const invoiceNumber = order.orderNumber.startsWith('INV-') ? order.orderNumber : `INV-${order.orderNumber}`;
   const invoiceDate = new Date(order.createdAt).toLocaleDateString('en-IN', {
     day: '2-digit',
     month: 'short',
@@ -51,7 +51,7 @@ export const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({ order, qrCodeUrl }
               <span><strong>Phone:</strong> +91 96592 86268</span>
             </div>
             <div className="flex flex-wrap gap-x-3 text-[10px] text-gray-500 font-mono">
-              <span>Email: info@manikandanlathe.com</span>
+              <span>Email: manikandanlatheklm@gmail.com</span>
               <span>Web: manikandanlathe.com</span>
             </div>
           </div>

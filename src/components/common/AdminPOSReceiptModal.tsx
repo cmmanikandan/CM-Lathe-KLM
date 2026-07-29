@@ -5,6 +5,7 @@ import { InvoiceA4 } from '../invoice/InvoiceA4';
 import { InvoiceThermal } from '../invoice/InvoiceThermal';
 import { useInvoicePdf } from '../invoice/useInvoicePdf';
 import { useRefunds } from '../../context/RefundContext';
+import { printInvoiceElement } from '../../utils/printHelper';
 import {
   Printer,
   X,
@@ -97,7 +98,7 @@ Thank You.`;
   const waUrl = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(waTextMessage)}`;
 
   const handlePrint = () => {
-    window.print();
+    printInvoiceElement(printRef.current, viewMode === 'THERMAL');
   };
 
   const handleCopyInvoiceLink = () => {
@@ -214,12 +215,12 @@ Thank You.`;
               </button>
 
               <button
-                onClick={() => downloadPdf(printRef.current, order)}
+                onClick={() => downloadPdf(printRef.current, order, viewMode)}
                 disabled={isGeneratingPdf}
-                className="bg-[#FF6A00] hover:bg-[#EA580C] text-white p-2.5 rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-colors"
+                className="bg-[#F97316] hover:bg-[#EA580C] text-white p-2.5 rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-colors cursor-pointer"
                 title="Download PDF File"
               >
-                <Download size={14} /> Download PDF
+                <Download size={14} /> {isGeneratingPdf ? 'Generating PDF...' : 'Download PDF'}
               </button>
 
               <a

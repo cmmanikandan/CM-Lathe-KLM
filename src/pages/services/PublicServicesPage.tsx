@@ -1,48 +1,76 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React from 'react';
+
 import { PublicNavbar } from '../../components/layout/PublicNavbar';
 import { PublicFooter } from '../../components/layout/PublicFooter';
-import { Phone, MessageCircle, ArrowRight, CheckCircle2, Clock, Send, ShieldCheck, Wrench } from 'lucide-react';
+import { Phone, MessageCircle, CheckCircle2, Clock, ShieldCheck, Wrench } from 'lucide-react';
 
 export const PublicServicesPage: React.FC = () => {
-  const navigate = useNavigate();
 
   const servicesList = [
     {
       id: "kalappai",
-      title: "Tractor Kalappai & Cultivators",
-      desc: "Hardened lathe-machined 5-tine, 9-tine & 11-tine cultivator tines forged for tough Tamil Nadu soil.",
-      image: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=600&q=80",
-      bullets: ["Hardened steel tines built for red soil", "Heavy angle iron main frame forging", "1-Year workshop structural warranty"],
+      title: "Tractor Kalappai Making & Forging",
+      desc: "Custom 5-tine, 7-tine & 9-tine tractor Kalappai cultivators with lathe-hardened steel tines built for tough soil.",
+      image: "/assets/service_kalappai.png",
+      bullets: [
+        "Hardened lathe steel tines for red & clay soil",
+        "Heavy angle iron main frame forging",
+        "5-Tine, 7-Tine & 9-Tine custom tractor sizes"
+      ],
       startingPrice: "₹24,500",
       deliveryTime: "3–5 Days"
     },
     {
-      id: "gates",
-      title: "Stainless Steel & MS Main Gates",
-      desc: "Custom architectural gates crafted with CNC laser cut panels, heavy-duty ball bearings & safety locks.",
-      image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80",
-      bullets: ["SS 304 anti-rust grade material", "CNC laser precision cut patterns", "Heavy bearing hinges for smooth operation"],
+      id: "grill",
+      title: "Custom Security Windows Grill",
+      desc: "Heavy-duty MS & Stainless Steel window safety grills built to exact house blueprints and custom dimensions.",
+      image: "/assets/service_window_grill.png",
+      bullets: [
+        "Heavy square rod & flat bar options",
+        "Geometric & decorative architectural patterns",
+        "Anti-rust primer coating & glossy finish"
+      ],
+      startingPrice: "₹12,000",
+      deliveryTime: "4–6 Days"
+    },
+    {
+      id: "main_gate",
+      title: "Architectural Main Safety Gates",
+      desc: "Custom Stainless Steel laser cut main gates & heavy MS safety gates crafted with smooth bearing hinges.",
+      image: "/assets/service_main_gate.png",
+      bullets: [
+        "Rust-Proof Stainless Steel laser cut panels",
+        "Heavy ball bearing hinges for effortless gliding",
+        "Built to custom architectural width & height"
+      ],
       startingPrice: "₹38,000",
       deliveryTime: "7–10 Days"
     },
     {
-      id: "lathe",
-      title: "Precision Shaft Turning & Grinding",
-      desc: "Industrial lathe machining, shaft grinding, bush fitting, thread cutting & emergency machine repairs.",
-      image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=600&q=80",
-      bullets: ["Micrometer tolerance precision turning", "Shaft grinding & bearing bush fitting", "Emergency 4-hour breakdown repair"],
-      startingPrice: "₹1,500",
-      deliveryTime: "Same Day / 24 Hours"
+      id: "roofing",
+      title: "Roofing Sheet Fitting & Truss Works",
+      desc: "Complete roofing sheet installation for houses & factory sheds: Cooling sheets, Cement sheets, Fiber sheets & Mud Ode tiles.",
+      image: "/assets/service_roofing.png",
+      bullets: [
+        "Cooling sheets, Cement sheets & Fiber sheets",
+        "Terracotta Clay Mud Ode roof tile fitting",
+        "Heavy structural steel truss frame erection"
+      ],
+      startingPrice: "₹28,000",
+      deliveryTime: "5–8 Days"
     },
     {
-      id: "grill",
-      title: "Custom Security Windows Grill",
-      desc: "Elegant MS & SS window safety grills built to exact architectural blueprints and custom dimensions.",
-      image: "https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=600&q=80",
-      bullets: ["Heavy square rod & flat bar options", "Durable anti-rust primer coating", "Custom architectural design blueprints"],
-      startingPrice: "₹12,000",
-      deliveryTime: "4–6 Days"
+      id: "welding_lathe",
+      title: "Electric Welding & Lathe Machining",
+      desc: "Professional electric arc welding, CO2 MIG welding, lathe shaft turning, gunmetal bush fitting & emergency breakdown repairs.",
+      image: "/assets/service_welding.png",
+      bullets: [
+        "Precision micrometer shaft turning & grinding",
+        "Heavy electric arc & CO2 metal MIG welding",
+        "Emergency 4-hour machine breakdown repair"
+      ],
+      startingPrice: "₹1,500",
+      deliveryTime: "Same Day / 24 Hours"
     }
   ];
 
@@ -53,97 +81,97 @@ export const PublicServicesPage: React.FC = () => {
       {/* Header Banner */}
       <section className="bg-[#111111] text-white py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto space-y-3">
-          <span className="text-[#F97316] font-mono text-xs font-bold uppercase tracking-widest block">
-            Custom Machinery & Steel Works
-          </span>
+          <div className="inline-flex items-center gap-1.5 bg-[#F97316]/20 border border-[#F97316]/40 text-[#F97316] text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+            <Wrench size={12} /> Master Workshop Fabrication
+          </div>
           <h1 className="font-heading font-black text-3xl sm:text-5xl text-white">
             OUR FABRICATION SERVICES
           </h1>
           <p className="text-gray-300 text-sm sm:text-base max-w-2xl leading-relaxed">
-            Pioneer heavy lathe machining, tractor cultivator forging & SS 304 architectural gate fabrication setup in Kallimandhayam.
+            Expert lathe machining, tractor kalappai making, window grills, main gates, roofing sheet fitting & heavy arc welding setup in Kallimandhayam.
           </p>
         </div>
       </section>
 
-      {/* Services Grid (4 Cards Desktop, 2 Tablet, 1 Mobile) */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Services Grid (Clean 3 & 2 Column Layout) */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {servicesList.map((srv) => (
             <div
               key={srv.id}
-              className="bg-white rounded-[22px] border border-gray-200 overflow-hidden shadow-xs hover:border-[#F97316] hover:shadow-lg transition-all duration-300 flex flex-col justify-between group"
+              className="bg-white rounded-[22px] border border-gray-200 overflow-hidden shadow-xs hover:border-[#F97316] hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
             >
               <div>
-                {/* 16:9 Ratio Image */}
-                <div className="aspect-video bg-gray-100 overflow-hidden relative">
+                {/* 16:9 Image Stage */}
+                <div className="aspect-video bg-gray-50 overflow-hidden relative flex items-center justify-center border-b border-gray-100 p-2">
                   <img
                     src={srv.image}
                     alt={srv.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 rounded-xl"
                   />
-                  <span className="absolute bottom-2 right-2 bg-black/80 backdrop-blur-md text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded flex items-center gap-1">
+                  <span className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-md text-white text-[10px] font-mono font-bold px-2.5 py-1 rounded-xl flex items-center gap-1 shadow-md">
                     <Clock size={12} className="text-[#F97316]" /> {srv.deliveryTime}
                   </span>
                 </div>
 
-                <div className="p-4 space-y-3">
+                <div className="p-5 space-y-4">
                   <div>
-                    <h3 className="font-heading font-black text-base text-[#111111] group-hover:text-[#F97316] transition-colors leading-tight">
+                    <h3 className="font-heading font-black text-lg text-[#111111] group-hover:text-[#F97316] transition-colors leading-tight">
                       {srv.title}
                     </h3>
-                    <p className="text-xs text-gray-600 line-clamp-2 mt-1 leading-relaxed">
+                    <p className="text-xs text-gray-600 line-clamp-3 mt-1.5 leading-relaxed">
                       {srv.desc}
                     </p>
                   </div>
 
-                  {/* 3 Bullet Points */}
-                  <ul className="space-y-1 text-xs text-gray-700 font-sans border-t border-gray-100 pt-2">
+                  {/* Bullet Points */}
+                  <ul className="space-y-1.5 text-xs text-gray-700 font-sans border-t border-gray-100 pt-3">
                     {srv.bullets.map((b, i) => (
-                      <li key={i} className="flex items-center gap-1.5 text-[11px]">
-                        <CheckCircle2 size={13} className="text-[#F97316] shrink-0" />
-                        <span className="line-clamp-1">{b}</span>
+                      <li key={i} className="flex items-start gap-2 text-xs">
+                        <CheckCircle2 size={14} className="text-[#F97316] shrink-0 mt-0.5" />
+                        <span>{b}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
               </div>
 
-              {/* Price & Actions Footer */}
-              <div className="p-4 pt-0 space-y-2 border-t border-gray-100 mt-2">
-                <div className="flex justify-between items-baseline pt-2">
-                  <span className="text-[10px] text-gray-400 font-mono uppercase font-bold">Starting Price</span>
-                  <span className="font-heading font-black text-base text-[#F97316]">{srv.startingPrice}</span>
-                </div>
-
+              {/* Actions Footer */}
+              <div className="p-5 pt-0 space-y-2 border-t border-gray-100 mt-3 pt-3">
                 <div className="grid grid-cols-2 gap-2">
                   <a
                     href="https://wa.me/919659286268"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-[#25D366] hover:bg-[#20ba5a] text-white text-[11px] font-heading font-black py-2 rounded-xl flex items-center justify-center gap-1 shadow-xs"
+                    className="bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-heading font-black py-2.5 rounded-xl flex items-center justify-center gap-1.5 shadow-xs"
                   >
-                    <MessageCircle size={12} /> WhatsApp
+                    <MessageCircle size={14} /> WhatsApp
                   </a>
 
                   <a
                     href="tel:+919659286268"
-                    className="bg-gray-100 hover:bg-gray-200 text-[#111111] text-[11px] font-heading font-black py-2 rounded-xl flex items-center justify-center gap-1"
+                    className="bg-[#111111] hover:bg-[#F97316] text-white text-xs font-heading font-black py-2.5 rounded-xl flex items-center justify-center gap-1.5 shadow-xs transition-colors"
                   >
-                    <Phone size={12} className="text-[#F97316]" /> Call
+                    <Phone size={14} /> Call Workshop
                   </a>
                 </div>
-
-                <Link
-                  to="/products"
-                  className="w-full bg-[#111111] hover:bg-[#F97316] text-white text-xs font-heading font-black py-2.5 rounded-xl flex items-center justify-center gap-1.5 shadow-xs transition-colors"
-                >
-                  View Related Products <ArrowRight size={14} />
-                </Link>
               </div>
 
             </div>
           ))}
         </div>
+
+        {/* Master Quality Guarantee Banner */}
+        <div className="bg-white rounded-[26px] border border-gray-200 p-6 sm:p-8 space-y-4 shadow-xs text-center max-w-4xl mx-auto">
+          <ShieldCheck size={40} className="mx-auto text-[#F97316]" />
+          <h2 className="font-heading font-black text-xl sm:text-2xl text-[#111111]">
+            DIRECT FACTORY QUALITY GUARANTEED
+          </h2>
+          <p className="text-xs sm:text-sm text-gray-600 max-w-2xl mx-auto leading-relaxed">
+            All fabrication work is personally supervised by Master Craftsman <strong>Chellamuthu K</strong> with 25+ years of experience in Kallimandhayam. We use heavy anti-rust steel, precision lathe machinery, and structural welding.
+          </p>
+        </div>
+
       </div>
 
       <PublicFooter />

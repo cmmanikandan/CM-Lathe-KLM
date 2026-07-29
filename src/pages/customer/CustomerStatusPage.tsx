@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStatus } from '../../context/StatusContext';
 import { StatusStoryViewer } from '../../components/common/StatusStoryViewer';
+import { ImageViewerModal } from '../../components/common/ImageViewerModal';
+import { fetchGallery } from '../../services/supabaseService';
 import {
   Flame,
   Eye,
@@ -18,7 +20,12 @@ import {
   Search,
   Wrench,
   Package,
-  ImageIcon
+  ImageIcon,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  ArrowLeft,
+  Maximize2
 } from 'lucide-react';
 
 export const CustomerStatusPage: React.FC = () => {
@@ -55,58 +62,273 @@ export const CustomerStatusPage: React.FC = () => {
 
   const tags = ['All', 'Work Progress', 'Completed Orders', 'New Products', 'Offers', 'Announcements'];
 
-  const filteredFeedStories = activeStories.filter((s) => {
-    if (selectedTag === 'All') return true;
-    return s.tag.toLowerCase().includes(selectedTag.toLowerCase());
-  });
+  const [galleryItems, setGalleryItems] = useState<any[]>([]);
+  const [galleryLoading, setGalleryLoading] = useState(true);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState(0);
+
+  const [activeFolderItem, setActiveFolderItem] = useState<any | null>(null);
+
+  const [folderPhotoIndex, setFolderPhotoIndex] = useState(0);
+
+  const categories = [
+    'All',
+    'Kalappai',
+    'Steel Gates',
+    'Lathe Works',
+    'Windows Grill',
+    'Steel Doors',
+    'Machine Works',
+    'New Installations'
+  ];
+
+  useEffect(() => {
+    fetchGallery().then((items) => {
+      if (items && items.length > 0) {
+        setGalleryItems(
+          items.map((i) => ({
+            id: i.id,
+            title: i.title,
+            category: i.category,
+            mediaUrl: i.mediaUrl,
+            images: (i as any).images || [i.mediaUrl],
+            isFolder: (i as any).isFolder || ((i as any).images && (i as any).images.length > 1) || false,
+            date: i.createdAt ? i.createdAt.split('T')[0] : '2026-07-28',
+          }))
+        );
+      } else {
+        setGalleryItems([
+          {
+            id: 'g1',
+            title: '9-Tine Hardened Tractor Kalappai Folder',
+            category: 'Kalappai',
+            mediaUrl: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80',
+            images: [
+              'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80',
+              'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80',
+              'https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=800&q=80'
+            ],
+            isFolder: true,
+            date: '2026-07-28'
+          },
+          { id: 'g2', title: 'CNC Laser Cut SS 304 Main Safety Gate', category: 'Steel Gates', mediaUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', isFolder: false, date: '2026-07-26' },
+          { id: 'g3', title: 'Precision Lathe Turning Machine Shafts', category: 'Lathe Works', mediaUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80', isFolder: false, date: '2026-07-24' },
+          {
+            id: 'g4',
+            title: 'Steel Chair & Bench Fabrication Album',
+            category: 'Steel Doors',
+            mediaUrl: 'https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=800&q=80',
+            images: [
+              'https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=800&q=80',
+              'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80'
+            ],
+            isFolder: true,
+            date: '2026-07-22'
+          },
+          { id: 'g5', title: 'Heavy Duty Structural Steel Door', category: 'Steel Doors', mediaUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', isFolder: false, date: '2026-07-20' },
+          { id: 'g6', title: '5-Tine Compact Cultivator Assembly', category: 'Kalappai', mediaUrl: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80', isFolder: false, date: '2026-07-18' }
+        ]);
+      }
+      setGalleryLoading(false);
+    });
+  }, []);
+
+  const filteredGallery = galleryItems.filter(
+    (item) => selectedTag === 'All' || item.category === selectedTag
+  );
+
+  const galleryImageUrls = filteredGallery.map((g) => g.mediaUrl);
+
+  const handleCardClick = (item: any, idx: number) => {
+    if (item.isFolder && item.images && item.images.length > 1) {
+      setActiveFolderItem(item);
+      setFolderPhotoIndex(0);
+    } else {
+      setViewerIndex(idx);
+      setViewerOpen(true);
+    }
+  };
+
+  // ─── DEDICATED FOLDER ALBUM FULL PAGE VIEW ───
+  if (activeFolderItem) {
+    const folderImages: string[] = activeFolderItem.images || [activeFolderItem.mediaUrl];
+    const currentPhoto = folderImages[folderPhotoIndex] || activeFolderItem.mediaUrl;
+
+    const handleNextPhoto = () => {
+      setFolderPhotoIndex((prev) => (prev + 1) % folderImages.length);
+    };
+
+    const handlePrevPhoto = () => {
+      setFolderPhotoIndex((prev) => (prev - 1 + folderImages.length) % folderImages.length);
+    };
+
+    return (
+      <div className="min-h-screen bg-[#F8F9FA] text-[#111111] font-sans antialiased pb-24 space-y-6">
+        
+        {/* Top Sticky Folder Navigation Bar */}
+        <div className="bg-white/90 backdrop-blur-xl border-b border-gray-200 sticky top-[64px] z-30 px-4 sm:px-6 py-4 shadow-xs">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            <button
+              onClick={() => setActiveFolderItem(null)}
+              className="bg-gray-100 hover:bg-[#111111] hover:text-white text-gray-800 text-xs font-heading font-black px-4 py-2.5 rounded-2xl flex items-center gap-2 transition-all shrink-0 active:scale-95"
+            >
+              <ArrowLeft size={16} /> Back to Gallery
+            </button>
+
+            <div className="text-right sm:text-left flex-1 min-w-0">
+              <span className="text-[10px] font-mono text-[#F97316] font-bold uppercase tracking-widest block">
+                📁 FOLDER ALBUM VIEW • {activeFolderItem.category}
+              </span>
+              <h2 className="font-heading font-black text-base sm:text-xl text-[#111111] truncate">
+                {activeFolderItem.title}
+              </h2>
+            </div>
+
+            <span className="bg-[#F97316] text-white text-xs font-mono font-bold px-3 py-1 rounded-full shrink-0">
+              {folderPhotoIndex + 1} / {folderImages.length}
+            </span>
+          </div>
+        </div>
+
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-6">
+          
+          {/* Main Featured Photo Stage with Next / Prev Overlay Controls */}
+          <div className="bg-white rounded-[26px] border border-gray-200 p-4 sm:p-6 shadow-md relative space-y-4">
+            <div className="relative aspect-4/3 sm:aspect-16/9 bg-white rounded-2xl overflow-hidden flex items-center justify-center p-2 border border-gray-100 group">
+              
+              <img
+                src={currentPhoto}
+                alt={`Photo ${folderPhotoIndex + 1}`}
+                onClick={() => {
+                  setViewerIndex(folderPhotoIndex);
+                  setViewerOpen(true);
+                }}
+                className="max-h-[60vh] w-auto object-contain cursor-pointer group-hover:scale-102 transition-transform duration-300"
+              />
+
+              {/* Prev Button */}
+              {folderImages.length > 1 && (
+                <button
+                  onClick={handlePrevPhoto}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/70 hover:bg-[#F97316] text-white transition-all shadow-lg active:scale-95 z-20"
+                  aria-label="Previous Photo"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+              )}
+
+              {/* Next Button */}
+              {folderImages.length > 1 && (
+                <button
+                  onClick={handleNextPhoto}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/70 hover:bg-[#F97316] text-white transition-all shadow-lg active:scale-95 z-20"
+                  aria-label="Next Photo"
+                >
+                  <ChevronRight size={24} />
+                </button>
+              )}
+
+              <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-md text-white text-[11px] font-mono px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-md">
+                <Maximize2 size={14} className="text-[#F97316]" /> Click for 360° Rotate & Zoom
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-2">
+              <div>
+                <h3 className="font-heading font-black text-base text-[#111111]">
+                  {activeFolderItem.title} (Photo {folderPhotoIndex + 1})
+                </h3>
+                <p className="text-xs text-gray-500 font-mono mt-0.5">
+                  Uploaded on {activeFolderItem.date} • Category: {activeFolderItem.category}
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePrevPhoto}
+                  className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-xs font-heading font-black text-gray-800 flex items-center gap-1"
+                >
+                  <ChevronLeft size={16} /> Prev
+                </button>
+                <button
+                  onClick={handleNextPhoto}
+                  className="px-4 py-2 rounded-xl bg-[#F97316] hover:bg-[#EA580C] text-xs font-heading font-black text-white flex items-center gap-1 shadow-xs"
+                >
+                  Next <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Folder Thumbnails Carousel Row */}
+          <div className="bg-white p-4 rounded-[22px] border border-gray-200 space-y-2 shadow-xs">
+            <span className="text-xs font-heading font-black text-gray-400 uppercase tracking-wider block">
+              Folder Photos Carousel ({folderImages.length})
+            </span>
+
+            <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-2">
+              {folderImages.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setFolderPhotoIndex(idx)}
+                  className={`w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 shrink-0 bg-white p-1 transition-all flex items-center justify-center ${
+                    folderPhotoIndex === idx
+                      ? 'border-[#F97316] ring-2 ring-[#F97316]/30 scale-95 shadow-md'
+                      : 'border-gray-200 opacity-70 hover:opacity-100'
+                  }`}
+                >
+                  <img src={img} alt={`Thumb ${idx + 1}`} className="w-full h-full object-contain" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+        </div>
+
+        {/* Full-Screen Rotator Modal */}
+        <ImageViewerModal
+          images={folderImages}
+          initialIndex={folderPhotoIndex}
+          isOpen={viewerOpen}
+          onClose={() => setViewerOpen(false)}
+          title={`${activeFolderItem.title} (${folderPhotoIndex + 1}/${folderImages.length})`}
+        />
+
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-[#111111] font-sans antialiased pb-24 space-y-6">
       
-      {/* 1. STICKY GLASS HEADER */}
+      {/* 1. STICKY GLASS HEADER (Clean title without top filter chips) */}
       <div className="bg-white/80 backdrop-blur-xl border-b border-gray-200/80 sticky top-[64px] z-30 px-4 sm:px-6 py-4 shadow-xs">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
               <span className="p-1.5 rounded-xl bg-orange-100 text-[#F97316]">
                 <Flame size={18} className="animate-pulse" />
               </span>
-              <h1 className="font-heading font-black text-xl sm:text-2xl text-[#111111]">WORKSHOP STORIES</h1>
+              <h1 className="font-heading font-black text-xl sm:text-2xl text-[#111111]">WORKSHOP STORIES & GALLERY</h1>
               <span className="bg-[#F97316] text-white text-[10px] font-mono font-black px-2 py-0.5 rounded-full uppercase">
-                Live 24h
+                Live Factory Feed
               </span>
             </div>
-            <p className="text-xs text-gray-500 mt-1">Live workshop progress, completed lathe projects, special offers & announcements</p>
-          </div>
-
-          {/* Filter Chips */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
-            {tags.map((tag) => (
-              <button
-                key={tag}
-                onClick={() => setSelectedTag(tag)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-heading font-extrabold shrink-0 transition-all ${
-                  selectedTag === tag
-                    ? 'bg-[#111111] text-white shadow-xs'
-                    : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200'
-                }`}
-              >
-                {tag}
-              </button>
-            ))}
+            <p className="text-xs text-gray-500 mt-1">24h Live stories, real-time manufacturing progress & completed customer orders</p>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         
-        {/* 2. TOP STORY CIRCLES ROW (WHATSAPP / INSTAGRAM STYLE) */}
+        {/* 2. TOP 24H LIVE WORKSHOP STORIES (CIRCLE BUBBLES ROW) */}
         <div className="bg-white p-4 rounded-[26px] border border-gray-200 shadow-xs space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-heading font-black text-xs uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-              <Sparkles size={14} className="text-[#F97316]" /> Recent Workshop Stories
+              <Sparkles size={14} className="text-[#F97316]" /> 24h Live Workshop Stories
             </h3>
-            <span className="text-[11px] font-mono text-gray-400">Tap to view full-screen</span>
+            <span className="text-[11px] font-mono text-gray-400">Tap circle to view story full-screen</span>
           </div>
 
           <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-2">
@@ -121,11 +343,11 @@ export const CustomerStatusPage: React.FC = () => {
               >
                 {/* 80x80 Gradient Ring Circle */}
                 <div className="w-20 h-20 rounded-full p-0.5 bg-gradient-to-tr from-[#F97316] via-amber-500 to-[#111111] shadow-md group-hover:scale-105 transition-transform duration-300 relative">
-                  <div className="w-full h-full rounded-full overflow-hidden border-2 border-white bg-gray-100 relative">
+                  <div className="w-full h-full rounded-full overflow-hidden border-2 border-white bg-white relative flex items-center justify-center">
                     <img
                       src={story.mediaUrl}
                       alt={story.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      className="w-full h-full object-contain p-1 group-hover:scale-110 transition-transform duration-500"
                     />
                   </div>
                   <span className="absolute bottom-0 right-0 bg-[#F97316] text-white text-[8px] font-mono font-black px-1.5 py-0.5 rounded-full border border-white">
@@ -141,122 +363,100 @@ export const CustomerStatusPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 3. RECENT UPDATES CONTENT FEED (16:9 MEDIA CARDS) */}
+        {/* 3. CATEGORY FILTERS (PLACED RIGHT AFTER THE STORY CARD) */}
+        <div className="bg-white p-3 rounded-[22px] border border-gray-200 shadow-xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-heading font-black text-gray-400 uppercase tracking-wider">
+              Filter Gallery Category:
+            </span>
+            <span className="text-xs font-mono font-bold text-[#F97316]">{selectedTag}</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedTag(cat)}
+                className={`px-3.5 py-2 rounded-xl text-xs font-heading font-extrabold shrink-0 transition-all ${
+                  selectedTag === cat
+                    ? 'bg-[#111111] text-white shadow-xs'
+                    : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 4. WORKSHOP GALLERY SHOWCASE GRID (FOLDER & SINGLE CARDS) */}
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="font-heading font-black text-base uppercase text-[#111111] flex items-center gap-2">
-              <Clock size={18} className="text-[#F97316]" /> RECENT WORKSHOP UPDATES FEED
+              <ImageIcon size={18} className="text-[#F97316]" /> WORKSHOP GALLERY ({filteredGallery.length})
             </h2>
-            <span className="text-xs font-mono text-gray-500">Showing {filteredFeedStories.length} Updates</span>
+            <span className="text-xs font-mono text-gray-500">Category: {selectedTag}</span>
           </div>
 
-          {filteredFeedStories.length === 0 ? (
+          {galleryLoading ? (
+            <div className="py-12 text-center text-xs font-mono text-gray-500 flex items-center justify-center gap-2">
+              <Loader2 size={16} className="animate-spin text-[#F97316]" /> Loading live workshop gallery...
+            </div>
+          ) : filteredGallery.length === 0 ? (
             <div className="bg-white rounded-[22px] p-12 text-center border border-gray-200 shadow-xs space-y-3">
-              <Flame size={48} className="mx-auto text-gray-300" />
-              <h3 className="font-heading font-black text-lg text-[#111111]">No Stories Matching Tag</h3>
-              <p className="text-xs text-gray-500">Try selecting 'All' from top category filters.</p>
+              <ImageIcon size={48} className="mx-auto text-gray-300" />
+              <h3 className="font-heading font-black text-lg text-[#111111]">No Gallery Items for '{selectedTag}'</h3>
+              <p className="text-xs text-gray-500">Select 'All' from category filter buttons above.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredFeedStories.map((story, idx) => {
-                const isLiked = userLikedMap[story.id];
-                const likesCount = likesMap[story.id] || (12 + idx * 3);
-                return (
-                  <div
-                    key={story.id}
-                    onClick={() => {
-                      setActiveStoryIndex(idx);
-                      incrementSeenCount(story.id);
-                    }}
-                    className="bg-white rounded-[24px] border border-gray-200 overflow-hidden shadow-xs hover:border-[#F97316] hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group"
-                  >
-                    <div>
-                      {/* 16:9 Aspect Ratio Media Container */}
-                      <div className="aspect-video bg-gray-100 overflow-hidden relative">
-                        <img
-                          src={story.mediaUrl}
-                          alt={story.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                        <span className="absolute top-3 left-3 bg-black/75 backdrop-blur-md text-white text-[10px] font-heading font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
-                          {story.tag}
-                        </span>
-                        <span className="absolute bottom-3 right-3 bg-black/75 backdrop-blur-md text-white text-[10px] font-mono px-2 py-0.5 rounded-full flex items-center gap-1">
-                          <Eye size={12} className="text-[#F97316]" /> {story.seenCount} views
-                        </span>
-                      </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {filteredGallery.map((item, idx) => (
+                <div
+                  key={item.id}
+                  onClick={() => handleCardClick(item, idx)}
+                  className="bg-white rounded-[22px] border border-gray-200 overflow-hidden shadow-xs hover:border-[#F97316] hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between relative"
+                >
+                  {/* Image Card Container */}
+                  <div className="relative aspect-square bg-white overflow-hidden flex items-center justify-center border-b border-gray-100 p-2">
+                    <img
+                      src={item.mediaUrl}
+                      alt={item.title}
+                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                    />
 
-                      {/* Card Content */}
-                      <div className="p-4 space-y-2">
-                        <h3 className="font-heading font-black text-base text-[#111111] group-hover:text-[#F97316] transition-colors leading-tight">
-                          {story.title}
-                        </h3>
-                        {story.subtitle && (
-                          <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
-                            {story.subtitle}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+                    {/* Category Tag */}
+                    <span className="absolute top-2 left-2 bg-[#111111]/85 backdrop-blur-md text-white text-[9px] font-mono font-bold px-2 py-0.5 rounded-full uppercase">
+                      {item.category}
+                    </span>
 
-                    {/* Card Actions & Social Footer */}
-                    <div className="p-4 pt-0 space-y-3 border-t border-gray-100 mt-2">
-                      <div className="flex items-center justify-between pt-2 text-xs">
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={(e) => toggleLike(e, story.id)}
-                            className="flex items-center gap-1 text-gray-600 hover:text-red-500 font-mono text-xs font-bold transition-colors"
-                          >
-                            <Heart size={16} className={isLiked ? 'fill-red-500 text-red-500' : ''} />
-                            <span>{likesCount}</span>
-                          </button>
-
-                          <button
-                            onClick={(e) => handleShare(e, story.title)}
-                            className="flex items-center gap-1 text-gray-500 hover:text-black font-mono text-xs transition-colors"
-                          >
-                            <Share2 size={16} />
-                            <span>Share</span>
-                          </button>
-                        </div>
-
-                        <span className="text-[10px] font-mono text-gray-400">
-                          {new Date(story.createdAt).toLocaleDateString('en-IN')}
-                        </span>
-                      </div>
-
-                      {/* Quick Action Links */}
-                      <div className="grid grid-cols-2 gap-2" onClick={(e) => e.stopPropagation()}>
-                        <a
-                          href="https://wa.me/919659286268"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-[#25D366] hover:bg-[#20ba5a] text-white text-[11px] font-heading font-black py-2 rounded-xl flex items-center justify-center gap-1 shadow-xs"
-                        >
-                          <MessageCircle size={14} /> WhatsApp
-                        </a>
-
-                        <button
-                          onClick={() => navigate('/customer/gallery')}
-                          className="bg-[#111111] hover:bg-[#F97316] text-white text-[11px] font-heading font-black py-2 rounded-xl flex items-center justify-center gap-1 shadow-xs transition-colors"
-                        >
-                          <ImageIcon size={14} /> View Gallery
-                        </button>
-                      </div>
-
-                    </div>
-
+                    {/* Folder Badge if Multiple Images */}
+                    {item.isFolder && (
+                      <span className="absolute top-2 right-2 bg-[#F97316] text-white text-[9px] font-heading font-black px-2 py-0.5 rounded-full shadow-md flex items-center gap-1">
+                        📁 {item.images?.length || 2} Photos Folder
+                      </span>
+                    )}
                   </div>
-                );
-              })}
+
+                  <div className="p-3 space-y-1">
+                    <h3 className="font-heading font-black text-xs text-[#111111] group-hover:text-[#F97316] transition-colors leading-snug line-clamp-2">
+                      {item.title}
+                    </h3>
+                    <div className="flex items-center justify-between pt-1 text-[10px] text-gray-400 font-mono">
+                      <span>{item.date}</span>
+                      <span className="text-[#F97316] font-bold group-hover:underline">
+                        {item.isFolder ? 'Open Folder 📁' : 'Full View 🔍'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
-
         </div>
 
       </div>
 
-      {/* 4. FULL-SCREEN STORY VIEWER MODAL */}
+      {/* 6. FULL-SCREEN STORY VIEWER MODAL */}
       {activeStoryIndex !== null && (
         <StatusStoryViewer
           stories={activeStories}
@@ -266,6 +466,15 @@ export const CustomerStatusPage: React.FC = () => {
           onStorySeen={incrementSeenCount}
         />
       )}
+
+      {/* 7. FULL-SCREEN GALLERY IMAGE VIEWER MODAL WITH ROTATE & ZOOM */}
+      <ImageViewerModal
+        images={galleryImageUrls}
+        initialIndex={viewerIndex}
+        isOpen={viewerOpen}
+        onClose={() => setViewerOpen(false)}
+        title={filteredGallery[viewerIndex]?.title}
+      />
 
     </div>
   );

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useProducts } from '../../context/ProductContext';
 import { useAuth } from '../../context/AuthContext';
-import { PublicNavbar } from '../../components/layout/PublicNavbar';
 import { PublicFooter } from '../../components/layout/PublicFooter';
 import { ImageViewerModal } from '../../components/common/ImageViewerModal';
 import { LoginRequiredModal } from '../../components/common/LoginRequiredModal';
@@ -29,7 +28,9 @@ import {
   Cpu,
   Check,
   Copy,
-  CheckCircle
+  CheckCircle,
+  AlertTriangle,
+  Clock
 } from 'lucide-react';
 
 export const PublicProductDetailPage: React.FC = () => {
@@ -105,7 +106,6 @@ export const PublicProductDetailPage: React.FC = () => {
   if (!product) {
     return (
       <div className="min-h-screen bg-[#F8F9FA] flex flex-col justify-between">
-        <PublicNavbar />
         <div className="p-8 text-center bg-white rounded-[22px] shadow-xs border border-gray-200 my-12 max-w-lg mx-auto space-y-3 font-sans">
           <h2 className="font-heading font-black text-lg text-[#111111]">Product Showcase Not Found</h2>
           <button
@@ -148,7 +148,7 @@ export const PublicProductDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-[#111111] font-sans antialiased flex flex-col selection:bg-[#F97316] selection:text-white">
-      <PublicNavbar />
+
 
       {/* Glassmorphism Sticky Header on Scroll */}
       <AnimatePresence>
@@ -208,13 +208,13 @@ export const PublicProductDetailPage: React.FC = () => {
           {/* Left Column: Images */}
           <div className="lg:col-span-6 space-y-4 sticky top-20">
             <div
-              className="relative aspect-square rounded-[26px] overflow-hidden bg-white border border-gray-200/90 shadow-md cursor-pointer group"
+              className="relative aspect-square rounded-[26px] overflow-hidden bg-white border border-gray-200/90 shadow-md cursor-pointer group flex items-center justify-center"
               onClick={() => setIsViewerOpen(true)}
             >
               <img
                 src={product.images[selectedImageIndex] || product.images[0]}
                 alt={product.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500"
               />
               <div className="absolute bottom-4 right-4 bg-black/80 backdrop-blur-md text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-md">
                 <Maximize2 size={15} /> View Full Screen ({selectedImageIndex + 1}/{product.images.length})
@@ -227,11 +227,11 @@ export const PublicProductDetailPage: React.FC = () => {
                   <button
                     key={idx}
                     onClick={() => setSelectedImageIndex(idx)}
-                    className={`w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all shrink-0 bg-white ${
+                    className={`w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all shrink-0 bg-white flex items-center justify-center ${
                       selectedImageIndex === idx ? 'border-[#F97316] ring-2 ring-[#F97316]/30' : 'border-gray-200 opacity-70'
                     }`}
                   >
-                    <img src={img} alt={`Thumb ${idx + 1}`} className="w-full h-full object-cover" />
+                    <img src={img} alt={`Thumb ${idx + 1}`} className="w-full h-full object-contain p-1" />
                   </button>
                 ))}
               </div>
@@ -241,13 +241,41 @@ export const PublicProductDetailPage: React.FC = () => {
           {/* Right Column: Information & Pricing */}
           <div className="lg:col-span-6 space-y-6">
             <div className="space-y-2">
-              <span className="text-[#F97316] font-mono text-xs font-bold uppercase tracking-widest">
-                {product.category} • Kallimandhayam Factory
-              </span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[#F97316] font-mono text-xs font-bold uppercase tracking-widest">
+                  {product.category} • Kallimandhayam Shop
+                </span>
+
+                {/* Stock Status Badge */}
+                {product.stock > 0 && product.stock <= 5 ? (
+                  <span className="bg-amber-100 text-amber-900 text-xs font-mono font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-amber-300 animate-pulse">
+                    <AlertTriangle size={13} className="text-amber-600" /> Low Stock: Only {product.stock} left!
+                  </span>
+                ) : product.stock > 5 ? (
+                  <span className="bg-green-100 text-green-800 text-xs font-mono font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-green-300">
+                    <CheckCircle size={13} /> In Stock ({product.stock} units ready)
+                  </span>
+                ) : (
+                  <span className="bg-orange-100 text-[#F97316] text-xs font-mono font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-orange-300">
+                    <Clock size={13} /> Custom Made to Order
+                  </span>
+                )}
+              </div>
               <h1 className="font-heading font-black text-2xl sm:text-3xl lg:text-4xl text-[#111111] leading-tight">
                 {product.name}
               </h1>
             </div>
+
+            {/* Low Stock Warning Banner */}
+            {product.stock > 0 && product.stock <= 5 && (
+              <div className="bg-amber-50 border-2 border-amber-300 p-4 rounded-2xl flex items-center gap-3 text-xs font-sans text-amber-900 font-bold shadow-xs">
+                <AlertTriangle size={24} className="text-[#F97316] shrink-0" />
+                <div>
+                  <span className="text-xs font-black text-red-600 uppercase block tracking-wider">⚡ LOW STOCK ALERT</span>
+                  <span>Hurry! Only <strong className="font-mono text-sm text-[#111111]">{product.stock}</strong> items left in workshop ready stock. Place your order before stock runs out!</span>
+                </div>
+              </div>
+            )}
 
             <div className="bg-white p-5 rounded-[22px] border border-gray-200/90 shadow-xs space-y-3">
               <div className="flex items-baseline justify-between">
@@ -308,35 +336,22 @@ export const PublicProductDetailPage: React.FC = () => {
               </a>
             </div>
 
-            {/* Razorpay Trust */}
-            <div className="bg-white p-5 rounded-[22px] border border-gray-200 shadow-xs space-y-2 text-xs font-mono">
-              <div className="flex items-center gap-2 font-bold text-[#111111]">
-                <Lock size={16} className="text-[#F97316]" /> 100% Secure Payments by Razorpay
-              </div>
-              <p className="text-gray-500">UPI, Credit/Debit Card, Net Banking, EMI Available.</p>
-            </div>
           </div>
         </div>
 
-        {/* Technical Specs Table */}
+        {/* Simple Product Overview & Details */}
         <div className="bg-white rounded-[26px] border border-gray-200 p-6 sm:p-8 shadow-xs space-y-4">
           <h2 className="font-heading font-black text-lg text-[#111111] uppercase tracking-wider flex items-center gap-2">
-            <Layers size={18} className="text-[#F97316]" /> Technical Specifications
+            <Sparkles size={18} className="text-[#F97316]" /> Product Overview & Description
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-xs font-mono">
-            {[
-              { key: 'Primary Material', val: product.specifications.material || 'Carbon Steel' },
-              { key: 'Dimensions / Size', val: selectedSizeOpt.label },
-              { key: 'Estimated Weight', val: selectedSizeOpt.weight },
-              { key: 'Surface Coating', val: product.specifications.finish || 'Industrial Powder Coat' },
-              { key: 'Warranty Period', val: '5 Years Structural Guarantee' },
-              { key: 'Country of Origin', val: 'Made in India (Kallimandhayam)' }
-            ].map((spec, idx) => (
-              <div key={idx} className="flex justify-between py-2 border-b border-gray-100">
-                <span className="text-gray-500 font-bold">{spec.key}:</span>
-                <span className="text-[#111111] font-bold">{spec.val}</span>
-              </div>
-            ))}
+          <div className="text-xs sm:text-sm text-gray-700 leading-relaxed font-sans space-y-3">
+            <p className="leading-relaxed text-gray-800 font-medium">
+              {product.description}
+            </p>
+            <div className="bg-orange-50/60 border border-orange-200 p-3.5 rounded-2xl flex items-center gap-2 text-xs font-mono text-orange-950">
+              <CheckCircle2 size={16} className="text-[#F97316] shrink-0" />
+              <span>Forged and custom fabricated at MANIKANDAN LATHE workshop in Kallimandhayam.</span>
+            </div>
           </div>
         </div>
 

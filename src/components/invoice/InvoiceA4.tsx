@@ -27,7 +27,6 @@ export const InvoiceA4: React.FC<InvoiceA4Props> = ({ order, containerRef }) => 
       <InvoiceItems order={order} />
       <InvoiceSummary order={order} />
       <InvoicePayments order={order} />
-      <InvoiceTimeline order={order} />
       <InvoiceFooter order={order} />
     </div>
   );

@@ -9,6 +9,8 @@ import {
   insertPayment,
   updateOrderStatus as dbUpdateStatus,
   upsertCustomerProfile,
+  deleteOrderFromDb,
+  deleteOrdersFromDb,
 } from '../services/supabaseService';
 import {
   generateOnlineOrderNumber,
@@ -70,6 +72,7 @@ interface OrderContextType {
       notes?: string;
     }
   ) => Promise<PaymentTransaction>;
+  updateOrderDiscount: (orderId: string, additionalDiscount: number) => Promise<void>;
 
   updateOrderStatus: (orderId: string, status: OrderStatus, logMessage?: string) => Promise<void>;
   updateOrderPriority: (orderId: string, priority: Order['priority']) => Promise<void>;
@@ -78,6 +81,8 @@ interface OrderContextType {
   assignDeliveryDetails: (orderId: string, details: DeliveryDetails) => Promise<void>;
   uploadCompletedImages: (orderId: string, images: string[]) => Promise<void>;
   cancelOrder: (orderId: string, reason?: string) => Promise<void>;
+  deleteOrder: (orderId: string) => Promise<void>;
+  bulkDeleteOrders: (orderIds: string[]) => Promise<void>;
   getOrderById: (orderId: string) => Order | undefined;
   getCustomerOrders: (phone: string) => Order[];
   saveDraftOrder: (draft: any) => void;
@@ -126,7 +131,18 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // ─── Helpers ────────────────────────────────────────────────────────────
 
-  const getOrderById = (orderId: string) => orders.find((o) => o.id === orderId);
+  const getOrderById = (orderId: string) => {
+    if (!orderId) return undefined;
+    const cleanId = orderId.replace(/^#/, '').trim();
+    return orders.find(
+      (o) =>
+        o.id === orderId ||
+        o.id === cleanId ||
+        o.orderNumber === orderId ||
+        o.orderNumber === `#${cleanId}` ||
+        o.orderNumber.replace(/^#/, '') === cleanId
+    );
+  };
   const getCustomerOrders = (phone: string) => {
     const last10 = phone.replace(/\D/g, '').slice(-10);
     return orders.filter((o) => o.customerPhone.replace(/\D/g, '').slice(-10) === last10);
@@ -318,6 +334,20 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return payment;
   };
 
+  const updateOrderDiscount = async (orderId: string, additionalDiscount: number) => {
+    const o = getOrderById(orderId);
+    if (!o) return;
+    const newReduced = (o.reducedAmount || 0) + additionalDiscount;
+    const newFinalPrice = Math.max(0, (o.basePrice || o.finalPrice) - newReduced);
+    const newBalance = Math.max(0, newFinalPrice - o.advancePaid);
+    await supabase.from('orders').update({
+      reduced_amount: newReduced,
+      final_price: newFinalPrice,
+      remaining_balance: newBalance,
+    }).eq('id', orderId);
+    await refreshOrders();
+  };
+
 
   const logOrderActivity = async (orderId: string, action: string, performedBy: string, details?: string) => {
     const o = getOrderById(orderId);
@@ -503,16 +533,27 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const deleteOrder = async (orderId: string) => {
+    await deleteOrderFromDb(orderId);
+    setOrders((prev) => prev.filter((o) => o.id !== orderId));
+  };
+
+  const bulkDeleteOrders = async (orderIds: string[]) => {
+    await deleteOrdersFromDb(orderIds);
+    setOrders((prev) => prev.filter((o) => !orderIds.includes(o.id)));
+  };
+
   return (
     <OrderContext.Provider value={{
       orders, loading, refreshOrders,
       createOrder, createOfflineOrder,
       adminAcceptOrder, adminRejectOrder,
-      addPaymentToOrder, updateOrderStatus,
+      addPaymentToOrder, updateOrderDiscount, updateOrderStatus,
       updateOrderPriority, updateOrderProduction,
       logOrderActivity, saveDraftOrder, getDraftOrders, deleteDraftOrder,
       createPaymentRequest, payPaymentRequest, cancelPaymentRequest,
       assignDeliveryDetails, uploadCompletedImages, cancelOrder,
+      deleteOrder, bulkDeleteOrders,
       getOrderById, getCustomerOrders,
     }}>
       {children}

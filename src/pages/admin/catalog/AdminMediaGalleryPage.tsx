@@ -191,7 +191,7 @@ export const AdminMediaGalleryPage: React.FC = () => {
                       <Film size={24} className="text-white" />
                     </div>
                   ) : (
-                    <img src={m.url} alt={m.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <img src={m.url} alt={m.title} className="w-full h-full object-contain p-1 bg-gray-100 group-hover:scale-105 transition-transform duration-300" />
                   )}
                   {!m.visible && <div className="absolute inset-0 bg-black/40 flex items-center justify-center"><EyeOff size={20} className="text-white/70" /></div>}
                   {m.featured && <div className="absolute top-2 left-2"><Star size={14} className="text-[#F97316] fill-[#F97316]" /></div>}

@@ -140,8 +140,8 @@ export const RegisterPage: React.FC = () => {
       {/* Top Left ONLY: Back to Website */}
       <div className="w-full max-w-7xl mx-auto flex items-center justify-start">
         <button
-          onClick={() => navigate('/')}
-          className="inline-flex items-center gap-1.5 bg-white hover:bg-gray-100 text-[#111111] text-xs font-heading font-black px-4 py-2 rounded-xl border border-gray-200 shadow-xs transition-all active:scale-95"
+          onClick={() => navigate('/landing')}
+          className="inline-flex items-center gap-1.5 bg-white hover:bg-[#111111] hover:text-white text-[#111111] text-xs font-heading font-black px-4 py-2.5 rounded-xl border border-gray-200 shadow-xs transition-all active:scale-95 cursor-pointer"
         >
           <ArrowLeft size={16} className="text-[#F97316]" /> Back to Website
         </button>
@@ -181,7 +181,7 @@ export const RegisterPage: React.FC = () => {
                 <input
                   type="text"
                   required
-                  autoFocus
+                  autoComplete="off"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Senthil Kumar"

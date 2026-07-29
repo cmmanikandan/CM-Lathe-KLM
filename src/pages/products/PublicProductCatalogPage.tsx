@@ -153,11 +153,11 @@ export const PublicProductCatalogPage: React.FC = () => {
                 className="bg-white rounded-[22px] border border-gray-200/80 p-3 shadow-xs flex flex-col justify-between cursor-pointer hover:border-[#F97316] transition-all group"
               >
                 <div>
-                  <div className="relative rounded-2xl overflow-hidden bg-gray-100 aspect-square">
+                  <div className="relative rounded-2xl overflow-hidden bg-gray-100 aspect-square flex items-center justify-center">
                     <img
                       src={product.images[0]}
                       alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300"
                     />
                     <span className="absolute top-2 left-2 bg-[#F97316] text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase">
                       {product.badgeText || 'Custom Forged'}

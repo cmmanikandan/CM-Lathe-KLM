@@ -82,7 +82,7 @@ import { AdminImportExportPage } from './pages/admin/catalog/AdminImportExportPa
 const ProtectedAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { role, isLoggedIn } = useAuth();
   if (!isLoggedIn || role !== 'admin') {
-    return <Navigate to="/admin/login" replace />;
+    return <Navigate to="/login?mode=admin" replace />;
   }
   return <AdminLayout>{children}</AdminLayout>;
 };
@@ -99,6 +99,17 @@ const ProtectedCustomerRoute: React.FC<{ children: React.ReactNode }> = ({ child
   return <CustomerLayout>{children}</CustomerLayout>;
 };
 
+// Smart Root Route Handler
+const RootRouteHandler: React.FC = () => {
+  const { isLoggedIn, role } = useAuth();
+  
+  if (isLoggedIn) {
+    return <Navigate to={role === 'admin' ? '/admin' : '/customer/home'} replace />;
+  }
+
+  return <PublicLandingPage />;
+};
+
 const AppContent: React.FC = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -108,12 +119,14 @@ const AppContent: React.FC = () => {
     <>
       <Routes>
         {/* 1. PUBLIC MARKETING WEBSITE ROUTES (No Login Required) */}
-        <Route path="/" element={<PublicLandingPage />} />
+        <Route path="/" element={<RootRouteHandler />} />
+        <Route path="/landing" element={<PublicLandingPage />} />
         <Route path="/about" element={<PublicAboutPage />} />
         <Route path="/services" element={<PublicServicesPage />} />
         <Route path="/products" element={<PublicProductCatalogPage />} />
         <Route path="/products/:id" element={<PublicProductDetailPage />} />
-        <Route path="/gallery" element={<PublicGalleryPage />} />
+        <Route path="/product/:id" element={<PublicProductDetailPage />} />
+        <Route path="/gallery" element={<Navigate to="/customer/status" replace />} />
         <Route path="/contact" element={<PublicContactPage />} />
 
         {/* PUBLIC SECURE INVOICE & RECEIPT ROUTES */}
@@ -142,7 +155,7 @@ const AppContent: React.FC = () => {
         <Route path="/customer/enquiries" element={<ProtectedCustomerRoute><CustomerEnquiriesPage /></ProtectedCustomerRoute>} />
         <Route path="/customer/refunds" element={<ProtectedCustomerRoute><CustomerRefundsPage /></ProtectedCustomerRoute>} />
         <Route path="/customer/status" element={<ProtectedCustomerRoute><CustomerStatusPage /></ProtectedCustomerRoute>} />
-        <Route path="/customer/gallery" element={<ProtectedCustomerRoute><CustomerGalleryPage /></ProtectedCustomerRoute>} />
+        <Route path="/customer/gallery" element={<Navigate to="/customer/status" replace />} />
         <Route path="/customer/wishlist" element={<ProtectedCustomerRoute><CustomerWishlistPage /></ProtectedCustomerRoute>} />
         <Route path="/customer/notifications" element={<ProtectedCustomerRoute><CustomerNotificationsPage /></ProtectedCustomerRoute>} />
         <Route path="/customer/profile" element={<ProtectedCustomerRoute><CustomerProfilePage /></ProtectedCustomerRoute>} />
@@ -154,7 +167,7 @@ const AppContent: React.FC = () => {
         <Route path="/profile" element={<Navigate to="/customer/profile" replace />} />
 
         {/* 4. ADMIN PORTAL ROUTES */}
-        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/admin/login" element={<Navigate to="/login?mode=admin" replace />} />
         <Route path="/admin" element={<ProtectedAdminRoute><AdminDashboardPage /></ProtectedAdminRoute>} />
         <Route path="/admin/enquiries" element={<ProtectedAdminRoute><AdminEnquiriesPage /></ProtectedAdminRoute>} />
         <Route path="/admin/orders" element={<ProtectedAdminRoute><AdminOrdersPage /></ProtectedAdminRoute>} />

@@ -163,14 +163,26 @@ export const fetchCustomerOrders = async (phone: string): Promise<Order[]> => {
   return orders;
 };
 
-/** Fetch a single order with items + payments */
+/** Fetch a single order with items + payments (by UUID or Order Number) */
 export const fetchOrderById = async (orderId: string): Promise<Order | null> => {
-  const { data: row, error } = await supabase.from('orders').select('*').eq('id', orderId).single();
-  if (error || !row) return null;
+  if (!orderId) return null;
+  const cleanId = orderId.replace(/^#/, '').trim();
 
+  let { data: row } = await supabase.from('orders').select('*').eq('id', cleanId).maybeSingle();
+  if (!row) {
+    const { data: rowNum } = await supabase
+      .from('orders')
+      .select('*')
+      .or(`order_number.eq.${cleanId},order_number.eq.#${cleanId}`)
+      .maybeSingle();
+    row = rowNum;
+  }
+  if (!row) return null;
+
+  const targetId = row.id;
   const [itemsRes, paymentsRes] = await Promise.all([
-    supabase.from('order_items').select('*').eq('order_id', orderId),
-    supabase.from('payment_transactions').select('*').eq('order_id', orderId).order('date', { ascending: true }),
+    supabase.from('order_items').select('*').eq('order_id', targetId),
+    supabase.from('payment_transactions').select('*').eq('order_id', targetId).order('date', { ascending: true }),
   ]);
 
   const items = (itemsRes.data || []).map((r) => mapOrderItem(r as Record<string, unknown>));
@@ -246,9 +258,114 @@ export const fetchGallery = async (): Promise<GalleryItem[]> => {
     description: r.description as string | undefined,
     mediaUrl: r.media_url as string,
     mediaType: r.media_type as 'image' | 'video',
-    isFeatured: r.is_featured as boolean,
+    isFeatured: Boolean(r.is_featured),
     createdAt: r.created_at as string,
   }));
+};
+
+export const insertGalleryItem = async (item: GalleryItem): Promise<GalleryItem | null> => {
+  const { data, error } = await supabase
+    .from('admin_gallery')
+    .insert({
+      id: item.id || `gal-${Date.now()}`,
+      title: item.title,
+      category: item.category,
+      description: item.description || null,
+      media_url: item.mediaUrl,
+      media_type: item.mediaType || 'image',
+      is_featured: item.isFeatured || false,
+      created_at: item.createdAt || new Date().toISOString(),
+    })
+    .select()
+    .single();
+
+  if (error || !data) {
+    console.error('insertGalleryItem DB error:', error);
+    return item;
+  }
+  return {
+    id: data.id as string,
+    title: data.title as string,
+    category: data.category as string,
+    description: data.description as string | undefined,
+    mediaUrl: data.media_url as string,
+    mediaType: data.media_type as 'image' | 'video',
+    isFeatured: Boolean(data.is_featured),
+    createdAt: data.created_at as string,
+  };
+};
+
+export const deleteGalleryItem = async (id: string): Promise<boolean> => {
+  const { error } = await supabase.from('admin_gallery').delete().eq('id', id);
+  if (error) {
+    console.error('deleteGalleryItem error:', error);
+    return false;
+  }
+  return true;
+};
+
+// ─── WRITE: BANNERS ─────────────────────────────────────────────────────────
+
+export interface DBBanner {
+  id: string;
+  title: string;
+  subtitle: string;
+  tag: string;
+  image: string;
+  createdAt?: string;
+}
+
+export const fetchBanners = async (): Promise<DBBanner[]> => {
+  const { data, error } = await supabase
+    .from('admin_banners')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error || !data) return [];
+  return data.map((r) => ({
+    id: r.id as string,
+    title: r.title as string,
+    subtitle: r.subtitle as string,
+    tag: r.tag as string,
+    image: r.image as string,
+    createdAt: r.created_at as string,
+  }));
+};
+
+export const insertBanner = async (banner: DBBanner): Promise<DBBanner | null> => {
+  const { data, error } = await supabase
+    .from('admin_banners')
+    .insert({
+      id: banner.id || `b-${Date.now()}`,
+      title: banner.title,
+      subtitle: banner.subtitle,
+      tag: banner.tag || 'AGRICULTURAL MACHINERY',
+      image: banner.image,
+      created_at: banner.createdAt || new Date().toISOString(),
+    })
+    .select()
+    .single();
+
+  if (error || !data) {
+    console.error('insertBanner DB error:', error);
+    return banner;
+  }
+  return {
+    id: data.id as string,
+    title: data.title as string,
+    subtitle: data.subtitle as string,
+    tag: data.tag as string,
+    image: data.image as string,
+    createdAt: data.created_at as string,
+  };
+};
+
+export const deleteBannerItem = async (id: string): Promise<boolean> => {
+  const { error } = await supabase.from('admin_banners').delete().eq('id', id);
+  if (error) {
+    console.error('deleteBannerItem error:', error);
+    return false;
+  }
+  return true;
 };
 
 // ─── WRITE: ORDERS ───────────────────────────────────────────────────────────
@@ -308,6 +425,20 @@ export const insertOrder = async (order: Order): Promise<void> => {
 export const updateOrderStatus = async (orderId: string, status: string, extraFields?: Record<string, unknown>): Promise<void> => {
   const { error } = await supabase.from('orders').update({ status, ...extraFields }).eq('id', orderId);
   if (error) console.error('updateOrderStatus error:', error);
+};
+
+export const deleteOrderFromDb = async (orderId: string): Promise<void> => {
+  await supabase.from('order_items').delete().eq('order_id', orderId);
+  await supabase.from('payment_transactions').delete().eq('order_id', orderId);
+  const { error } = await supabase.from('orders').delete().eq('id', orderId);
+  if (error) console.error('deleteOrderFromDb error:', error);
+};
+
+export const deleteOrdersFromDb = async (orderIds: string[]): Promise<void> => {
+  await supabase.from('order_items').delete().in('order_id', orderIds);
+  await supabase.from('payment_transactions').delete().in('order_id', orderIds);
+  const { error } = await supabase.from('orders').delete().in('id', orderIds);
+  if (error) console.error('deleteOrdersFromDb error:', error);
 };
 
 export const insertPayment = async (orderId: string, payment: PaymentTransaction): Promise<void> => {

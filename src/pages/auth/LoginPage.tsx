@@ -8,7 +8,7 @@ import { BrandLogo } from '../../components/common/BrandLogo';
 import { Mail, Lock, LogIn, ArrowLeft, Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
-  const { loginAsCustomer, loginAsAdmin, loginWithGoogle, isProfileComplete } = useAuth();
+  const { loginAsCustomer, loginAsAdmin, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -23,7 +23,7 @@ export const LoginPage: React.FC = () => {
   const [success, setSuccess] = useState(false);
 
   const isEmailValid = email.length > 0 && email.includes('@') && email.includes('.');
-  const isPasswordValid = password.length >= 6;
+  const isPasswordValid = password.length >= 4;
   const isFormValid = isEmailValid && isPasswordValid;
 
   const handleLogin = (e: React.FormEvent) => {
@@ -33,16 +33,16 @@ export const LoginPage: React.FC = () => {
     if (!email) { setErrorMsg('Please enter your email address.'); return; }
     if (!isEmailValid) { setErrorMsg('Invalid email format.'); return; }
     if (!password) { setErrorMsg('Please enter your password.'); return; }
-    if (password.length < 6) { setErrorMsg('Password must be at least 6 characters.'); return; }
 
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
       setSuccess(true);
       setTimeout(() => {
-        if (email.toLowerCase().includes('admin')) {
+        const lower = email.toLowerCase().trim();
+        if (lower.includes('admin') || lower === 'admin@manikandanlathe.com' || lower === 'admin@example.com') {
           loginAsAdmin();
-          navigate('/admin');
+          navigate('/admin', { replace: true });
         } else {
           loginAsCustomer(email.split('@')[0], '+91 96592 86268', email);
           navigate(from, { replace: true });
@@ -57,7 +57,6 @@ export const LoginPage: React.FC = () => {
       const result = await signInWithPopup(firebaseAuth, googleAuthProvider);
       const gUser = result.user;
 
-      // Call loginWithGoogle which sets profileCompleted based on existing data
       loginWithGoogle({
         googleUID: gUser.uid,
         googleName: gUser.displayName || 'Customer',
@@ -68,7 +67,6 @@ export const LoginPage: React.FC = () => {
       setLoading(false);
       setSuccess(true);
 
-      // Check profile completion / admin role AFTER loginWithGoogle updates state
       setTimeout(() => {
         const saved = localStorage.getItem('ml_user');
         if (saved) {
@@ -89,8 +87,7 @@ export const LoginPage: React.FC = () => {
         }
       }, 600);
 
-    } catch (err) {
-      // Firebase popup blocked or Google auth disabled in dev — fallback to mock
+    } catch {
       loginWithGoogle({
         googleUID: 'mock-uid-' + Date.now(),
         googleName: 'Google Customer',
@@ -99,24 +96,24 @@ export const LoginPage: React.FC = () => {
       });
       setLoading(false);
       setSuccess(true);
-      setTimeout(() => navigate('/profile-setup', { replace: true }), 600);
+      setTimeout(() => navigate('/customer/home', { replace: true }), 600);
     }
   };
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-[#111111] flex flex-col justify-between p-4 sm:p-6 antialiased selection:bg-[#F97316] selection:text-white">
 
-      {/* Back to Website */}
+      {/* Top Navbar: Back to Website Button */}
       <div className="w-full max-w-7xl mx-auto flex items-center justify-start">
         <button
-          onClick={() => navigate('/')}
-          className="inline-flex items-center gap-1.5 bg-white hover:bg-gray-100 text-[#111111] text-xs font-heading font-black px-4 py-2 rounded-xl border border-gray-200 shadow-xs transition-all active:scale-95"
+          onClick={() => navigate('/landing')}
+          className="inline-flex items-center gap-1.5 bg-white hover:bg-[#111111] hover:text-white text-[#111111] text-xs font-heading font-black px-4 py-2.5 rounded-xl border border-gray-200 shadow-xs transition-all active:scale-95 cursor-pointer"
         >
           <ArrowLeft size={16} className="text-[#F97316]" /> Back to Website
         </button>
       </div>
 
-      {/* Main Auth Card */}
+      {/* Main Universal Auth Card */}
       <div className="flex-1 flex items-center justify-center py-6">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
@@ -130,11 +127,11 @@ export const LoginPage: React.FC = () => {
                 <CheckCircle2 size={36} />
               </div>
               <h2 className="font-heading font-black text-2xl text-[#111111]">SIGN IN SUCCESSFUL!</h2>
-              <p className="text-xs text-gray-500 font-mono">Redirecting to your account...</p>
+              <p className="text-xs text-gray-500 font-mono">Opening your account portal...</p>
             </div>
           ) : (
             <>
-              {/* Brand */}
+              {/* Brand Header */}
               <div className="text-center space-y-3 flex flex-col items-center">
                 <BrandLogo size="login" className="justify-center" />
                 <div className="pt-2">
@@ -143,18 +140,18 @@ export const LoginPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Error */}
+              {/* Error Alert */}
               {errorMsg && (
                 <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl text-xs font-semibold flex items-center gap-2">
                   <AlertCircle size={14} /> {errorMsg}
                 </div>
               )}
 
-              {/* Google Sign-In — PROMINENT PRIMARY BUTTON */}
+              {/* Google Sign-In */}
               <button
                 onClick={handleGoogleLogin}
                 disabled={loading}
-                className="w-full bg-[#111111] hover:bg-[#222222] text-white font-heading font-black text-sm py-3.5 rounded-xl shadow-md flex items-center justify-center gap-3 transition-all active:scale-98 disabled:bg-gray-400"
+                className="w-full bg-[#111111] hover:bg-[#222222] text-white font-heading font-black text-sm py-3.5 rounded-xl shadow-md flex items-center justify-center gap-3 transition-all active:scale-98 disabled:bg-gray-400 cursor-pointer"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -172,7 +169,7 @@ export const LoginPage: React.FC = () => {
                 <div className="flex-grow border-t border-gray-200" />
               </div>
 
-              {/* Email/Password Form */}
+              {/* Universal Form */}
               <form onSubmit={handleLogin} className="space-y-4 text-xs font-sans">
                 <div>
                   <label className="font-bold text-gray-700 block mb-1">Email Address *</label>
@@ -181,7 +178,7 @@ export const LoginPage: React.FC = () => {
                     <input
                       type="email"
                       required
-                      autoFocus
+                      autoComplete="off"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="senthil@example.com"
@@ -204,12 +201,12 @@ export const LoginPage: React.FC = () => {
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
+                      autoComplete="new-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
                       className="w-full bg-gray-50 hover:bg-white focus:bg-white p-3 pl-10 pr-10 rounded-xl border border-gray-300 focus:border-[#F97316] outline-none font-medium text-gray-900 text-sm transition-colors"
                     />
-
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}

@@ -11,8 +11,18 @@ export const MobileBottomNav: React.FC = () => {
   const { orders: customerOrders } = useCustomerOrders(user?.phone || '');
   const { activeStories } = useStatus();
 
-  // Don't render mobile bottom nav on admin routes
-  if (location.pathname.startsWith('/admin')) {
+  const mainTabPaths = [
+    '/',
+    '/products',
+    '/status',
+    '/my-orders',
+    '/customer/orders',
+    '/profile',
+    '/login'
+  ];
+
+  // Only render on main primary tab routes
+  if (!mainTabPaths.includes(location.pathname)) {
     return null;
   }
 

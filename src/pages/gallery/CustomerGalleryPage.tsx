@@ -1,7 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ImageViewerModal } from '../../components/common/ImageViewerModal';
-import { ArrowLeft, Search, Share2, Eye, Sparkles } from 'lucide-react';
+import { fetchGallery } from '../../services/supabaseService';
+import { ArrowLeft, Search, Share2, Eye, Sparkles, Loader2 } from 'lucide-react';
+
+interface CustomerGalleryItem {
+  id: string | number;
+  title: string;
+  category: string;
+  image: string;
+  date: string;
+}
 
 export const CustomerGalleryPage: React.FC = () => {
   const navigate = useNavigate();
@@ -9,17 +18,45 @@ export const CustomerGalleryPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
+  const [customerGalleryItems, setCustomerGalleryItems] = useState<CustomerGalleryItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const categories = ['All', 'Workshop Progress', 'Completed Orders', 'Factory Machinery', 'Gate Installations'];
+  const categories = ['All', 'Workshop Progress', 'Completed Orders', 'Factory Machinery', 'Gate Installations', 'Steel Gates', 'Kalappai', 'Lathe Works'];
 
-  const customerGalleryItems = [
-    { id: 1, title: '9-Tine Kalappai Assembly Line', category: 'Workshop Progress', image: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80', date: '2026-07-25' },
-    { id: 2, title: 'Completed SS 304 Main Gate Delivery', category: 'Completed Orders', image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', date: '2026-07-23' },
-    { id: 3, title: 'High Precision Lathe Shaft Machining', category: 'Factory Machinery', image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80', date: '2026-07-20' },
-    { id: 4, title: 'Decorative Window Grill Fitting', category: 'Gate Installations', image: 'https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=800&q=80', date: '2026-07-18' },
-    { id: 5, title: 'Custom 5-Tine Cultivator Tines Forging', category: 'Workshop Progress', image: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80', date: '2026-07-15' },
-    { id: 6, title: 'Finished Structural Steel Security Door', category: 'Completed Orders', image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', date: '2026-07-12' }
-  ];
+  const loadGallery = async () => {
+    setLoading(true);
+    try {
+      const items = await fetchGallery();
+      if (items && items.length > 0) {
+        setCustomerGalleryItems(
+          items.map((i) => ({
+            id: i.id,
+            title: i.title,
+            category: i.category,
+            image: i.mediaUrl,
+            date: i.createdAt ? i.createdAt.split('T')[0] : '2026-07-25',
+          }))
+        );
+      } else {
+        setCustomerGalleryItems([
+          { id: 1, title: '9-Tine Kalappai Assembly Line', category: 'Workshop Progress', image: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80', date: '2026-07-25' },
+          { id: 2, title: 'Completed SS 304 Main Gate Delivery', category: 'Completed Orders', image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', date: '2026-07-23' },
+          { id: 3, title: 'High Precision Lathe Shaft Machining', category: 'Factory Machinery', image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80', date: '2026-07-20' },
+          { id: 4, title: 'Decorative Window Grill Fitting', category: 'Gate Installations', image: 'https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=800&q=80', date: '2026-07-18' },
+          { id: 5, title: 'Custom 5-Tine Cultivator Tines Forging', category: 'Workshop Progress', image: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80', date: '2026-07-15' },
+          { id: 6, title: 'Finished Structural Steel Security Door', category: 'Completed Orders', image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', date: '2026-07-12' }
+        ]);
+      }
+    } catch (err) {
+      console.error('CustomerGallery load error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadGallery();
+  }, []);
 
   const filteredItems = customerGalleryItems.filter(
     (item) => selectedCategory === 'All' || item.category === selectedCategory
@@ -83,8 +120,8 @@ export const CustomerGalleryPage: React.FC = () => {
             }}
             className="bg-white rounded-[22px] border border-gray-200/80 overflow-hidden shadow-xs hover:border-[#F97316] transition-all cursor-pointer group flex flex-col justify-between"
           >
-            <div className="relative aspect-square bg-gray-100 overflow-hidden">
-              <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+            <div className="relative aspect-square bg-gray-100 overflow-hidden flex items-center justify-center">
+              <img src={item.image} alt={item.title} className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300" />
               <span className="absolute top-2 left-2 bg-[#111111]/80 backdrop-blur-md text-white text-[8px] sm:text-[9px] font-mono font-bold px-2 py-0.5 rounded-full uppercase">
                 {item.category}
               </span>

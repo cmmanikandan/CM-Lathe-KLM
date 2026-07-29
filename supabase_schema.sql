@@ -224,6 +224,18 @@ CREATE TABLE admin_gallery (
 );
 
 -- --------------------------------------------------------------------
+-- TABLE 8: ADMIN BANNERS (HOMEPAGE HERO CAROUSEL BANNERS)
+-- --------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS admin_banners (
+  id VARCHAR(64) PRIMARY KEY DEFAULT ('b-' || extract(epoch from now())::bigint),
+  title TEXT NOT NULL,
+  subtitle TEXT NOT NULL,
+  tag TEXT NOT NULL DEFAULT 'AGRICULTURAL MACHINERY',
+  image TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- --------------------------------------------------------------------
 -- PERFORMANCE INDEXES
 -- --------------------------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_orders_customer_phone ON orders(customer_phone);
@@ -243,6 +255,7 @@ ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payment_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE status_stories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admin_gallery ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_banners ENABLE ROW LEVEL SECURITY;
 
 -- Allow Public & Anon Read/Write for complete PWA & Admin Portal functionality
 DROP POLICY IF EXISTS "Public Products Access" ON products;
@@ -252,12 +265,14 @@ DROP POLICY IF EXISTS "Public Order Items Access" ON order_items;
 DROP POLICY IF EXISTS "Public Payments Access" ON payment_transactions;
 DROP POLICY IF EXISTS "Public Stories Access" ON status_stories;
 DROP POLICY IF EXISTS "Public Gallery Access" ON admin_gallery;
+DROP POLICY IF EXISTS "Public Banners Access" ON admin_banners;
 
 CREATE POLICY "Public Products Access" ON products FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Profiles Access" ON customer_profiles FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Orders Access" ON orders FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Order Items Access" ON order_items FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Payments Access" ON payment_transactions FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public Banners Access" ON admin_banners FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Stories Access" ON status_stories FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Gallery Access" ON admin_gallery FOR ALL USING (true) WITH CHECK (true);
 

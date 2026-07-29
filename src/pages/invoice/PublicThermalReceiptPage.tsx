@@ -6,6 +6,7 @@ import { useOrders } from '../../context/OrderContext';
 import { InvoiceThermal } from '../../components/invoice/InvoiceThermal';
 import { InvoiceToolbar } from '../../components/invoice/InvoiceToolbar';
 import { useInvoicePdf } from '../../components/invoice/useInvoicePdf';
+import { printInvoiceElement } from '../../utils/printHelper';
 import { Loader2, AlertCircle } from 'lucide-react';
 import '../../components/invoice/print.css';
 
@@ -81,8 +82,8 @@ export const PublicThermalReceiptPage: React.FC = () => {
             navigate(`/invoice/${order.id}`);
           }
         }}
-        onPrint={() => window.print()}
-        onDownloadPdf={() => downloadPdf(receiptRef.current, order)}
+        onPrint={() => printInvoiceElement(receiptRef.current, true)}
+        onDownloadPdf={() => downloadPdf(receiptRef.current, order, 'THERMAL')}
         onClose={() => navigate(-1)}
         isGeneratingPdf={isGeneratingPdf}
       />

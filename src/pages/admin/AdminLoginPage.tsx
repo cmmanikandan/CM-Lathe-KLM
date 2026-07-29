@@ -75,6 +75,7 @@ export const AdminLoginPage: React.FC = () => {
                 <input
                   type="email"
                   required
+                  autoComplete="off"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@manikandanlathe.com"
@@ -90,6 +91,7 @@ export const AdminLoginPage: React.FC = () => {
                 <input
                   type="password"
                   required
+                  autoComplete="off"
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
                   placeholder="Enter admin passcode (e.g. 1234)"

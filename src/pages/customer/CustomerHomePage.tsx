@@ -72,8 +72,16 @@ export const CustomerHomePage: React.FC = () => {
     (o) => o.status !== 'COMPLETED' && o.status !== 'REJECTED'
   );
 
-  const recommendedProducts = products.filter((p) => p.isRecommended || p.isBestSelling).slice(0, 4);
-  const trendingProducts = products.filter((p) => p.isTrending || p.isReadyStock).slice(0, 4);
+  const recommendedProducts = (() => {
+    const rec = products.filter((p) => p.isRecommended || p.isBestSelling);
+    if (rec.length >= 2) return rec.slice(0, 4);
+    return products.filter((p) => p.status === 'Published' || !p.status).slice(0, 4);
+  })();
+  const trendingProducts = (() => {
+    const tr = products.filter((p) => p.isTrending || p.isReadyStock);
+    if (tr.length >= 2) return tr.slice(0, 4);
+    return products.filter((p) => p.status === 'Published' || !p.status).slice(4, 8);
+  })();
 
   // Check for active PENDING payment request across customer's orders
   const activePaymentRequest = customerOrders
@@ -290,87 +298,7 @@ export const CustomerHomePage: React.FC = () => {
         </div>
       </div>
 
-      {/* 5. QUICK ACTION GRID */}
-      <div>
-        <span className="text-[11px] font-heading font-black text-gray-400 uppercase tracking-wider block mb-2">
-          Customer Shortcuts
-        </span>
-        
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
-          <button
-            onClick={() => navigate('/customer/products')}
-            className="bg-white p-3 rounded-[22px] border border-gray-200/80 shadow-xs flex flex-col items-center justify-center gap-1.5 hover:border-[#F97316] transition-all active:scale-95"
-          >
-            <div className="w-9 h-9 rounded-full bg-orange-50 text-[#F97316] flex items-center justify-center">
-              <Package size={18} />
-            </div>
-            <span className="text-[11px] font-heading font-black text-[#111111]">Products</span>
-          </button>
 
-          <button
-            onClick={() => navigate('/customer/orders')}
-            className="bg-white p-3 rounded-[22px] border border-gray-200/80 shadow-xs flex flex-col items-center justify-center gap-1.5 hover:border-[#F97316] transition-all active:scale-95"
-          >
-            <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
-              <ShoppingBag size={18} />
-            </div>
-            <span className="text-[11px] font-heading font-black text-[#111111]">My Orders</span>
-          </button>
-
-          <button
-            onClick={() => navigate('/customer/status')}
-            className="bg-white p-3 rounded-[22px] border border-gray-200/80 shadow-xs flex flex-col items-center justify-center gap-1.5 hover:border-[#F97316] transition-all active:scale-95 relative"
-          >
-            <div className="w-9 h-9 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
-              <Flame size={18} className="animate-pulse" />
-            </div>
-            <span className="text-[11px] font-heading font-black text-[#111111]">Stories</span>
-            {activeStories.length > 0 && <span className="w-2 h-2 rounded-full bg-[#F97316] absolute top-2 right-4" />}
-          </button>
-
-          <button
-            onClick={() => navigate('/customer/gallery')}
-            className="bg-white p-3 rounded-[22px] border border-gray-200/80 shadow-xs flex flex-col items-center justify-center gap-1.5 hover:border-[#F97316] transition-all active:scale-95"
-          >
-            <div className="w-9 h-9 rounded-full bg-[#F97316]/10 text-[#F97316] flex items-center justify-center">
-              <Sparkles size={18} />
-            </div>
-            <span className="text-[11px] font-heading font-black text-[#111111]">Gallery</span>
-          </button>
-
-          <button
-            onClick={() => navigate('/customer/profile')}
-            className="bg-white p-3 rounded-[22px] border border-gray-200/80 shadow-xs flex flex-col items-center justify-center gap-1.5 hover:border-[#F97316] transition-all active:scale-95"
-          >
-            <div className="w-9 h-9 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center">
-              <CreditCard size={18} />
-            </div>
-            <span className="text-[11px] font-heading font-black text-[#111111]">Payments</span>
-          </button>
-
-          <a
-            href="tel:+919659286268"
-            className="bg-white p-3 rounded-[22px] border border-gray-200/80 shadow-xs flex flex-col items-center justify-center gap-1.5 hover:border-[#F97316] transition-all active:scale-95"
-          >
-            <div className="w-9 h-9 rounded-full bg-green-50 text-green-600 flex items-center justify-center">
-              <Phone size={18} />
-            </div>
-            <span className="text-[11px] font-heading font-black text-[#111111]">Call Shop</span>
-          </a>
-
-          <a
-            href="https://wa.me/919659286268"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-white p-3 rounded-[22px] border border-gray-200/80 shadow-xs flex flex-col items-center justify-center gap-1.5 hover:border-[#F97316] transition-all active:scale-95"
-          >
-            <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <MessageCircle size={18} />
-            </div>
-            <span className="text-[11px] font-heading font-black text-[#111111]">WhatsApp</span>
-          </a>
-        </div>
-      </div>
 
       {/* 6. WORKSHOP STORIES BUBBLES */}
       {activeStories.length > 0 && (
@@ -402,59 +330,107 @@ export const CustomerHomePage: React.FC = () => {
       )}
 
       {/* 7. RECOMMENDED PRODUCTS */}
-      <div className="space-y-3">
-        <div className="flex justify-between items-center">
-          <h3 className="font-heading font-black text-sm uppercase text-[#111111] flex items-center gap-1.5">
-            <Star size={16} className="text-[#F97316] fill-[#F97316]" /> Recommended Products
-          </h3>
-          <Link to="/customer/products" className="text-xs font-extrabold text-[#F97316]">See All</Link>
-        </div>
+      {recommendedProducts.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <h3 className="font-heading font-black text-sm uppercase text-[#111111] flex items-center gap-1.5">
+              <Star size={16} className="text-[#F97316] fill-[#F97316]" /> Recommended For You
+            </h3>
+            <Link to="/customer/products" className="text-xs font-extrabold text-[#F97316]">See All</Link>
+          </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
-          {recommendedProducts.map((p) => (
-            <div
-              key={p.id}
-              onClick={() => navigate(`/customer/products/${p.id}`)}
-              className="bg-white rounded-[22px] border border-gray-200/90 p-3 shadow-xs flex flex-col justify-between cursor-pointer hover:border-[#F97316] transition-all group relative"
-            >
-              <div>
-                {/* Compact Image Container */}
-                <div className="relative rounded-2xl overflow-hidden bg-gray-100 aspect-square max-h-48">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+            {recommendedProducts.map((p) => (
+              <div
+                key={p.id}
+                onClick={() => navigate(`/customer/products/${p.id}`)}
+                className="bg-white rounded-[22px] border border-gray-200/90 p-3 shadow-xs flex flex-col justify-between cursor-pointer hover:border-[#F97316] transition-all group relative"
+              >
+                <div>
+                  <div className="relative rounded-2xl overflow-hidden bg-gray-100 aspect-square max-h-48">
+                    <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    {p.badgeText && (
+                      <span className="absolute top-2 left-2 bg-[#F97316] text-white text-[8px] sm:text-[9px] font-black px-2 py-0.5 rounded-full uppercase">
+                        {p.badgeText}
+                      </span>
+                    )}
+                    <span className="absolute bottom-2 left-2 bg-black/70 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                      ★ {p.rating}
+                    </span>
+                  </div>
+
+                  <div className="mt-2.5 space-y-1">
+                    <h4 className="font-heading font-extrabold text-xs sm:text-sm text-[#111111] line-clamp-1 group-hover:text-[#F97316] transition-colors">
+                      {p.name}
+                    </h4>
+                    <p className="text-[10px] text-gray-500 font-mono line-clamp-1">{p.specifications.material}</p>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex items-center justify-between border-t border-gray-100 mt-2">
+                  <span className="font-heading font-black text-xs sm:text-sm text-[#F97316]">
+                    ₹{p.price.toLocaleString('en-IN')}
+                  </span>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); navigate(`/customer/products/${p.id}`); }}
+                    className="px-2.5 py-1 bg-[#111111] hover:bg-[#F97316] text-white text-[10px] sm:text-xs font-heading font-black rounded-xl shadow-xs transition-colors"
+                  >
+                    Order
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 8. TRENDING / READY STOCK PRODUCTS */}
+      {trendingProducts.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <h3 className="font-heading font-black text-sm uppercase text-[#111111] flex items-center gap-1.5">
+              <Flame size={16} className="text-[#F97316]" /> Trending & Ready Stock
+            </h3>
+            <Link to="/customer/products" className="text-xs font-extrabold text-[#F97316]">See All</Link>
+          </div>
+
+          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+            {trendingProducts.map((p) => (
+              <div
+                key={p.id}
+                onClick={() => navigate(`/customer/products/${p.id}`)}
+                className="shrink-0 w-36 sm:w-44 bg-white rounded-[18px] border border-gray-200/90 p-2.5 shadow-xs cursor-pointer hover:border-[#F97316] transition-all group"
+              >
+                <div className="relative rounded-xl overflow-hidden bg-gray-100 aspect-square mb-2">
                   <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  {p.badgeText && (
-                    <span className="absolute top-2 left-2 bg-[#F97316] text-white text-[8px] sm:text-[9px] font-black px-2 py-0.5 rounded-full uppercase">
-                      {p.badgeText}
+                  {p.isReadyStock && (
+                    <span className="absolute top-1.5 left-1.5 bg-green-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase">
+                      Ready
                     </span>
                   )}
-                  <span className="absolute bottom-2 left-2 bg-black/70 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
-                    ★ {p.rating}
-                  </span>
                 </div>
-
-                <div className="mt-2.5 space-y-1">
-                  <h4 className="font-heading font-extrabold text-xs sm:text-sm text-[#111111] line-clamp-1 group-hover:text-[#F97316] transition-colors">
-                    {p.name}
-                  </h4>
-                  <p className="text-[10px] text-gray-500 font-mono line-clamp-1">{p.specifications.material}</p>
-                </div>
+                <h4 className="font-heading font-bold text-[11px] text-[#111111] line-clamp-2 leading-tight group-hover:text-[#F97316] transition-colors">{p.name}</h4>
+                <span className="font-heading font-black text-xs text-[#F97316] mt-1 block">₹{p.price.toLocaleString('en-IN')}</span>
               </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-              <div className="pt-2 flex items-center justify-between border-t border-gray-100 mt-2">
-                <span className="font-heading font-black text-xs sm:text-sm text-[#F97316]">
-                  ₹{p.price.toLocaleString('en-IN')}
-                </span>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/customer/products/${p.id}`);
-                  }}
-                  className="px-2.5 py-1 bg-[#111111] hover:bg-[#F97316] text-white text-[10px] sm:text-xs font-heading font-black rounded-xl shadow-xs transition-colors"
-                >
-                  Order
-                </button>
-              </div>
-            </div>
-          ))}
+      {/* 9. QUICK CONTACT FOOTER */}
+      <div className="bg-[#111111] rounded-[22px] p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
+        <div>
+          <p className="font-heading font-black text-sm text-white">Need Custom Fabrication?</p>
+          <p className="text-[11px] text-gray-400 mt-0.5">Call or WhatsApp Chellamuthu K for a free workshop quote.</p>
+        </div>
+        <div className="flex gap-2 shrink-0">
+          <a href="tel:+919659286268" className="bg-[#F97316] text-white text-xs font-heading font-black px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow-sm">
+            <Phone size={13} /> Call Now
+          </a>
+          <a href="https://wa.me/919659286268" target="_blank" rel="noopener noreferrer"
+            className="bg-[#25D366] text-white text-xs font-heading font-black px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow-sm">
+            <MessageCircle size={13} /> WhatsApp
+          </a>
         </div>
       </div>
 

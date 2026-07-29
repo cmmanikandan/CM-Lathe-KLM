@@ -4,6 +4,7 @@ import { InvoiceToolbar } from '../invoice/InvoiceToolbar';
 import { InvoiceA4 } from '../invoice/InvoiceA4';
 import { InvoiceThermal } from '../invoice/InvoiceThermal';
 import { useInvoicePdf } from '../invoice/useInvoicePdf';
+import { printInvoiceElement } from '../../utils/printHelper';
 import '../invoice/print.css';
 
 interface PDFInvoiceModalProps {
@@ -29,11 +30,11 @@ export const PDFInvoiceModal: React.FC<PDFInvoiceModalProps> = ({ order, isOpen,
   if (!isOpen || !order) return null;
 
   const handlePrint = () => {
-    window.print();
+    printInvoiceElement(invoiceRef.current, activeTemplate === 'thermal');
   };
 
   const handleDownloadPDF = () => {
-    downloadPdf(invoiceRef.current, order);
+    downloadPdf(invoiceRef.current, order, activeTemplate === 'thermal' ? 'THERMAL' : 'A4');
   };
 
   return (

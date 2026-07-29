@@ -1,14 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PublicNavbar } from '../../components/layout/PublicNavbar';
 import { PublicFooter } from '../../components/layout/PublicFooter';
 import { ImageViewerModal } from '../../components/common/ImageViewerModal';
-import { Search, Filter, Share2, Eye, Play, Sparkles } from 'lucide-react';
+import { fetchGallery, GalleryItem as DBGalleryItem } from '../../services/supabaseService';
+import { Search, Filter, Share2, Eye, Play, Sparkles, Loader2 } from 'lucide-react';
+
+interface GalleryItem {
+  id: string | number;
+  title: string;
+  category: string;
+  type: string;
+  mediaUrl: string;
+  date: string;
+}
 
 export const PublicGalleryPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const categories = [
     'All',
@@ -24,16 +36,43 @@ export const PublicGalleryPage: React.FC = () => {
     'New Installations'
   ];
 
-  const galleryItems = [
-    { id: 1, title: '9-Tine Hardened Tractor Kalappai', category: 'Kalappai', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80', date: '2026-07-20' },
-    { id: 2, title: 'CNC Laser Cut SS 304 Main Safety Gate', category: 'Steel Gates', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', date: '2026-07-22' },
-    { id: 3, title: 'Precision Lathe Turning Machine Shafts', category: 'Lathe Works', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80', date: '2026-07-18' },
-    { id: 4, title: 'Decorative Security Window Grill', category: 'Windows Grill', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=800&q=80', date: '2026-07-15' },
-    { id: 5, title: 'Heavy Duty Structural Steel Door', category: 'Steel Doors', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', date: '2026-07-10' },
-    { id: 6, title: '5-Tine Compact Cultivator Assembly', category: 'Kalappai', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80', date: '2026-07-08' },
-    { id: 7, title: 'Industrial Lathe Bush & Bearing Fitting', category: 'Machine Works', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80', date: '2026-07-05' },
-    { id: 8, title: 'Kallimandhayam Factory Gate Installation', category: 'New Installations', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', date: '2026-07-01' }
-  ];
+  const loadGallery = async () => {
+    setLoading(true);
+    try {
+      const items = await fetchGallery();
+      if (items && items.length > 0) {
+        setGalleryItems(
+          items.map((i) => ({
+            id: i.id,
+            title: i.title,
+            category: i.category,
+            type: i.mediaType || 'image',
+            mediaUrl: i.mediaUrl,
+            date: i.createdAt ? i.createdAt.split('T')[0] : '2026-07-25',
+          }))
+        );
+      } else {
+        setGalleryItems([
+          { id: 1, title: '9-Tine Hardened Tractor Kalappai', category: 'Kalappai', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80', date: '2026-07-20' },
+          { id: 2, title: 'CNC Laser Cut SS 304 Main Safety Gate', category: 'Steel Gates', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', date: '2026-07-22' },
+          { id: 3, title: 'Precision Lathe Turning Machine Shafts', category: 'Lathe Works', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80', date: '2026-07-18' },
+          { id: 4, title: 'Decorative Security Window Grill', category: 'Windows Grill', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=800&q=80', date: '2026-07-15' },
+          { id: 5, title: 'Heavy Duty Structural Steel Door', category: 'Steel Doors', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', date: '2026-07-10' },
+          { id: 6, title: '5-Tine Compact Cultivator Assembly', category: 'Kalappai', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80', date: '2026-07-08' },
+          { id: 7, title: 'Industrial Lathe Bush & Bearing Fitting', category: 'Machine Works', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80', date: '2026-07-05' },
+          { id: 8, title: 'Kallimandhayam Factory Gate Installation', category: 'New Installations', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', date: '2026-07-01' }
+        ]);
+      }
+    } catch (err) {
+      console.error('Failed to load gallery:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadGallery();
+  }, []);
 
   const filteredItems = galleryItems.filter((item, idx) => {
     const matchesCat = selectedCategory === 'All' || item.category === selectedCategory || (selectedCategory === 'Latest Works' && idx < 4);
@@ -124,11 +163,11 @@ export const PublicGalleryPage: React.FC = () => {
                 onContextMenu={(e) => e.preventDefault()} // Disable right-click download
                 className="bg-white rounded-[22px] border border-gray-200/80 overflow-hidden shadow-xs hover:border-[#F97316] transition-all cursor-pointer group flex flex-col justify-between"
               >
-                <div className="relative aspect-square bg-gray-100 overflow-hidden">
+                <div className="relative aspect-square bg-gray-100 overflow-hidden flex items-center justify-center">
                   <img
                     src={item.mediaUrl}
                     alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 select-none"
+                    className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-500 select-none"
                     onContextMenu={(e) => e.preventDefault()}
                   />
                   <span className="absolute top-2 left-2 bg-[#111111]/80 backdrop-blur-md text-white text-[9px] font-mono font-bold px-2 py-0.5 rounded-full uppercase">

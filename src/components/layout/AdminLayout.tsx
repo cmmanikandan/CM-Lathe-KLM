@@ -77,8 +77,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     location.pathname.startsWith('/admin/import-export')
   );
 
-  const pendingOrdersCount = orders.filter(
-    (o) => o.status === 'PENDING' || o.status === 'ACCEPTED'
+  const onlineOrdersCount = orders.filter(
+    (o) => !o.isOfflineOrder && (o.orderType as string) !== 'POS' && o.orderType !== 'Quick Order'
   ).length;
 
   const pendingEnquiriesCount = enquiries.filter(
@@ -96,7 +96,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const topNavItems = [
     { name: 'Dashboard', path: '/admin', icon: LayoutDashboard, exact: true },
     { name: 'Enquiries', path: '/admin/enquiries', icon: FileText, badge: pendingEnquiriesCount },
-    { name: 'Orders', path: '/admin/orders', icon: ShoppingBag, badge: pendingOrdersCount },
+    { name: 'Orders', path: '/admin/orders', icon: ShoppingBag, badge: onlineOrdersCount },
     { name: 'Customer Directory', path: '/admin/customers', icon: Users },
   ];
 
@@ -104,7 +104,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const offlineNavItems = [
     { name: 'Quick Order (POS)', path: '/admin/offline-orders/quick', icon: ShoppingCart },
     { name: 'Advanced Fabrication', path: '/admin/offline-orders/advanced', icon: Hammer },
-    { name: 'Today Walk-in', path: '/admin/offline-orders/today', icon: ClipboardList },
+    { name: 'Offline Order', path: '/admin/offline-orders/today', icon: ClipboardList },
   ];
 
   // Catalog sub-items

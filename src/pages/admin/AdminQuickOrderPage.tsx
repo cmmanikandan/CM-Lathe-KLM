@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../../context/ProductContext';
 import { useOrders } from '../../context/OrderContext';
 import { Product, PaymentTransaction, Order } from '../../types';
 import { AdminPOSReceiptModal } from '../../components/common/AdminPOSReceiptModal';
 import { generateRazorpayQRData, createRazorpayPaymentLink } from '../../services/razorpayService';
+import { fetchAllCustomerProfiles } from '../../services/supabaseService';
 import {
   Zap,
   User,
@@ -24,18 +25,42 @@ import {
   Barcode,
   Layers,
   ArrowRight,
+  UserPlus,
+  Wrench,
+  AlertTriangle,
+  Send,
+  Check,
 } from 'lucide-react';
-
 
 export const AdminQuickOrderPage: React.FC = () => {
   const navigate = useNavigate();
   const { products } = useProducts();
   const { createOfflineOrder } = useOrders();
 
-  // Customer search & entry (optional)
+  // Customer List for Lookup
+  const [existingCustomers, setExistingCustomers] = useState<Array<{ name: string; phone: string; address?: string }>>([]);
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [showNewCustomerModal, setShowNewCustomerModal] = useState(false);
+
+  // Selected Customer Details
   const [customerPhone, setCustomerPhone] = useState('9876543210');
   const [customerName, setCustomerName] = useState('Walk-in Counter Customer');
   const [customerAddress, setCustomerAddress] = useState('Kallimandhayam Counter');
+
+  // New Customer Modal State
+  const [newCustName, setNewCustName] = useState('');
+  const [newCustPhone, setNewCustPhone] = useState('');
+  const [newCustAddress, setNewCustAddress] = useState('');
+
+  // Custom Work / Alteration Item Modal State
+  const [showCustomWorkModal, setShowCustomWorkModal] = useState(false);
+  const [customWorkName, setCustomWorkName] = useState('');
+  const [customWorkPrice, setCustomWorkPrice] = useState<number>(500);
+
+  // Unsaved Changes Navigation Guard Modal
+  const [showUnsavedGuardModal, setShowUnsavedGuardModal] = useState(false);
+  const [pendingNavigationPath, setPendingNavigationPath] = useState<string | null>(null);
 
   // Product Catalog Search & Category Filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -48,15 +73,18 @@ export const AdminQuickOrderPage: React.FC = () => {
       quantity: number;
       variantSize: string;
       unitPrice: number;
+      isCustomWork?: boolean;
     }>
   >([]);
 
   // Instant Discount
   const [discountAmount, setDiscountAmount] = useState<number>(0);
 
-  // Payment Selection: Cash, Dynamic QR, Manual UPI
-  const [paymentMode, setPaymentMode] = useState<'Cash' | 'UPI' | 'Razorpay'>('Cash');
+  // Payment Selection: Cash, Dynamic QR, Split, Partial
+  const [paymentMode, setPaymentMode] = useState<'Cash' | 'UPI' | 'Split' | 'Partial'>('Cash');
   const [cashReceived, setCashReceived] = useState<number>(0);
+  const [upiPaidAmount, setUpiPaidAmount] = useState<number>(0);
+  const [partialPaidAmount, setPartialPaidAmount] = useState<number>(0);
   const [utrNumber, setUtrNumber] = useState<string>('');
 
   // POS Submission & Receipt Modal
@@ -64,7 +92,15 @@ export const AdminQuickOrderPage: React.FC = () => {
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
 
-  // Categories list
+  // Fetch Existing Customers
+  useEffect(() => {
+    fetchAllCustomerProfiles().then((custs) => {
+      if (custs && custs.length > 0) {
+        setExistingCustomers(custs.map(c => ({ name: c.name, phone: c.phone, address: c.address })));
+      }
+    });
+  }, []);
+
   const categories = [
     'ALL',
     'Lathe Machine',
@@ -87,6 +123,12 @@ export const AdminQuickOrderPage: React.FC = () => {
     return matchesSearch && matchesCat;
   });
 
+  // Filter Customers
+  const filteredCustomers = existingCustomers.filter((c) =>
+    c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
+    c.phone.includes(customerSearch)
+  );
+
   // Cart operations
   const addToCart = (product: Product) => {
     setCart((prev) => {
@@ -102,11 +144,49 @@ export const AdminQuickOrderPage: React.FC = () => {
           product,
           quantity: 1,
           variantSize: product.variants?.[0]?.name || 'Standard',
-
           unitPrice: product.variants?.[0]?.price || product.price,
         },
       ];
     });
+  };
+
+  const addCustomWorkToCart = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customWorkName.trim()) {
+      alert('Please enter a custom work name.');
+      return;
+    }
+    const customProduct: Product = {
+      id: `custom-${Date.now()}`,
+      name: customWorkName.trim(),
+      category: 'Custom Fabrication',
+      price: customWorkPrice,
+      unit: 'Job',
+      stock: 999,
+      isReadyStock: true,
+      isMadeToOrder: false,
+      rating: 5,
+      reviewCount: 1,
+      views: 1,
+      images: ['https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=300&q=80'],
+      description: 'Custom lathe / alteration work',
+      specifications: { material: 'Custom Work', warranty: 'Standard Workshop Guarantee', color: 'Steel', size: 'Custom' },
+    };
+
+    setCart((prev) => [
+      ...prev,
+      {
+        product: customProduct,
+        quantity: 1,
+        variantSize: 'Custom Job',
+        unitPrice: customWorkPrice,
+        isCustomWork: true,
+      },
+    ]);
+
+    setCustomWorkName('');
+    setCustomWorkPrice(500);
+    setShowCustomWorkModal(false);
   };
 
   const updateQuantity = (productId: string, delta: number) => {
@@ -131,22 +211,43 @@ export const AdminQuickOrderPage: React.FC = () => {
   const subtotal = cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const grandTotal = Math.max(0, subtotal - discountAmount);
 
-  // Cash Return Calculator
-  const actualCashReceived = cashReceived > 0 ? cashReceived : grandTotal;
-  const balanceReturn = Math.max(0, actualCashReceived - grandTotal);
+  // Payment Breakdown Calculations
+  let advancePaid = grandTotal;
+  let cashAmount = grandTotal;
+  let upiAmount = 0;
 
-  // QR Code payload matching POS Grand Total
+  if (paymentMode === 'Split') {
+    cashAmount = cashReceived;
+    upiAmount = upiPaidAmount;
+    advancePaid = Math.min(grandTotal, cashAmount + upiAmount);
+  } else if (paymentMode === 'Partial') {
+    advancePaid = Math.min(grandTotal, partialPaidAmount);
+  }
+
+  const balanceDue = Math.max(0, grandTotal - advancePaid);
+  const actualCashReceived = paymentMode === 'Cash' && cashReceived > 0 ? cashReceived : grandTotal;
+  const balanceReturn = paymentMode === 'Cash' ? Math.max(0, actualCashReceived - grandTotal) : 0;
+
   const qrData = generateRazorpayQRData(
-    grandTotal,
+    paymentMode === 'Split' ? upiPaidAmount || grandTotal : grandTotal,
     `POS-${Date.now().toString().slice(-4)}`,
     customerName
   );
 
-  // Handle Instant POS Checkout
+  const handleProtectedNavigate = (targetPath: string) => {
+    if (cart.length > 0) {
+      setPendingNavigationPath(targetPath);
+      setShowUnsavedGuardModal(true);
+    } else {
+      navigate(targetPath);
+    }
+  };
+
+  // Save POS Bill
   const handleGeneratePOSBill = async (e: React.FormEvent) => {
     e.preventDefault();
     if (cart.length === 0) {
-      alert('Please add at least 1 product to the cart before generating POS bill.');
+      alert('Please add at least 1 product or custom work item before generating POS bill.');
       return;
     }
 
@@ -156,7 +257,6 @@ export const AdminQuickOrderPage: React.FC = () => {
         productId: item.product.id,
         productName: item.product.name,
         image: (item.product.images && item.product.images[0]) || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=300&q=80',
-
         variant: {
           size: item.variantSize,
           price: item.unitPrice,
@@ -164,9 +264,11 @@ export const AdminQuickOrderPage: React.FC = () => {
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         totalPrice: item.unitPrice * item.quantity,
+        isPosItem: true,
       }));
 
-      // Instant 100% full payment for POS Ready-made sale
+      const payModeString = paymentMode === 'Split' ? 'Split (Cash+UPI)' : paymentMode;
+
       const newOrder = await createOfflineOrder(
         customerName || 'Walk-in Counter Customer',
         customerPhone || '9876543210',
@@ -174,12 +276,12 @@ export const AdminQuickOrderPage: React.FC = () => {
         orderItems,
         subtotal,
         discountAmount,
-        grandTotal, // Full 100% advance paid for POS sale
-        paymentMode as PaymentTransaction['mode'],
+        advancePaid,
+        payModeString as any,
         'Counter Billing Staff',
         new Date().toISOString().split('T')[0],
         {
-          notes: `POS Counter Bill | Cash Recd: ₹${actualCashReceived} | Change: ₹${balanceReturn}`,
+          notes: `POS Counter Bill | Payment Mode: ${payModeString} | Recd: ₹${advancePaid} | Balance: ₹${balanceDue}`,
         }
       );
 
@@ -215,11 +317,17 @@ export const AdminQuickOrderPage: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => navigate('/admin/offline-orders/today')}
+              onClick={() => setShowCustomWorkModal(true)}
+              className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs px-4 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer"
+            >
+              <Wrench size={15} /> + Custom Work / Alteration
+            </button>
+
+            <button
+              onClick={() => handleProtectedNavigate('/admin/offline-orders/today')}
               className="bg-white/10 hover:bg-white/20 text-white font-heading font-bold text-xs px-4 py-2.5 rounded-xl border border-white/10 flex items-center gap-1.5 cursor-pointer"
             >
-              Today's POS Sales
-
+              Today's Offline Orders
             </button>
           </div>
         </div>
@@ -229,21 +337,30 @@ export const AdminQuickOrderPage: React.FC = () => {
       <div className="max-w-7xl mx-auto p-4 sm:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
-          {/* LEFT PANEL (COL-SPAN-7): PRODUCT CATALOG GRID */}
+          {/* LEFT PANEL: PRODUCT CATALOG GRID */}
           <div className="lg:col-span-7 space-y-4">
             
             {/* Search & Barcode Bar */}
             <div className="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs space-y-3">
-              <div className="relative">
-                <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search Product Name, Category, SKU or scan Barcode..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-gray-50 hover:bg-white focus:bg-white text-xs p-3 pl-10 rounded-xl border border-gray-300 font-medium text-gray-900 outline-none focus:border-[#F97316] transition-colors"
-                />
-                <Barcode size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#F97316]" />
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search Product Name, Category, SKU or scan Barcode..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-gray-50 hover:bg-white focus:bg-white text-xs p-3 pl-10 rounded-xl border border-gray-300 font-medium text-gray-900 outline-none focus:border-[#F97316] transition-colors"
+                  />
+                  <Barcode size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#F97316]" />
+                </div>
+
+                <button
+                  onClick={() => setShowCustomWorkModal(true)}
+                  className="bg-gray-900 hover:bg-black text-white font-heading font-black text-xs px-3.5 py-3 rounded-xl flex items-center gap-1 shrink-0 cursor-pointer"
+                >
+                  <Wrench size={14} className="text-[#F97316]" /> + Custom Work
+                </button>
               </div>
 
               {/* Category Pills Filter */}
@@ -293,7 +410,6 @@ export const AdminQuickOrderPage: React.FC = () => {
                       className="w-full h-28 rounded-xl object-cover border border-gray-100 group-hover:scale-102 transition-transform"
                     />
 
-
                     <div>
                       <span className="text-[9px] font-mono text-gray-400 font-bold uppercase block">
                         {product.category}
@@ -301,9 +417,19 @@ export const AdminQuickOrderPage: React.FC = () => {
                       <h4 className="font-heading font-bold text-xs text-[#111111] line-clamp-1 mt-0.5">
                         {product.name}
                       </h4>
-                      <span className="text-[10px] font-mono text-emerald-700 font-bold block mt-0.5">
-                        In Stock: 15 pcs
-                      </span>
+                      {product.stock > 0 && product.stock <= 5 ? (
+                        <span className="text-[10px] font-mono text-red-600 font-bold block mt-0.5 animate-pulse">
+                          ⚠️ Low Stock: Only {product.stock} left!
+                        </span>
+                      ) : product.stock > 5 ? (
+                        <span className="text-[10px] font-mono text-emerald-700 font-bold block mt-0.5">
+                          Stock: {product.stock} units ready ✓
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-mono text-orange-600 font-bold block mt-0.5">
+                          Custom Made to Order
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex items-center justify-between pt-1 border-t border-gray-100">
@@ -330,34 +456,81 @@ export const AdminQuickOrderPage: React.FC = () => {
 
           </div>
 
-          {/* RIGHT PANEL (COL-SPAN-5): POS COUNTER CHECKOUT */}
+          {/* RIGHT PANEL: POS COUNTER CHECKOUT */}
           <div className="lg:col-span-5 space-y-4">
             
             <form onSubmit={handleGeneratePOSBill} className="bg-white p-5 rounded-[24px] border border-gray-200 shadow-xl space-y-4 font-sans">
               
-              {/* Customer Lookup Header */}
-              <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-2 text-xs">
+              {/* Customer Directory Search & Select */}
+              <div className="p-3.5 bg-gray-50 rounded-2xl border border-gray-200 space-y-2.5 text-xs relative">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] font-mono text-gray-500 font-bold uppercase flex items-center gap-1">
-                    <User size={13} className="text-[#F97316]" /> Walk-in Customer Info
+                    <User size={13} className="text-[#F97316]" /> Customer Details
                   </span>
-                  <span className="text-[9px] font-mono text-emerald-700 font-bold">Counter Sale</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowNewCustomerModal(true)}
+                    className="text-[10px] font-heading font-bold text-[#F97316] hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <UserPlus size={12} /> + Add New Customer
+                  </button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                {/* Customer Directory Search Bar */}
+                <div className="relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Customer Name"
+                    placeholder="Search existing customer by Name or Phone..."
+                    value={customerSearch}
+                    onChange={(e) => {
+                      setCustomerSearch(e.target.value);
+                      setShowCustomerDropdown(true);
+                    }}
+                    onFocus={() => setShowCustomerDropdown(true)}
+                    className="w-full bg-white p-2 pl-9 rounded-xl border border-gray-300 font-medium text-xs outline-none"
+                  />
+
+                  {/* Dropdown list */}
+                  {showCustomerDropdown && filteredCustomers.length > 0 && (
+                    <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-20 max-h-40 overflow-y-auto divide-y divide-gray-100">
+                      {filteredCustomers.map((c, i) => (
+                        <div
+                          key={i}
+                          onClick={() => {
+                            setCustomerName(c.name);
+                            setCustomerPhone(c.phone);
+                            setCustomerAddress(c.address || 'Kallimandhayam Counter');
+                            setShowCustomerDropdown(false);
+                            setCustomerSearch('');
+                          }}
+                          className="p-2 hover:bg-orange-50 cursor-pointer text-xs flex justify-between items-center"
+                        >
+                          <span className="font-bold text-gray-900">{c.name}</span>
+                          <span className="font-mono text-gray-500 text-[11px]">{c.phone}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Auto-filled Selected Customer Inputs */}
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <input
+                    type="text"
+                    placeholder="Customer Name *"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="bg-white p-2 rounded-lg border border-gray-300 font-medium text-xs outline-none"
+                    className="bg-white p-2 rounded-xl border border-gray-300 font-medium text-xs outline-none focus:border-[#F97316]"
+                    required
                   />
                   <input
                     type="tel"
-                    placeholder="Mobile Number"
+                    placeholder="Mobile Number *"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="bg-white p-2 rounded-lg border border-gray-300 font-mono text-xs outline-none"
+                    className="bg-white p-2 rounded-xl border border-gray-300 font-mono text-xs outline-none focus:border-[#F97316]"
+                    required
                   />
                 </div>
               </div>
@@ -383,14 +556,15 @@ export const AdminQuickOrderPage: React.FC = () => {
                   <div className="p-8 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-300 text-gray-400 space-y-1">
                     <ShoppingBag size={28} className="mx-auto text-gray-300" />
                     <p className="text-xs font-bold">POS Cart is Empty</p>
-                    <p className="text-[10px]">Click products on the left to add items.</p>
+                    <p className="text-[10px]">Click products on the left or + Custom Work to add items.</p>
                   </div>
                 ) : (
                   <div className="max-h-56 overflow-y-auto divide-y divide-gray-100 pr-1 border rounded-xl">
                     {cart.map((item) => (
                       <div key={item.product.id} className="p-2.5 flex items-center justify-between gap-2 text-xs">
                         <div className="truncate flex-1">
-                          <strong className="font-heading font-bold text-gray-900 block truncate">
+                          <strong className="font-heading font-bold text-gray-900 block truncate flex items-center gap-1">
+                            {item.isCustomWork && <Wrench size={12} className="text-[#F97316] shrink-0" />}
                             {item.product.name}
                           </strong>
                           <span className="text-[10px] font-mono text-gray-500">₹{item.unitPrice} each</span>
@@ -461,11 +635,12 @@ export const AdminQuickOrderPage: React.FC = () => {
               {/* Payment Method Selector */}
               <div className="space-y-2">
                 <label className="font-bold text-xs text-gray-700 block">Choose Payment Method *</label>
-                <div className="grid grid-cols-3 gap-2 text-xs font-heading">
+                <div className="grid grid-cols-4 gap-1.5 text-xs font-heading">
                   {[
-                    { id: 'Cash', title: '1. Cash', icon: Banknote },
-                    { id: 'Razorpay', title: '2. Dynamic QR', icon: QrCode },
-                    { id: 'LINK', title: '3. Pay Link (WA)', icon: MessageCircle },
+                    { id: 'Cash', title: 'Cash', icon: Banknote },
+                    { id: 'UPI', title: 'UPI QR', icon: QrCode },
+                    { id: 'Split', title: 'Split Pay', icon: Layers },
+                    { id: 'Partial', title: 'Balance', icon: CreditCard },
                   ].map((m) => {
                     const Icon = m.icon;
                     const active = paymentMode === (m.id as any);
@@ -474,7 +649,7 @@ export const AdminQuickOrderPage: React.FC = () => {
                         type="button"
                         key={m.id}
                         onClick={() => setPaymentMode(m.id as any)}
-                        className={`p-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                        className={`p-2 rounded-xl font-bold flex flex-col items-center justify-center gap-1 border transition-all cursor-pointer text-[11px] ${
                           active
                             ? 'bg-[#F97316] text-white border-[#F97316] shadow-sm'
                             : 'bg-gray-100 text-gray-700 border-gray-200'
@@ -488,7 +663,7 @@ export const AdminQuickOrderPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* CASH PAYMENT RETURN CALCULATOR */}
+              {/* CASH PAYMENT CALCULATOR */}
               {paymentMode === 'Cash' && (
                 <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 space-y-2 font-mono text-xs">
                   <div className="flex justify-between items-center">
@@ -509,61 +684,80 @@ export const AdminQuickOrderPage: React.FC = () => {
                 </div>
               )}
 
-              {/* DYNAMIC QR CODE DISPLAY */}
-              {paymentMode === 'Razorpay' && (
-                <div className="p-3 bg-gray-50 rounded-2xl border border-gray-200 flex items-center gap-3 text-xs font-sans">
-                  <img src={qrData.qrCodeUrl} alt="POS QR" className="w-20 h-20 rounded-lg border border-gray-300 shrink-0" />
-                  <div>
-                    <strong className="text-gray-900 font-heading block">Scan QR to pay ₹{grandTotal.toLocaleString('en-IN')}</strong>
-                    <p className="text-[10px] text-gray-500">Supports GPay, PhonePe, Paytm, BHIM.</p>
+              {/* UPI DYNAMIC QR CODE */}
+              {paymentMode === 'UPI' && (
+                <div className="p-3 bg-gray-50 rounded-2xl border border-gray-200 space-y-2 text-xs font-sans">
+                  <div className="flex items-center gap-3">
+                    <img src={qrData.qrCodeUrl} alt="POS QR" className="w-20 h-20 rounded-lg border border-gray-300 shrink-0" />
+                    <div>
+                      <strong className="text-gray-900 font-heading block">Scan QR to pay ₹{grandTotal.toLocaleString('en-IN')}</strong>
+                      <p className="text-[10px] text-gray-500">Supports GPay, PhonePe, Paytm, BHIM.</p>
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Enter UTR / Transaction Ref No (Optional)"
+                    value={utrNumber}
+                    onChange={(e) => setUtrNumber(e.target.value)}
+                    className="w-full bg-white p-2 rounded-xl border border-gray-300 font-mono text-xs"
+                  />
+                </div>
+              )}
+
+              {/* SPLIT PAYMENT (CASH + UPI) */}
+              {paymentMode === 'Split' && (
+                <div className="p-3.5 bg-blue-50 rounded-2xl border border-blue-200 space-y-2 font-mono text-xs">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="font-bold text-blue-900 block">Cash Amount (₹):</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={cashReceived}
+                        onChange={(e) => setCashReceived(parseInt(e.target.value) || 0)}
+                        className="w-full bg-white p-2 rounded-lg border border-blue-300 font-bold text-right"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold text-blue-900 block">UPI Amount (₹):</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={upiPaidAmount}
+                        onChange={(e) => setUpiPaidAmount(parseInt(e.target.value) || 0)}
+                        className="w-full bg-white p-2 rounded-lg border border-blue-300 font-bold text-right"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center text-xs font-bold pt-1 border-t border-blue-200">
+                    <span>Total Paid: ₹{(cashReceived + upiPaidAmount).toLocaleString('en-IN')}</span>
+                    <span className={balanceDue > 0 ? 'text-red-600' : 'text-emerald-700'}>
+                      {balanceDue > 0 ? `Balance Due: ₹${balanceDue.toLocaleString('en-IN')}` : '✓ Fully Paid'}
+                    </span>
                   </div>
                 </div>
               )}
 
-              {/* PAYMENT LINK (WHATSAPP) DISPLAY */}
-              {(paymentMode as any) === 'LINK' && (() => {
-                const linkPayload = createRazorpayPaymentLink(
-                  `POS-${Date.now().toString().slice(-4)}`,
-                  grandTotal,
-                  customerName,
-                  customerPhone
-                );
-                return (
-                  <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-2 text-xs font-sans">
-                    <div className="flex justify-between items-center border-b border-emerald-200 pb-2">
-                      <span className="font-bold text-emerald-900 flex items-center gap-1">
-                        <MessageCircle size={14} className="text-[#25D366]" /> Razorpay WhatsApp Link
-                      </span>
-                      <span className="text-[10px] font-mono text-emerald-700">₹{grandTotal.toLocaleString('en-IN')}</span>
-                    </div>
-
-                    <p className="text-[11px] font-mono text-gray-600 truncate">{linkPayload.paymentLinkUrl}</p>
-
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                      <a
-                        href={linkPayload.whatsAppShareUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="py-2 bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
-                      >
-                        <MessageCircle size={14} /> Send WhatsApp
-                      </a>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          navigator.clipboard.writeText(linkPayload.paymentLinkUrl);
-                          alert('Payment link copied!');
-                        }}
-                        className="py-2 bg-gray-800 hover:bg-black text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-pointer"
-                      >
-                        Copy Link
-                      </button>
-                    </div>
+              {/* PARTIAL PAYMENT */}
+              {paymentMode === 'Partial' && (
+                <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 space-y-2 font-mono text-xs">
+                  <div className="flex justify-between items-center">
+                    <label className="font-bold text-amber-900">Amount Paid Now (₹):</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max={grandTotal}
+                      value={partialPaidAmount}
+                      onChange={(e) => setPartialPaidAmount(parseInt(e.target.value) || 0)}
+                      className="w-32 bg-white p-2 rounded-lg border border-amber-300 font-bold text-right outline-none"
+                    />
                   </div>
-                );
-              })()}
-
+                  <div className="flex justify-between items-center text-xs font-bold pt-1 border-t border-amber-200">
+                    <span className="text-amber-900">Remaining Balance Due:</span>
+                    <span className="text-red-600 font-heading font-black">₹{balanceDue.toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+              )}
 
               {/* GENERATE POS BILL BUTTON */}
               <button
@@ -580,6 +774,172 @@ export const AdminQuickOrderPage: React.FC = () => {
 
         </div>
       </div>
+
+      {/* NEW CUSTOMER MODAL */}
+      {showNewCustomerModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 font-sans shadow-2xl">
+            <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+              <h3 className="font-heading font-black text-base text-[#111111] flex items-center gap-2">
+                <UserPlus size={18} className="text-[#F97316]" /> Add New Customer
+              </h3>
+              <button onClick={() => setShowNewCustomerModal(false)} className="text-gray-400 hover:text-black">✕</button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="font-bold text-gray-700 block mb-1">Full Name *</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Manikandan P"
+                  value={newCustName}
+                  onChange={(e) => setNewCustName(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-gray-300 font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-gray-700 block mb-1">Mobile Number *</label>
+                <input
+                  type="tel"
+                  placeholder="e.g. 9842188412"
+                  value={newCustPhone}
+                  onChange={(e) => setNewCustPhone(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-gray-300 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-gray-700 block mb-1">Full Address / Location</label>
+                <textarea
+                  placeholder="e.g. Kallimandhayam Main Road"
+                  value={newCustAddress}
+                  onChange={(e) => setNewCustAddress(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-gray-300 font-medium h-20"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => setShowNewCustomerModal(false)}
+                className="flex-1 py-2.5 bg-gray-100 text-gray-700 font-bold text-xs rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (!newCustName || !newCustPhone) {
+                    alert('Please enter both name and mobile number.');
+                    return;
+                  }
+                  setCustomerName(newCustName);
+                  setCustomerPhone(newCustPhone);
+                  setCustomerAddress(newCustAddress || 'Kallimandhayam Counter');
+                  setShowNewCustomerModal(false);
+                  setNewCustName('');
+                  setNewCustPhone('');
+                  setNewCustAddress('');
+                }}
+                className="flex-1 py-2.5 bg-[#F97316] text-white font-bold text-xs rounded-xl shadow-md"
+              >
+                Save & Select Customer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CUSTOM WORK / ALTERATION MODAL */}
+      {showCustomWorkModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <form onSubmit={addCustomWorkToCart} className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 font-sans shadow-2xl">
+            <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+              <h3 className="font-heading font-black text-base text-[#111111] flex items-center gap-2">
+                <Wrench size={18} className="text-[#F97316]" /> Add Custom Work / Alteration Item
+              </h3>
+              <button type="button" onClick={() => setShowCustomWorkModal(false)} className="text-gray-400 hover:text-black">✕</button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="font-bold text-gray-700 block mb-1">Work / Job Title *</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Lathe Shaft Repair / Welding Work / Fitting Charge"
+                  value={customWorkName}
+                  onChange={(e) => setCustomWorkName(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-gray-300 font-medium"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-gray-700 block mb-1">Price / Work Charge (₹) *</label>
+                <input
+                  type="number"
+                  min="1"
+                  placeholder="e.g. 500"
+                  value={customWorkPrice}
+                  onChange={(e) => setCustomWorkPrice(parseInt(e.target.value) || 0)}
+                  className="w-full p-2.5 rounded-xl border border-gray-300 font-mono font-bold text-sm"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowCustomWorkModal(false)}
+                className="flex-1 py-2.5 bg-gray-100 text-gray-700 font-bold text-xs rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 py-2.5 bg-[#F97316] text-white font-bold text-xs rounded-xl shadow-md"
+              >
+                Add to Cart
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* UNSAVED CHANGES GUARD MODAL */}
+      {showUnsavedGuardModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 font-sans shadow-2xl text-center">
+            <AlertTriangle size={40} className="mx-auto text-amber-500" />
+            <div className="space-y-1">
+              <h3 className="font-heading font-black text-lg text-[#111111]">Unsaved POS Bill</h3>
+              <p className="text-xs text-gray-600">
+                You have active items in your POS cart. Leaving will discard the current unsaved counter bill.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2 pt-2">
+              <button
+                onClick={() => setShowUnsavedGuardModal(false)}
+                className="py-2.5 bg-[#F97316] text-white font-heading font-black text-xs rounded-xl shadow-md"
+              >
+                Continue Editing Current Bill
+              </button>
+              <button
+                onClick={() => {
+                  setCart([]);
+                  setShowUnsavedGuardModal(false);
+                  if (pendingNavigationPath) navigate(pendingNavigationPath);
+                }}
+                className="py-2.5 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 font-bold text-xs rounded-xl"
+              >
+                Discard & Leave Page
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* POS RECEIPT MODAL */}
       <AdminPOSReceiptModal
@@ -600,3 +960,4 @@ export const AdminQuickOrderPage: React.FC = () => {
 };
 
 export default AdminQuickOrderPage;
+

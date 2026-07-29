@@ -12,19 +12,29 @@
   }
 
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background-color: var(--color-light-bg);
     color: var(--color-primary-black);
     overflow-x: hidden;
     touch-action: manipulation;
+    -webkit-font-smoothing: antialiased;
   }
 
   h1, h2, h3, h4, h5, h6, .font-heading {
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+    letter-spacing: -0.015em;
   }
 
+  /* Form Controls: Clean normal/medium font weight to prevent overly bold popups */
   input, textarea, select {
-    font-weight: 500;
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-weight: 400 !important;
+    color: #111111;
+  }
+
+  input::placeholder, textarea::placeholder {
+    font-weight: 400;
+    color: #9CA3AF;
   }
 }
 
@@ -97,6 +107,26 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Continuous slow moving marquee ticker (Right to Left) */
+@keyframes marqueeSlow {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee-slow {
+  display: flex;
+  width: max-content;
+  animation: marqueeSlow 32s linear infinite;
+}
+
+.animate-marquee-slow:hover {
+  animation-play-state: paused;
 }
 
 /* Printing styles for invoice */

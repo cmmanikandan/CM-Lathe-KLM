@@ -119,11 +119,10 @@ export const CustomerProfilePage: React.FC = () => {
     { label: 'Invoices Issued', value: ordersLoading ? '—' : orders.length, icon: FileText, iconColor: 'text-[#D97706]', bgColor: 'bg-[#FEF3C7]' }
   ];
 
-  // Tailored Menu Items (Wishlist placed below Orders & Invoices)
+  // Tailored Menu Items (Clean & Essential — Main Title Only)
   const menuItems = [
     {
       label: 'My Orders & Invoices',
-      subtitle: 'Track production status, view & download invoices',
       icon: Package,
       iconColor: 'text-[#2563EB]',
       bgColor: 'bg-[#DBEAFE]',
@@ -132,7 +131,6 @@ export const CustomerProfilePage: React.FC = () => {
     },
     {
       label: 'Wishlist',
-      subtitle: 'Saved favourite products, gallery works & stories',
       icon: Heart,
       iconColor: 'text-[#EF4444]',
       bgColor: 'bg-[#FEE2E2]',
@@ -140,40 +138,21 @@ export const CustomerProfilePage: React.FC = () => {
       badge: wishlistCount > 0 ? `${wishlistCount} Saved` : undefined
     },
     {
-      label: 'Live Workshop Status Stories',
-      subtitle: '24h live work progress & announcement updates',
+      label: 'Workshop Stories & Gallery',
       icon: Flame,
       iconColor: 'text-[#F97316]',
       bgColor: 'bg-[#FFEDD5]',
       path: '/customer/status'
     },
     {
-      label: 'Factory Completed Works Gallery',
-      subtitle: 'Masonry photos & installation videos',
-      icon: ImageIcon,
-      iconColor: 'text-[#4F46E5]',
-      bgColor: 'bg-[#E0E7FF]',
-      path: '/customer/gallery'
-    },
-    {
       label: 'WhatsApp Workshop Support',
-      subtitle: 'Direct chat with Chellamuthu K (+91 96592 86268)',
       icon: MessageCircle,
       iconColor: 'text-[#22C55E]',
       bgColor: 'bg-[#DCFCE7]',
       path: 'https://wa.me/919659286268'
     },
-    {
-      label: 'Share MANIKANDAN LATHE App',
-      subtitle: 'Share workshop app link with friends & family',
-      icon: Share2,
-      iconColor: 'text-[#9333EA]',
-      bgColor: 'bg-[#F3E8FF]',
-      action: 'share'
-    },
     ...(isAdminUser ? [{
       label: 'Open Admin Workshop Portal',
-      subtitle: 'Counter sales, status stories, payment ledger & order control',
       icon: ShieldCheck,
       iconColor: 'text-white',
       bgColor: 'bg-[#F97316]',
@@ -217,7 +196,7 @@ export const CustomerProfilePage: React.FC = () => {
                 <div className="relative group cursor-pointer" onClick={() => setPhotoModalOpen(true)}>
                   <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-[#F97316] to-[#111111] p-1 shadow-md relative overflow-hidden">
                     {displayAvatarUrl ? (
-                      <img src={displayAvatarUrl} alt={name} className="w-full h-full object-cover rounded-full" />
+                      <img src={displayAvatarUrl} alt={name} referrerPolicy="no-referrer" className="w-full h-full object-cover rounded-full" />
                     ) : (
                       <div className="w-full h-full rounded-full bg-white flex items-center justify-center font-heading font-black text-2xl text-[#111111] uppercase">
                         {name ? name.charAt(0) : (user?.name ? user.name.charAt(0) : '?')}
@@ -441,7 +420,6 @@ export const CustomerProfilePage: React.FC = () => {
                       <span className="font-heading font-extrabold text-sm text-[#111111] group-hover:text-[#F97316] transition-colors block">
                         {item.label}
                       </span>
-                      <span className="text-xs text-gray-400 font-mono block">{item.subtitle}</span>
                     </div>
                   </div>
 

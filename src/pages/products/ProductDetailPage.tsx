@@ -39,7 +39,10 @@ import {
   CheckCircle,
   Upload,
   CreditCard,
-  FileText
+  FileText,
+  Edit3,
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 
 export const ProductDetailPage: React.FC = () => {
@@ -119,6 +122,9 @@ export const ProductDetailPage: React.FC = () => {
   const [newReviewComment, setNewReviewComment] = useState('');
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [reviewSuccessMsg, setReviewSuccessMsg] = useState('');
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
+  const [editComment, setEditComment] = useState('');
+  const [editRating, setEditRating] = useState(5);
 
   // Online Enquiry Workflow Modal state
   const [isEnquiryModalOpen, setIsEnquiryModalOpen] = useState(false);
@@ -437,13 +443,13 @@ export const ProductDetailPage: React.FC = () => {
           <div className="lg:col-span-6 space-y-4 sticky top-20">
             {/* Main Interactive Product Preview Image */}
             <div
-              className="relative aspect-square rounded-[26px] overflow-hidden bg-white border border-gray-200/90 shadow-md cursor-pointer group"
+              className="relative aspect-square rounded-[26px] overflow-hidden bg-white border border-gray-200/90 shadow-md cursor-pointer group flex items-center justify-center"
               onClick={() => setIsViewerOpen(true)}
             >
               <img
                 src={product.images[selectedImageIndex] || product.images[0]}
                 alt={product.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500"
               />
 
               {/* Product Badge Tag */}
@@ -479,37 +485,19 @@ export const ProductDetailPage: React.FC = () => {
                   <button
                     key={idx}
                     onClick={() => setSelectedImageIndex(idx)}
-                    className={`w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all shrink-0 bg-white ${
+                    className={`w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all shrink-0 bg-white flex items-center justify-center ${
                       selectedImageIndex === idx
                         ? 'border-[#F97316] ring-2 ring-[#F97316]/30 scale-95 shadow-md'
                         : 'border-gray-200 opacity-70 hover:opacity-100'
                     }`}
                   >
-                    <img src={img} alt={`Thumb ${idx + 1}`} className="w-full h-full object-cover" />
+                    <img src={img} alt={`Thumb ${idx + 1}`} className="w-full h-full object-contain p-1" />
                   </button>
                 ))}
               </div>
             )}
 
-            {/* Trust Assurance Pills */}
-            <div className="grid grid-cols-3 gap-3 pt-2 text-center">
-              <div className="bg-white p-3 rounded-2xl border border-gray-200 shadow-xs space-y-1">
-                <Truck size={20} className="mx-auto text-[#F97316]" />
-                <span className="font-heading font-black text-[11px] text-[#111111] block">Fast Delivery</span>
-                <span className="text-[10px] text-gray-500 font-mono block">{selectedSizeOpt.deliveryTime}</span>
-              </div>
-              <div className="bg-white p-3 rounded-2xl border border-gray-200 shadow-xs space-y-1">
-                <Wrench size={20} className="mx-auto text-[#F97316]" />
-                <span className="font-heading font-black text-[11px] text-[#111111] block">On-Site Fitting</span>
-                <span className="text-[10px] text-gray-500 font-mono block">Factory Mechanics</span>
-              </div>
-              <div className="bg-white p-3 rounded-2xl border border-gray-200 shadow-xs space-y-1">
-                <ShieldCheck size={20} className="mx-auto text-[#F97316]" />
-                <span className="font-heading font-black text-[11px] text-[#111111] block">5-Yr Warranty</span>
-                <span className="text-[10px] text-gray-500 font-mono block">Structural Guarantee</span>
-              </div>
             </div>
-          </div>
 
           {/* ── RIGHT COLUMN: Title, Pricing, Variants & Purchase Actions (6 Columns) ── */}
           <div className="lg:col-span-6 space-y-6">
@@ -522,9 +510,13 @@ export const ProductDetailPage: React.FC = () => {
                 </span>
 
                 {/* Stock Status Badge */}
-                {product.isReadyStock ? (
+                {product.stock > 0 && product.stock <= 5 ? (
+                  <span className="bg-amber-100 text-amber-900 text-xs font-mono font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-amber-300 animate-pulse">
+                    <AlertTriangle size={13} className="text-amber-600" /> Low Stock: Only {product.stock} left!
+                  </span>
+                ) : product.stock > 5 ? (
                   <span className="bg-green-100 text-green-800 text-xs font-mono font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-green-300">
-                    <CheckCircle size={13} /> In Ready Stock
+                    <CheckCircle size={13} /> In Ready Stock ({product.stock} units)
                   </span>
                 ) : (
                   <span className="bg-orange-100 text-[#F97316] text-xs font-mono font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-orange-300">
@@ -537,6 +529,17 @@ export const ProductDetailPage: React.FC = () => {
                 {product.name}
               </h1>
             </div>
+
+            {/* Low Stock Warning Banner */}
+            {product.stock > 0 && product.stock <= 5 && (
+              <div className="bg-amber-50 border-2 border-amber-300 p-4 rounded-2xl flex items-center gap-3 text-xs font-sans text-amber-900 font-bold shadow-xs">
+                <AlertTriangle size={24} className="text-[#F97316] shrink-0" />
+                <div>
+                  <span className="text-xs font-black text-red-600 uppercase block tracking-wider">⚡ LOW STOCK ALERT</span>
+                  <span>Hurry! Only <strong className="font-mono text-sm text-[#111111]">{product.stock}</strong> items left in workshop ready stock. Place your order enquiry before stock runs out!</span>
+                </div>
+              </div>
+            )}
 
             {/* Price & Rating Summary Row */}
             <div className="bg-white p-5 rounded-[22px] border border-gray-200/90 shadow-xs space-y-3">
@@ -643,175 +646,22 @@ export const ProductDetailPage: React.FC = () => {
                 <MessageCircle size={18} /> Inquiry
               </a>
             </div>
-
-            {/* 6. SECURE PAYMENTS BY RAZORPAY CARD */}
-            <div className="bg-white p-5 rounded-[22px] border border-gray-200 shadow-xs space-y-3 font-sans">
-              <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-                <div className="flex items-center gap-2">
-                  <Lock size={16} className="text-[#F97316]" />
-                  <span className="font-heading font-black text-xs text-[#111111]">100% Secure Payments by Razorpay</span>
-                </div>
-                <span className="text-[10px] font-mono text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200 font-bold">
-                  SSL Encrypted
-                </span>
-              </div>
-
-              <p className="text-[11px] text-gray-500 leading-relaxed font-mono">
-                Accepted methods: <strong>UPI, Google Pay, PhonePe, Paytm, Credit / Debit Cards, Net Banking & Wallets</strong>.
-              </p>
-
-              <div className="flex items-center gap-2 pt-1 text-[10px] font-mono text-gray-400">
-                <span className="bg-gray-100 px-2 py-1 rounded border border-gray-200">GPay</span>
-                <span className="bg-gray-100 px-2 py-1 rounded border border-gray-200">PhonePe</span>
-                <span className="bg-gray-100 px-2 py-1 rounded border border-gray-200">Paytm</span>
-                <span className="bg-gray-100 px-2 py-1 rounded border border-gray-200">Visa / Mastercard</span>
-                <span className="bg-gray-100 px-2 py-1 rounded border border-gray-200">Razorpay Verified</span>
-              </div>
-            </div>
-
           </div>
         </div>
 
-        {/* ── 3. EXPANDABLE DESCRIPTION & STRUCTURED SPECIFICATION TABS ── */}
-        <div className="bg-white rounded-[26px] border border-gray-200 p-6 sm:p-8 shadow-xs space-y-6">
-          
-          {/* Tab Selection Navigation */}
-          <div className="flex items-center gap-2 border-b border-gray-200 overflow-x-auto no-scrollbar pb-2">
-            {[
-              { id: 'overview', label: '📖 Product Overview' },
-              { id: 'features', label: '🛠️ Structural Features' },
-              { id: 'applications', label: '🚜 Applications' },
-              { id: 'process', label: '⚙️ Lathe Process' },
-              { id: 'maintenance', label: '🔧 Maintenance Tips' }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`px-4 py-2 rounded-xl text-xs font-heading font-black transition-all shrink-0 ${
-                  activeTab === tab.id
-                    ? 'bg-[#111111] text-white shadow-xs'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Tab Content Display */}
-          <div className="text-xs sm:text-sm text-gray-700 leading-relaxed font-sans space-y-4">
-            {activeTab === 'overview' && (
-              <div className="space-y-3">
-                <div className={`relative transition-all duration-300 ${!descriptionExpanded ? 'line-clamp-3 overflow-hidden' : ''}`}>
-                  <p className="leading-relaxed text-gray-700 font-medium">
-                    {product.description}
-                  </p>
-                  <p className="mt-2 text-gray-600">
-                    Engineered at MANIKANDAN LATHE factory in Kallimandhayam under the supervision of Chellamuthu K (25+ years industry experience). Built using heavy cold-rolled carbon steel, lathe-bushed pivots, and automated TIG welding for extreme durability in Tamil Nadu agricultural & structural conditions.
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => setDescriptionExpanded(!descriptionExpanded)}
-                  className="text-[#F97316] font-heading font-black text-xs flex items-center gap-1 hover:underline pt-1"
-                >
-                  {descriptionExpanded ? (
-                    <>Read Less <ChevronUp size={14} /></>
-                  ) : (
-                    <>Read Full Description <ChevronDown size={14} /></>
-                  )}
-                </button>
-              </div>
-            )}
-
-            {activeTab === 'features' && (
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <li className="flex items-start gap-2 bg-gray-50 p-3 rounded-xl border border-gray-200">
-                  <CheckCircle2 size={16} className="text-[#F97316] shrink-0 mt-0.5" />
-                  <span><strong>High Tensile Steel:</strong> Forged carbon steel tines designed to withstand extreme ground resistance without bending.</span>
-                </li>
-                <li className="flex items-start gap-2 bg-gray-50 p-3 rounded-xl border border-gray-200">
-                  <CheckCircle2 size={16} className="text-[#F97316] shrink-0 mt-0.5" />
-                  <span><strong>Precision Lathe Machining:</strong> Bushings and pivot pins turned on precision lathe machines for smooth alignment.</span>
-                </li>
-                <li className="flex items-start gap-2 bg-gray-50 p-3 rounded-xl border border-gray-200">
-                  <CheckCircle2 size={16} className="text-[#F97316] shrink-0 mt-0.5" />
-                  <span><strong>Anti-Rust Treatment:</strong> Dual-layer primer and industrial powder coat finish protects against monsoon rust.</span>
-                </li>
-                <li className="flex items-start gap-2 bg-gray-50 p-3 rounded-xl border border-gray-200">
-                  <CheckCircle2 size={16} className="text-[#F97316] shrink-0 mt-0.5" />
-                  <span><strong>Reinforced Frame Joints:</strong> Multi-pass MIG & TIG welds tested for high shock load endurance.</span>
-                </li>
-              </ul>
-            )}
-
-            {activeTab === 'applications' && (
-              <div className="space-y-2">
-                <p>Designed for versatile heavy duty usage across farming, residential, and commercial sectors:</p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-                  <div className="bg-orange-50 border border-orange-200 p-3 rounded-xl">
-                    <strong className="text-orange-900 block font-heading font-black text-xs">Agriculture & Farming</strong>
-                    <span className="text-xs text-gray-600">Deep soil tilling, hard ground cultivator work, tractor attachment.</span>
-                  </div>
-                  <div className="bg-orange-50 border border-orange-200 p-3 rounded-xl">
-                    <strong className="text-orange-900 block font-heading font-black text-xs">Residential Security</strong>
-                    <span className="text-xs text-gray-600">Main safety gates, steel security doors, CNC window grills.</span>
-                  </div>
-                  <div className="bg-orange-50 border border-orange-200 p-3 rounded-xl">
-                    <strong className="text-orange-900 block font-heading font-black text-xs">Industrial Turning</strong>
-                    <span className="text-xs text-gray-600">Factory shaft bushes, custom machinery spares, heavy lathe repairs.</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'process' && (
-              <ol className="list-decimal list-inside space-y-2 font-mono text-xs text-gray-700">
-                <li><strong>Raw Material Inspection:</strong> High tensile carbon steel & SS 304 sheets quality tested.</li>
-                <li><strong>CNC Laser & Lathe Turning:</strong> Shafts and pins turned to exact 0.05mm tolerance.</li>
-                <li><strong>Heavy Duty Assembly:</strong> Fixture-aligned assembly with multi-pass welding.</li>
-                <li><strong>Surface Treatment & Coating:</strong> Shot-blasting followed by powder coat baking.</li>
-              </ol>
-            )}
-
-            {activeTab === 'maintenance' && (
-              <div className="space-y-2 text-xs">
-                <p><strong>To ensure a 15+ year lifespan:</strong></p>
-                <ul className="list-disc list-inside space-y-1 text-gray-600 font-mono">
-                  <li>Grease lathe-bushed pivot joints every 3 months.</li>
-                  <li>Wipe off heavy mud after agricultural use.</li>
-                  <li>Touch up minor scratches with anti-rust spray.</li>
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── 4. DYNAMIC TECHNICAL SPECIFICATIONS TABLE ── */}
+        {/* ── SIMPLE PRODUCT OVERVIEW & DESCRIPTION ── */}
         <div className="bg-white rounded-[26px] border border-gray-200 p-6 sm:p-8 shadow-xs space-y-4">
           <h2 className="font-heading font-black text-lg text-[#111111] uppercase tracking-wider flex items-center gap-2">
-            <Layers size={18} className="text-[#F97316]" /> Technical Specifications
+            <Sparkles size={18} className="text-[#F97316]" /> Product Details & Overview
           </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-xs font-mono">
-            {[
-              { key: 'Primary Material', val: product.specifications.material || 'Carbon Steel' },
-              { key: 'Steel Grade', val: 'MS Grade A1 / High Tensile Steel' },
-              { key: 'Dimensions / Size', val: selectedSizeOpt.label },
-              { key: 'Estimated Weight', val: selectedSizeOpt.weight },
-              { key: 'Surface Coating', val: product.specifications.finish || 'Industrial Powder Coat' },
-              { key: 'Manufacturing Method', val: 'Precision Lathe Turning & TIG Welding' },
-              { key: 'Primary Color', val: product.specifications.color || 'Industrial Black' },
-              { key: 'Warranty Period', val: '5 Years Structural Guarantee' },
-              { key: 'On-Site Installation', val: 'Available in Dindigul / Tamil Nadu' },
-              { key: 'Estimated Delivery', val: selectedSizeOpt.deliveryTime },
-              { key: 'Country of Origin', val: 'Made in India (Kallimandhayam)' }
-            ].map((spec, idx) => (
-              <div key={idx} className="flex justify-between py-2 border-b border-gray-100">
-                <span className="text-gray-500 font-bold">{spec.key}:</span>
-                <span className="text-[#111111] font-bold text-right">{spec.val}</span>
-              </div>
-            ))}
+          <div className="text-xs sm:text-sm text-gray-700 leading-relaxed font-sans space-y-3">
+            <p className="leading-relaxed text-gray-800 font-medium">
+              {product.description}
+            </p>
+            <div className="bg-orange-50/60 border border-orange-200 p-3.5 rounded-2xl flex items-center gap-2 text-xs font-mono text-orange-950">
+              <CheckCircle2 size={16} className="text-[#F97316] shrink-0" />
+              <span>Engineered & forged at MANIKANDAN LATHE workshop in Kallimandhayam with precision lathe alignment.</span>
+            </div>
           </div>
         </div>
 
@@ -868,7 +718,7 @@ export const ProductDetailPage: React.FC = () => {
           {/* Reviews List */}
           <div className="space-y-4">
             {reviews.map((rev) => (
-              <div key={rev.id} className="p-4 rounded-2xl border border-gray-200/90 space-y-2 bg-white hover:border-[#F97316] transition-all">
+              <div key={rev.id} className="p-4 rounded-2xl border border-gray-200/90 space-y-3 bg-white hover:border-[#F97316] transition-all">
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="flex items-center gap-2">
@@ -882,14 +732,101 @@ export const ProductDetailPage: React.FC = () => {
                     <span className="text-[10px] text-gray-400 font-mono">{rev.location} • {rev.date}</span>
                   </div>
 
-                  <div className="flex text-amber-400">
-                    {Array.from({ length: rev.rating }).map((_, i) => (
-                      <Star key={i} size={13} className="fill-amber-400 text-amber-400" />
-                    ))}
+                  <div className="flex items-center gap-3">
+                    <div className="flex text-amber-400">
+                      {Array.from({ length: rev.rating }).map((_, i) => (
+                        <Star key={i} size={13} className="fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+
+                    {/* Customer Action Buttons: Edit & Delete (Admin has full control, customer can only edit/delete THEIR OWN review) */}
+                    {(() => {
+                      const isAdmin = user?.googleUID === 'qiiShV5WlAY2Zwok3vNxhedl3N12' || user?.id === 'qiiShV5WlAY2Zwok3vNxhedl3N12' || user?.role === 'admin';
+                      const uName = (user?.name || '').trim().toLowerCase();
+                      const rName = (rev.name || '').trim().toLowerCase();
+                      const isOwner = user && (
+                        (uName && rName && (uName.includes(rName) || rName.includes(uName))) ||
+                        ((rev as any).userId && (rev as any).userId === user.id) ||
+                        ((rev as any).phone && user.phone && (rev as any).phone === user.phone)
+                      );
+                      const canModify = isAdmin || isOwner;
+                      if (!canModify) return null;
+
+                      return (
+                        <div className="flex items-center gap-1.5 border-l border-gray-200 pl-2">
+                          <button
+                            onClick={() => {
+                              setEditingReviewId(rev.id);
+                              setEditComment(rev.comment);
+                              setEditRating(rev.rating);
+                            }}
+                            className="p-1 rounded-lg text-gray-500 hover:text-[#F97316] hover:bg-orange-50 transition-colors"
+                            title="Edit Feedback"
+                          >
+                            <Edit3 size={14} />
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              if (window.confirm('Are you sure you want to delete this review?')) {
+                                setReviews((prev) => prev.filter((r) => r.id !== rev.id));
+                              }
+                            }}
+                            className="p-1 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                            title="Delete Feedback"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
-                <p className="text-xs text-gray-700 leading-relaxed font-medium">{rev.comment}</p>
+                {editingReviewId === rev.id ? (
+                  <div className="bg-orange-50/60 p-3 rounded-xl border border-orange-200 space-y-2">
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="font-bold text-gray-700">Update Rating:</span>
+                      <div className="flex text-amber-400 cursor-pointer">
+                        {[1, 2, 3, 4, 5].map((st) => (
+                          <Star
+                            key={st}
+                            size={16}
+                            onClick={() => setEditRating(st)}
+                            className={st <= editRating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <textarea
+                      rows={2}
+                      value={editComment}
+                      onChange={(e) => setEditComment(e.target.value)}
+                      className="w-full bg-white p-2.5 rounded-lg border border-gray-300 text-xs outline-none focus:border-[#F97316]"
+                    />
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setReviews((prev) =>
+                            prev.map((r) => (r.id === rev.id ? { ...r, comment: editComment, rating: editRating } : r))
+                          );
+                          setEditingReviewId(null);
+                        }}
+                        className="bg-[#F97316] text-white text-[11px] font-heading font-black px-3 py-1.5 rounded-lg"
+                      >
+                        Save Changes
+                      </button>
+                      <button
+                        onClick={() => setEditingReviewId(null)}
+                        className="bg-gray-200 text-gray-700 text-[11px] font-bold px-3 py-1.5 rounded-lg"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-700 leading-relaxed font-medium">{rev.comment}</p>
+                )}
               </div>
             ))}
           </div>

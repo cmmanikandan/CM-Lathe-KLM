@@ -15,9 +15,9 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
   const location = useLocation();
   const [isVisible, setIsVisible] = useState(true);
 
-  // Trigger splash screen on route change to /login or /admin/login
+  // Trigger splash screen on route change to /login or /admin/login or initial load
   useEffect(() => {
-    if (location.pathname === '/login' || location.pathname === '/admin/login') {
+    if (location.pathname === '/login' || location.pathname === '/admin/login' || location.pathname === '/') {
       setIsVisible(true);
     }
   }, [location.pathname]);

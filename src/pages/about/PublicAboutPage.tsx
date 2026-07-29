@@ -48,7 +48,7 @@ export const PublicAboutPage: React.FC = () => {
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 size={16} className="text-[#F97316]" />
-                <span>Certified MS & SS 304 High Grade Steel Raw Materials</span>
+                <span>Certified Anti-Rust Heavy Duty Steel Raw Materials</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 size={16} className="text-[#F97316]" />

@@ -82,11 +82,11 @@ export const ForgotPasswordPage: React.FC = () => {
                     <input
                       type="email"
                       required
-                      autoFocus
+                      autoComplete="off"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="senthil@example.com"
-                      className="w-full bg-gray-100 p-3 pl-10 rounded-xl border border-gray-300 focus:border-[#F97316] outline-none font-bold text-sm"
+                      className="w-full bg-gray-100 p-3 pl-10 rounded-xl border border-gray-300 focus:border-[#F97316] outline-none font-medium text-sm"
                     />
                   </div>
                 </div>

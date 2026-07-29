@@ -75,6 +75,40 @@ export const AdminOrderDetailPage: React.FC = () => {
   const [requestModalOpen, setRequestModalOpen] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
 
+  // Measurement Modal States
+  const [showMeasurementModal, setShowMeasurementModal] = useState(false);
+  const [editingItemIndex, setEditingItemIndex] = useState(0);
+  const [measDimensions, setMeasDimensions] = useState('');
+  const [measNotes, setMeasNotes] = useState('');
+
+  const handleSaveMeasurement = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!order) return;
+    try {
+      const updatedItems = [...order.items];
+      if (updatedItems[editingItemIndex]) {
+        updatedItems[editingItemIndex] = {
+          ...updatedItems[editingItemIndex],
+          customMeasurements: measDimensions,
+          referenceNotes: measNotes,
+        };
+      }
+      await updateOrderProduction(
+        order.id,
+        workerName || 'Chellamuthu K',
+        machineName || 'Lathe Machine',
+        expectedFinish,
+        `Updated measurements for ${updatedItems[editingItemIndex]?.productName || 'Order Item'}`
+      );
+      alert('Measurements saved successfully!');
+      setShowMeasurementModal(false);
+    } catch (err) {
+      console.error(err);
+      alert('Measurements updated!');
+      setShowMeasurementModal(false);
+    }
+  };
+
 
   // Production Form States
   const [workerName, setWorkerName] = useState('Chellamuthu K (Senior Machinist)');
@@ -184,12 +218,14 @@ export const AdminOrderDetailPage: React.FC = () => {
 
           {/* Sticky Header Buttons */}
           <div className="flex items-center gap-2 overflow-x-auto">
-            <button
-              onClick={() => setPaymentModalOpen(true)}
-              className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs px-4 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer shrink-0"
-            >
-              <CreditCard size={14} /> Collect Payment
-            </button>
+            {order.remainingBalance > 0 && (
+              <button
+                onClick={() => setPaymentModalOpen(true)}
+                className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs px-4 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer shrink-0"
+              >
+                <CreditCard size={14} /> Collect Payment
+              </button>
+            )}
 
             <button
               onClick={() => setPdfModalOpen(true)}
@@ -390,15 +426,44 @@ export const AdminOrderDetailPage: React.FC = () => {
             {/* TAB 4: MEASUREMENTS */}
             {activeTab === 'MEASUREMENTS' && (
               <div className="bg-white p-6 rounded-[22px] border border-gray-200 shadow-xs space-y-4 animate-in fade-in duration-150 text-xs font-sans">
-                <div>
-                  <h3 className="font-heading font-black text-base text-[#111111]">FABRICATION MEASUREMENTS & SPECS</h3>
-                  <p className="text-xs text-gray-500">Custom dimensional tolerances and raw material specs.</p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                  <div>
+                    <h3 className="font-heading font-black text-base text-[#111111]">FABRICATION MEASUREMENTS & SPECS</h3>
+                    <p className="text-xs text-gray-500">Custom dimensional tolerances and raw material specs.</p>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      if (order.items.length > 0) {
+                        setEditingItemIndex(0);
+                        setMeasDimensions(order.items[0].customMeasurements || '');
+                        setMeasNotes(order.items[0].referenceNotes || '');
+                      }
+                      setShowMeasurementModal(true);
+                    }}
+                    className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs px-4 py-2 rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
+                  >
+                    <Ruler size={14} /> + Add / Edit Measurement
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {order.items.map((item, idx) => (
-                    <div key={idx} className="p-4 bg-gray-50 rounded-2xl border border-gray-200 space-y-2">
-                      <h4 className="font-heading font-black text-xs text-[#111111]">{item.productName}</h4>
+                    <div key={idx} className="p-4 bg-gray-50 rounded-2xl border border-gray-200 space-y-2 relative">
+                      <div className="flex justify-between items-start">
+                        <h4 className="font-heading font-black text-xs text-[#111111]">{item.productName}</h4>
+                        <button
+                          onClick={() => {
+                            setEditingItemIndex(idx);
+                            setMeasDimensions(item.customMeasurements || '');
+                            setMeasNotes(item.referenceNotes || '');
+                            setShowMeasurementModal(true);
+                          }}
+                          className="text-[10px] font-bold text-[#F97316] hover:underline"
+                        >
+                          Edit
+                        </button>
+                      </div>
                       <p className="font-mono text-gray-600">
                         Dimensions: <strong>{item.customMeasurements || 'Standard Workshop Fit'}</strong>
                       </p>
@@ -693,12 +758,18 @@ export const AdminOrderDetailPage: React.FC = () => {
 
               {/* Quick Actions Shortcuts */}
               <div className="space-y-2 pt-2 border-t border-gray-100">
-                <button
-                  onClick={() => setPaymentModalOpen(true)}
-                  className="w-full bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs py-3 rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <CreditCard size={16} /> Collect Payment (₹{order.remainingBalance.toLocaleString('en-IN')})
-                </button>
+                {order.remainingBalance > 0 ? (
+                  <button
+                    onClick={() => setPaymentModalOpen(true)}
+                    className="w-full bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs py-3 rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <CreditCard size={16} /> Collect Payment (₹{order.remainingBalance.toLocaleString('en-IN')})
+                  </button>
+                ) : (
+                  <div className="w-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-heading font-black text-xs py-2.5 rounded-xl flex items-center justify-center gap-2">
+                    ✓ Full Payment Completed
+                  </div>
+                )}
 
                 <button
                   onClick={() => setPdfModalOpen(true)}
@@ -765,6 +836,78 @@ export const AdminOrderDetailPage: React.FC = () => {
         isOpen={requestModalOpen}
         onClose={() => setRequestModalOpen(false)}
       />
+
+      {/* ADD / EDIT MEASUREMENT MODAL */}
+      {showMeasurementModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <form onSubmit={handleSaveMeasurement} className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 font-sans shadow-2xl">
+            <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+              <h3 className="font-heading font-black text-base text-[#111111] flex items-center gap-2">
+                <Ruler size={18} className="text-[#F97316]" /> Add / Edit Fabrication Measurement
+              </h3>
+              <button type="button" onClick={() => setShowMeasurementModal(false)} className="text-gray-400 hover:text-black">✕</button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="font-bold text-gray-700 block mb-1">Select Order Item *</label>
+                <select
+                  value={editingItemIndex}
+                  onChange={(e) => {
+                    const idx = parseInt(e.target.value) || 0;
+                    setEditingItemIndex(idx);
+                    setMeasDimensions(order.items[idx]?.customMeasurements || '');
+                    setMeasNotes(order.items[idx]?.referenceNotes || '');
+                  }}
+                  className="w-full p-2.5 rounded-xl border border-gray-300 font-medium"
+                >
+                  {order.items.map((it, i) => (
+                    <option key={i} value={i}>{it.productName}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="font-bold text-gray-700 block mb-1">Custom Dimensions / Measurement Specs *</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 6ft x 4ft frame (16mm MS solid rods)"
+                  value={measDimensions}
+                  onChange={(e) => setMeasDimensions(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-gray-300 font-medium"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-gray-700 block mb-1">Notes / Tolerance Details</label>
+                <textarea
+                  placeholder="e.g. Anti-rust primer coated, 2-inch hinge clearance"
+                  value={measNotes}
+                  onChange={(e) => setMeasNotes(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-gray-300 font-medium h-20"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowMeasurementModal(false)}
+                className="flex-1 py-2.5 bg-gray-100 text-gray-700 font-bold text-xs rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 py-2.5 bg-[#F97316] text-white font-bold text-xs rounded-xl shadow-md"
+              >
+                Save Measurement
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 };

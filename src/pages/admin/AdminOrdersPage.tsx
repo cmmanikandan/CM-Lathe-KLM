@@ -22,11 +22,13 @@ import {
   Calendar,
   User,
   SlidersHorizontal,
+  Trash2,
+  AlertTriangle,
 } from 'lucide-react';
 
 export const AdminOrdersPage: React.FC = () => {
   const navigate = useNavigate();
-  const { orders, getDraftOrders } = useOrders();
+  const { orders, getDraftOrders, deleteOrder } = useOrders();
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,6 +44,7 @@ export const AdminOrdersPage: React.FC = () => {
   const [filterOrderType, setFilterOrderType] = useState<string>('ALL');
 
   // Modals State
+  const [deletingOrder, setDeletingOrder] = useState<Order | null>(null);
   const [payingOrder, setPayingOrder] = useState<Order | null>(null);
   const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
 
@@ -66,8 +69,10 @@ export const AdminOrdersPage: React.FC = () => {
   const revenueToday = todayOrders.reduce((sum, o) => sum + o.advancePaid, 0);
   const totalOutstandingBalance = orders.reduce((sum, o) => sum + o.remainingBalance, 0);
 
-  // Filter Logic
-  const filteredOrders = orders.filter((o) => {
+  // Filter Logic — ONLY ONLINE CUSTOMER ORDERS
+  const onlineOrders = orders.filter((o) => !o.isOfflineOrder && (o.orderType as string) !== 'POS' && o.orderType !== 'Quick Order');
+
+  const filteredOrders = onlineOrders.filter((o) => {
     // 1. Search Query
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
@@ -78,8 +83,6 @@ export const AdminOrdersPage: React.FC = () => {
 
     // 2. Tab Filter
     let matchesTab = true;
-    if (activeTab === 'ONLINE') matchesTab = !o.isOfflineOrder;
-    if (activeTab === 'OFFLINE') matchesTab = Boolean(o.isOfflineOrder);
     if (activeTab === 'COMPLETED') matchesTab = o.status === 'COMPLETED';
     if (activeTab === 'CANCELLED') matchesTab = o.status === 'REJECTED';
 
@@ -89,7 +92,6 @@ export const AdminOrdersPage: React.FC = () => {
     if (filterPaymentStatus === 'PAID' && o.remainingBalance > 0) matchesAdv = false;
     if (filterPaymentStatus === 'DUE' && o.remainingBalance === 0) matchesAdv = false;
     if (filterPriority !== 'ALL' && o.priority !== filterPriority) matchesAdv = false;
-    if (filterOrderType !== 'ALL' && o.orderType !== filterOrderType) matchesAdv = false;
 
     return matchesSearch && matchesTab && matchesAdv;
   });
@@ -105,7 +107,7 @@ export const AdminOrdersPage: React.FC = () => {
               <ShoppingBag size={16} /> PRODUCTION ERP • ORDER MANAGEMENT
             </span>
             <h1 className="font-heading font-black text-2xl text-white mt-1">
-              ONLINE & WORKSHOP ORDERS
+              ONLINE CUSTOMER ORDERS ({onlineOrders.length})
             </h1>
           </div>
 
@@ -170,12 +172,9 @@ export const AdminOrdersPage: React.FC = () => {
         <div className="bg-white p-2 rounded-2xl border border-gray-200 shadow-xs flex items-center justify-between gap-2 overflow-x-auto text-xs font-heading">
           <div className="flex items-center gap-1">
             {[
-              { id: 'ALL', title: 'All Orders', count: countTotal },
-              { id: 'ONLINE', title: 'Online Orders', count: countOnline },
-              { id: 'OFFLINE', title: 'Offline Walk-in', count: countOffline },
-              { id: 'DRAFTS', title: 'Draft Orders', count: drafts.length },
-              { id: 'COMPLETED', title: 'Completed', count: countCompleted },
-              { id: 'CANCELLED', title: 'Cancelled', count: countCancelled },
+              { id: 'ALL', title: 'All Online Orders', count: onlineOrders.length },
+              { id: 'COMPLETED', title: 'Completed', count: onlineOrders.filter(o => o.status === 'COMPLETED').length },
+              { id: 'CANCELLED', title: 'Cancelled', count: onlineOrders.filter(o => o.status === 'REJECTED').length },
             ].map((tab) => {
               const active = activeTab === tab.id;
               return (
@@ -396,39 +395,49 @@ export const AdminOrdersPage: React.FC = () => {
                   </div>
 
                   {/* Card Bottom Quick Actions */}
-                  <div className="grid grid-cols-4 gap-1.5 pt-1" onClick={(e) => e.stopPropagation()}>
+                  <div className="grid grid-cols-5 gap-1 pt-1" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => navigate(`/admin/orders/${ord.id}`)}
-                      className="py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs rounded-xl flex items-center justify-center gap-1 cursor-pointer"
-                      title="Open Full Order Detail Page"
+                      className="py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs rounded-xl flex items-center justify-center cursor-pointer"
+                      title="Open Detail Page"
                     >
                       <ChevronRight size={13} />
                     </button>
 
-                    <button
-                      onClick={() => setPayingOrder(ord)}
-                      className="py-1.5 bg-[#F97316] hover:bg-[#EA580C] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 cursor-pointer"
-                      title="Collect Payment"
-                    >
-                      <CreditCard size={13} /> Pay
-                    </button>
+                    {ord.remainingBalance > 0 && (
+                      <button
+                        onClick={() => setPayingOrder(ord)}
+                        className="py-1.5 bg-[#F97316] hover:bg-[#EA580C] text-white font-bold text-xs rounded-xl flex items-center justify-center cursor-pointer"
+                        title="Collect Payment"
+                      >
+                        <CreditCard size={13} />
+                      </button>
+                    )}
 
                     <a
                       href={waUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="py-1.5 bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 cursor-pointer"
+                      className="py-1.5 bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-xs rounded-xl flex items-center justify-center cursor-pointer"
                       title="WhatsApp Customer"
                     >
-                      <MessageCircle size={13} /> WA
+                      <MessageCircle size={13} />
                     </a>
 
                     <button
                       onClick={() => setInvoiceOrder(ord)}
-                      className="py-1.5 bg-[#111111] hover:bg-black text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 cursor-pointer"
+                      className="py-1.5 bg-[#111111] hover:bg-black text-white font-bold text-xs rounded-xl flex items-center justify-center cursor-pointer"
                       title="Print Tax Invoice"
                     >
-                      <Printer size={13} /> Bill
+                      <Printer size={13} />
+                    </button>
+
+                    <button
+                      onClick={() => setDeletingOrder(ord)}
+                      className="py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs rounded-xl flex items-center justify-center cursor-pointer"
+                      title="Delete Order"
+                    >
+                      <Trash2 size={13} />
                     </button>
                   </div>
 
@@ -439,6 +448,79 @@ export const AdminOrdersPage: React.FC = () => {
         )}
 
       </div>
+
+      {/* ── CUSTOM DELETE ORDER CONFIRMATION CARD MODAL ── */}
+      {deletingOrder && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-[26px] border-2 border-red-200 shadow-2xl max-w-md w-full p-6 space-y-5 font-sans">
+            
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <div className="flex items-center gap-2 text-red-600 font-heading font-black text-base uppercase tracking-wide">
+                <div className="p-2 bg-red-100 rounded-xl text-red-600">
+                  <Trash2 size={20} />
+                </div>
+                Delete Order Confirmation
+              </div>
+              <button
+                onClick={() => setDeletingOrder(null)}
+                className="text-gray-400 hover:text-black font-bold p-1 rounded-lg transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-2.5 text-xs font-sans">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 font-mono">Order Number:</span>
+                <strong className="font-heading font-black text-sm text-[#111111]">#{deletingOrder.orderNumber}</strong>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 font-mono">Customer Name:</span>
+                <strong className="font-bold text-gray-900">{deletingOrder.customerName}</strong>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 font-mono">Customer Mobile:</span>
+                <span className="font-mono text-gray-700">{deletingOrder.customerPhone}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 font-mono">Items Billed:</span>
+                <span className="font-mono text-gray-800 truncate max-w-[200px]">
+                  {deletingOrder.items.map((i) => `${i.productName} (${i.quantity})`).join(', ')}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                <span className="text-gray-500 font-mono">Total Billed:</span>
+                <strong className="font-mono font-black text-sm text-emerald-700">₹{deletingOrder.finalPrice.toLocaleString('en-IN')}</strong>
+              </div>
+            </div>
+
+            <div className="bg-red-50 border border-red-200 p-3.5 rounded-xl text-xs text-red-900 font-bold flex items-start gap-2.5">
+              <AlertTriangle size={18} className="text-red-600 shrink-0 mt-0.5" />
+              <span>Are you sure you want to permanently delete Order <strong>#{deletingOrder.orderNumber}</strong>? This record will be permanently deleted from system database and cannot be recovered.</span>
+            </div>
+
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                onClick={() => setDeletingOrder(null)}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-heading font-black text-xs py-3.5 rounded-xl transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={async () => {
+                  await deleteOrder(deletingOrder.id);
+                  setDeletingOrder(null);
+                }}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-heading font-black text-xs py-3.5 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+              >
+                <Trash2 size={16} /> Delete Permanently
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {/* Admin Payment Collection Modal */}
       <AdminPaymentCollectionModal

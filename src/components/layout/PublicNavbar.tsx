@@ -13,7 +13,6 @@ import {
   Home,
   Package,
   Wrench,
-  ImageIcon,
   Info,
   Mail
 } from 'lucide-react';
@@ -42,7 +41,6 @@ export const PublicNavbar: React.FC = () => {
     { name: 'Home', path: '/', icon: Home },
     { name: 'Products', path: '/products', icon: Package },
     { name: 'Services', path: '/services', icon: Wrench },
-    { name: 'Gallery', path: '/gallery', icon: ImageIcon },
     { name: 'About', path: '/about', icon: Info },
     { name: 'Contact', path: '/contact', icon: Mail }
   ];

@@ -6,6 +6,7 @@ import { useOrders } from '../../context/OrderContext';
 import { InvoiceA4 } from '../../components/invoice/InvoiceA4';
 import { InvoiceToolbar } from '../../components/invoice/InvoiceToolbar';
 import { useInvoicePdf } from '../../components/invoice/useInvoicePdf';
+import { printInvoiceElement } from '../../utils/printHelper';
 import { Loader2, ArrowLeft, AlertCircle } from 'lucide-react';
 import '../../components/invoice/print.css';
 
@@ -87,7 +88,7 @@ export const PublicInvoicePage: React.FC = () => {
             setActiveTemplate('a4');
           }
         }}
-        onPrint={() => window.print()}
+        onPrint={() => printInvoiceElement(invoiceRef.current, activeTemplate === 'thermal')}
         onDownloadPdf={() => downloadPdf(invoiceRef.current, order)}
         onClose={() => navigate(-1)}
         isGeneratingPdf={isGeneratingPdf}

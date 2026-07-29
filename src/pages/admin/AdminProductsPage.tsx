@@ -852,6 +852,35 @@ export const AdminProductsPage: React.FC = () => {
                     />
                   </div>
 
+                  {/* Full Product Description Textarea */}
+                  <div className="md:col-span-3">
+                    <label className="font-bold text-gray-700 block mb-1">
+                      Full Product Description * <span className="text-gray-400 font-normal font-mono">(Displayed on Customer Product Detail Page)</span>
+                    </label>
+                    <textarea
+                      rows={4}
+                      required
+                      value={formDescription}
+                      onChange={(e) => setFormDescription(e.target.value)}
+                      placeholder="Write comprehensive product description, materials used, lathe specs, warranty, suitability for Tamil Nadu soil/farms..."
+                      className="w-full bg-gray-50 p-3 rounded-xl border border-gray-300 font-sans text-xs outline-none focus:border-[#F97316]"
+                    />
+                  </div>
+
+                  {/* Short Summary Description */}
+                  <div className="md:col-span-3">
+                    <label className="font-bold text-gray-700 block mb-1">
+                      Short Summary / Highlights <span className="text-gray-400 font-normal font-mono">(1-2 sentences for product cards)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formShortDescription}
+                      onChange={(e) => setFormShortDescription(e.target.value)}
+                      placeholder="e.g. Forged lathe-machined tines engineered for tough agricultural tilling..."
+                      className="w-full bg-gray-50 p-3 rounded-xl border border-gray-300 outline-none focus:border-[#F97316]"
+                    />
+                  </div>
+
                   <div>
                     <label className="font-bold text-gray-700 block mb-1">Primary Category *</label>
                     <select
