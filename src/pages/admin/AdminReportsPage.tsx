@@ -46,17 +46,30 @@ export const AdminReportsPage: React.FC = () => {
   const completionRate = totalOrdersCount > 0 ? Math.round((completedOrders.length / totalOrdersCount) * 100) : 100;
   const averageOrderValue = totalOrdersCount > 0 ? Math.round(totalRevenue / totalOrdersCount) : 0;
 
-  // Monthly Revenue Trend Data (Simulated comparative monthly distribution based on actual + historical baseline)
-  const monthlyRevenueData = [
-    { month: 'Sep 2025', revenue: 145000, orders: 12 },
-    { month: 'Oct 2025', revenue: 182000, orders: 15 },
-    { month: 'Nov 2025', revenue: 210000, orders: 18 },
-    { month: 'Dec 2025', revenue: 275000, orders: 22 },
-    { month: 'Jan 2026', revenue: 310000, orders: 26 },
-    { month: 'Feb 2026', revenue: Math.max(totalRevenue, 348000), orders: Math.max(totalOrdersCount, 28) }
-  ];
+  // Dynamic 6-Month Revenue Trend calculated from live orders
+  const now = new Date();
+  const monthlyRevenueData: { month: string; yearMonth: string; revenue: number; orders: number }[] = [];
 
-  const maxMonthlyRevenue = Math.max(...monthlyRevenueData.map((d) => d.revenue));
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const month = d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+    const yearMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    monthlyRevenueData.push({ month, yearMonth, revenue: 0, orders: 0 });
+  }
+
+  orders.forEach((o) => {
+    if (o.status === 'REJECTED') return;
+    const date = new Date(o.createdAt);
+    if (isNaN(date.getTime())) return;
+    const ym = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const targetMonth = monthlyRevenueData.find((m) => m.yearMonth === ym);
+    if (targetMonth) {
+      targetMonth.revenue += o.finalPrice || 0;
+      targetMonth.orders += 1;
+    }
+  });
+
+  const maxMonthlyRevenue = Math.max(1, ...monthlyRevenueData.map((d) => d.revenue));
 
   // Category sales breakdown
   const categoryMap: Record<string, { count: number; revenue: number }> = {};

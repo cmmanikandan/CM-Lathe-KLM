@@ -5,6 +5,9 @@ import { useRefunds } from '../../context/RefundContext';
 import { Order } from '../../types';
 import { AdminPOSReceiptModal } from '../../components/common/AdminPOSReceiptModal';
 import { PDFInvoiceModal } from '../../components/common/PDFInvoiceModal';
+import { AdminPaymentCollectionModal } from '../../components/common/AdminPaymentCollectionModal';
+import { ReduceDiscountModal } from '../../components/common/ReduceDiscountModal';
+import { DeleteOrderConfirmationModal } from '../../components/common/DeleteOrderConfirmationModal';
 import {
   Zap,
   Search,
@@ -43,6 +46,8 @@ export const AdminTodayOfflineOrdersPage: React.FC<AdminTodayOfflineOrdersPagePr
   const [receiptOrder, setReceiptOrder] = useState<Order | null>(null);
   const [pdfOrder, setPdfOrder] = useState<Order | null>(null);
   const [deletingOrder, setDeletingOrder] = useState<Order | null>(null);
+  const [paymentOrder, setPaymentOrder] = useState<Order | null>(null);
+  const [reduceOrder, setReduceOrder] = useState<Order | null>(null);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
 
@@ -95,35 +100,12 @@ export const AdminTodayOfflineOrdersPage: React.FC<AdminTodayOfflineOrdersPagePr
     }
   };
 
-  const handleMarkPaid = async (ord: Order) => {
-    const input = prompt(
-      `Enter payment amount to collect for Order #${ord.orderNumber}:\n(Total Billed: ₹${ord.finalPrice}, Current Balance Due: ₹${ord.remainingBalance})`,
-      ord.remainingBalance > 0 ? String(ord.remainingBalance) : String(ord.finalPrice)
-    );
-    if (!input) return;
-    const amt = parseFloat(input);
-    if (isNaN(amt) || amt <= 0) {
-      alert('Invalid payment amount.');
-      return;
-    }
-    const mode = confirm('Click OK for Cash Payment, or Cancel for UPI/Online Payment') ? 'Cash' : 'UPI';
-    await addPaymentToOrder(ord.id, amt, mode, 'Owner Admin', `POS-PAY-${Date.now()}`);
-    alert(`Payment of ₹${amt} successfully recorded as ${mode}! Balance updated.`);
+  const handleMarkPaid = (ord: Order) => {
+    setPaymentOrder(ord);
   };
 
-  const handleReduceAmount = async (ord: Order) => {
-    const input = prompt(
-      `Enter extra discount amount to REDUCE from Order #${ord.orderNumber}:\n(Current Total Billed: ₹${ord.finalPrice}, Current Remaining Balance: ₹${ord.remainingBalance})`,
-      '100'
-    );
-    if (!input) return;
-    const disc = parseFloat(input);
-    if (isNaN(disc) || disc <= 0) {
-      alert('Invalid discount amount.');
-      return;
-    }
-    await updateOrderDiscount(ord.id, disc);
-    alert(`Successfully applied ₹${disc} extra discount! Updated total billed & remaining balance.`);
+  const handleReduceAmount = (ord: Order) => {
+    setReduceOrder(ord);
   };
 
   return (
@@ -318,7 +300,13 @@ export const AdminTodayOfflineOrdersPage: React.FC<AdminTodayOfflineOrdersPagePr
                             />
                           </td>
                           <td className="p-3.5 font-heading font-black text-sm text-[#111111]">
-                            #{ord.orderNumber}
+                            <button
+                              onClick={() => navigate(`/admin/offline-orders/detail/${ord.id}`)}
+                              className="hover:text-[#F97316] transition-colors cursor-pointer text-left font-black"
+                              title="Click to open full order detail page"
+                            >
+                              #{ord.orderNumber}
+                            </button>
                           </td>
                           <td className="p-3.5 font-mono text-gray-500 text-[11px]">
                             <div>{new Date(ord.createdAt).toLocaleDateString('en-IN')}</div>
@@ -352,75 +340,13 @@ export const AdminTodayOfflineOrdersPage: React.FC<AdminTodayOfflineOrdersPagePr
                             </span>
                           </td>
                           <td className="p-3.5 text-center">
-                            <div className="flex items-center justify-center gap-1">
-                              {ord.remainingBalance > 0 ? (
-                                <button
-                                  onClick={() => handleMarkPaid(ord)}
-                                  className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] rounded-lg flex items-center gap-1 cursor-pointer shadow-xs"
-                                  title="Mark Paid / Add Payment"
-                                >
-                                  <CreditCard size={12} /> Pay Balance
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => handleMarkPaid(ord)}
-                                  className="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[11px] rounded-lg cursor-pointer"
-                                  title="Update Paid Amount"
-                                >
-                                  ✓ Paid
-                                </button>
-                              )}
-
-                              <button
-                                onClick={() => handleReduceAmount(ord)}
-                                className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 font-bold text-[11px] rounded-lg flex items-center gap-1 cursor-pointer"
-                                title="Reduce Amount / Give Discount Anytime"
-                              >
-                                🏷️ Reduce
-                              </button>
-
-                              <button
-                                onClick={() => setReceiptOrder(ord)}
-                                className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs rounded-lg flex items-center gap-1 cursor-pointer"
-                                title="Print POS Thermal Receipt"
-                              >
-                                <Printer size={13} /> Bill
-                              </button>
-
-                              <button
-                                onClick={() => setPdfOrder(ord)}
-                                className="px-2 py-1 bg-[#111111] hover:bg-black text-white font-bold text-xs rounded-lg flex items-center gap-1 cursor-pointer"
-                                title="Print A4 Tax Invoice"
-                              >
-                                <FileText size={13} /> Invoice
-                              </button>
-
-                              <a
-                                href={waUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="px-2 py-1 bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-xs rounded-lg flex items-center gap-1 cursor-pointer"
-                                title="WhatsApp Customer"
-                              >
-                                <MessageCircle size={13} />
-                              </a>
-
-                              <button
-                                onClick={() => handleRefund(ord)}
-                                className="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold text-xs rounded-lg flex items-center gap-1 cursor-pointer"
-                                title="Refund POS Bill"
-                              >
-                                <RotateCcw size={13} />
-                              </button>
-
-                              <button
-                                onClick={() => setDeletingOrder(ord)}
-                                className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs rounded-lg flex items-center gap-1 cursor-pointer"
-                                title="Delete POS Bill"
-                              >
-                                <Trash2 size={13} />
-                              </button>
-                            </div>
+                            <button
+                              onClick={() => navigate(`/admin/offline-orders/${ord.id}`)}
+                              className="w-8 h-8 rounded-xl bg-[#F97316] hover:bg-[#EA580C] text-white flex items-center justify-center font-black mx-auto transition-transform active:scale-95 shadow-md cursor-pointer"
+                              title="Open Full Order Page & Actions (>)"
+                            >
+                              <ChevronRight size={18} />
+                            </button>
                           </td>
                         </tr>
                       );
@@ -677,6 +603,27 @@ export const AdminTodayOfflineOrdersPage: React.FC<AdminTodayOfflineOrdersPagePr
         order={pdfOrder}
         isOpen={!!pdfOrder}
         onClose={() => setPdfOrder(null)}
+      />
+
+      {/* Admin Payment Collection Modal */}
+      <AdminPaymentCollectionModal
+        order={paymentOrder}
+        isOpen={!!paymentOrder}
+        onClose={() => setPaymentOrder(null)}
+      />
+
+      {/* Reduce Discount Modal */}
+      <ReduceDiscountModal
+        order={reduceOrder}
+        isOpen={!!reduceOrder}
+        onClose={() => setReduceOrder(null)}
+      />
+
+      {/* Delete Order Modal */}
+      <DeleteOrderConfirmationModal
+        order={deletingOrder}
+        isOpen={!!deletingOrder}
+        onClose={() => setDeletingOrder(null)}
       />
     </div>
   );

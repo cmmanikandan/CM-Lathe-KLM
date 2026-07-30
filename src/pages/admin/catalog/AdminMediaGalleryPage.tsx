@@ -34,19 +34,12 @@ type MediaItem = {
   size?: string;
 };
 
-const DEMO_MEDIA: MediaItem[] = [
-  { id: 'med-1', url: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80', type: 'Image', title: 'Compound Gate - Completed Installation', tags: ['gate', 'installation', 'heavy duty'], category: 'Completed Works', featured: true, visible: true, uploadedAt: '2026-07-25', size: '1.2 MB' },
-  { id: 'med-2', url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80', type: 'Image', title: 'Workshop MS Fabrication', tags: ['workshop', 'fabrication', 'ms steel'], category: 'Workshop', featured: false, visible: true, uploadedAt: '2026-07-22', size: '0.9 MB' },
-  { id: 'med-3', url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80', type: 'Image', title: 'Window Grill - Standard Safety', tags: ['grill', 'window', 'safety'], category: 'Products', featured: true, visible: true, uploadedAt: '2026-07-20', size: '1.5 MB' },
-  { id: 'med-4', url: 'https://images.unsplash.com/photo-1565688534245-05d6b5be184a?auto=format&fit=crop&w=800&q=80', type: 'Image', title: 'Tractor Cultivator - Ready', tags: ['tractor', 'agricultural', 'cultivator'], category: 'Products', featured: false, visible: true, uploadedAt: '2026-07-18', size: '0.7 MB' },
-  { id: 'med-5', url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=80', type: 'Image', title: 'Before Installation - Client Site', tags: ['before', 'site', 'client'], category: 'Before & After', featured: false, visible: true, uploadedAt: '2026-07-15', size: '1.1 MB' },
-  { id: 'med-6', url: 'https://images.unsplash.com/photo-1565688534245-05d6b5be184a?auto=format&fit=crop&w=800&q=80', type: 'Image', title: 'After Installation - Client Site', tags: ['after', 'completed', 'client'], category: 'Before & After', featured: false, visible: false, uploadedAt: '2026-07-15', size: '1.0 MB' },
-];
+const DEMO_MEDIA: MediaItem[] = [];
 
 const CATEGORIES: MediaItem['category'][] = ['Products', 'Workshop', 'Installation', 'Completed Works', 'Before & After', 'Team'];
 
 export const AdminMediaGalleryPage: React.FC = () => {
-  const [media, setMedia] = useState<MediaItem[]>(DEMO_MEDIA);
+  const [media, setMedia] = useState<MediaItem[]>([]);
   const [search, setSearch] = useState('');
   const [filterCat, setFilterCat] = useState<string>('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');

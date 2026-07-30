@@ -78,8 +78,14 @@ export const OrderDetailPage: React.FC = () => {
       <div className="bg-white p-4 sm:p-5 rounded-[22px] border border-gray-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate('/customer/orders')}
-            className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-[#111111] transition-colors"
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate('/customer/orders');
+              }
+            }}
+            className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-[#111111] transition-colors cursor-pointer"
           >
             <ArrowLeft size={18} />
           </button>

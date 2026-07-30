@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../../context/ProductContext';
 import { Product, ProductVariant } from '../../types';
 import { uploadToCloudinary } from '../../services/cloudinaryService';
+import { GenericDeleteModal } from '../../components/common/GenericDeleteModal';
 import {
   Package,
   Plus,
@@ -72,6 +73,7 @@ export const AdminProductsPage: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
   const [editingProd, setEditingProd] = useState<Product | null>(null);
+  const [deletingProd, setDeletingProd] = useState<Product | null>(null);
 
   // Filters & Search State
   const [searchQuery, setSearchQuery] = useState('');
@@ -779,10 +781,8 @@ export const AdminProductsPage: React.FC = () => {
                                   <Copy size={15} />
                                 </button>
                                 <button
-                                  onClick={() => {
-                                    if (confirm(`Delete product ${p.name}?`)) deleteProduct(p.id);
-                                  }}
-                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                  onClick={() => setDeletingProd(p)}
+                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                                   title="Delete Product"
                                 >
                                   <Trash2 size={15} />
@@ -1261,6 +1261,19 @@ export const AdminProductsPage: React.FC = () => {
         </div>
       )}
 
+      {/* Delete Product Modal */}
+      <GenericDeleteModal
+        isOpen={!!deletingProd}
+        title="Delete Machinery Product"
+        itemTitle={deletingProd?.name}
+        description={`Are you sure you want to delete product "${deletingProd?.name}" from your catalog?`}
+        onClose={() => setDeletingProd(null)}
+        onConfirm={async () => {
+          if (deletingProd) {
+            deleteProduct(deletingProd.id);
+          }
+        }}
+      />
     </div>
   );
 };

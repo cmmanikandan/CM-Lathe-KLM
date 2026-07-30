@@ -34,18 +34,11 @@ export const CustomerGalleryPage: React.FC = () => {
             title: i.title,
             category: i.category,
             image: i.mediaUrl,
-            date: i.createdAt ? i.createdAt.split('T')[0] : '2026-07-25',
+            date: i.createdAt ? i.createdAt.split('T')[0] : new Date().toISOString().split('T')[0],
           }))
         );
       } else {
-        setCustomerGalleryItems([
-          { id: 1, title: '9-Tine Kalappai Assembly Line', category: 'Workshop Progress', image: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80', date: '2026-07-25' },
-          { id: 2, title: 'Completed SS 304 Main Gate Delivery', category: 'Completed Orders', image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', date: '2026-07-23' },
-          { id: 3, title: 'High Precision Lathe Shaft Machining', category: 'Factory Machinery', image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80', date: '2026-07-20' },
-          { id: 4, title: 'Decorative Window Grill Fitting', category: 'Gate Installations', image: 'https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=800&q=80', date: '2026-07-18' },
-          { id: 5, title: 'Custom 5-Tine Cultivator Tines Forging', category: 'Workshop Progress', image: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80', date: '2026-07-15' },
-          { id: 6, title: 'Finished Structural Steel Security Door', category: 'Completed Orders', image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', date: '2026-07-12' }
-        ]);
+        setCustomerGalleryItems([]);
       }
     } catch (err) {
       console.error('CustomerGallery load error:', err);

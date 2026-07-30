@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useOrders } from '../../context/OrderContext';
 import { useStatus } from '../../context/StatusContext';
 import { GoogleMapEmbed } from '../../components/common/GoogleMapEmbed';
+import { fetchHeroBanners, HeroBanner } from '../../services/supabaseService';
 import {
   Search,
   Mic,
@@ -51,27 +52,15 @@ export const LandingPage: React.FC = () => {
     return 'Good Evening 🌙';
   };
 
-  // Hero Banners
-  const heroBanners = [
-    {
-      title: "TRACTOR KALAPPAI & CULTIVATORS",
-      subtitle: "Precision forged lathe-machined tines engineered for tough agricultural soil.",
-      tag: "AGRICULTURAL MACHINERY",
-      image: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=1000&q=80"
-    },
-    {
-      title: "STAINLESS STEEL & MS MAIN GATES",
-      subtitle: "Custom architectural gates crafted with laser cut panels & heavy duty bearings.",
-      tag: "MAIN SAFETY GATES",
-      image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1000&q=80"
-    },
-    {
-      title: "PRECISION LATHE MACHINE WORKS",
-      subtitle: "Expert lathe turning, shaft grinding, bush fitting & machine repairs in Kallimandhayam.",
-      tag: "LATHE TURNING WORKS",
-      image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1000&q=80"
-    }
-  ];
+  const [heroBanners, setHeroBanners] = useState<HeroBanner[]>([]);
+
+  useEffect(() => {
+    const loadBanners = async () => {
+      const banners = await fetchHeroBanners();
+      setHeroBanners(banners.filter((b) => b.isActive));
+    };
+    loadBanners();
+  }, []);
 
   // Auto sliding hero banner
   useEffect(() => {

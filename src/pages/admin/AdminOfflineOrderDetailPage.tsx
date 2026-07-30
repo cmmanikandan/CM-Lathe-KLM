@@ -5,6 +5,9 @@ import { Order, OrderStatus } from '../../types';
 import { PDFInvoiceModal } from '../../components/common/PDFInvoiceModal';
 import { AdminPaymentCollectionModal } from '../../components/common/AdminPaymentCollectionModal';
 import { RazorpayQRModal } from '../../components/common/RazorpayQRModal';
+import { AdminPOSReceiptModal } from '../../components/common/AdminPOSReceiptModal';
+import { ReduceDiscountModal } from '../../components/common/ReduceDiscountModal';
+import { DeleteOrderConfirmationModal } from '../../components/common/DeleteOrderConfirmationModal';
 import {
   ArrowLeft,
   User,
@@ -45,6 +48,8 @@ export const AdminOfflineOrderDetailPage: React.FC = () => {
     uploadCompletedImages,
     logOrderActivity,
     cancelOrder,
+    updateOrderDiscount,
+    deleteOrder,
   } = useOrders();
 
   const order = getOrderById(id || '');
@@ -57,6 +62,17 @@ export const AdminOfflineOrderDetailPage: React.FC = () => {
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+  const [reduceModalOpen, setReduceModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  const handleReduceAmount = () => {
+    setReduceModalOpen(true);
+  };
+
+  const handleDeleteOrder = () => {
+    setDeleteModalOpen(true);
+  };
 
   // Production Form States
   const [workerName, setWorkerName] = useState('Chellamuthu K (Senior Machinist)');
@@ -91,6 +107,367 @@ export const AdminOfflineOrderDetailPage: React.FC = () => {
     )}, Remaining Balance: ₹${order.remainingBalance.toLocaleString('en-IN')}. Thank you!`
   );
   const waUrl = `https://wa.me/91${cleanPhone}?text=${waText}`;
+
+  const isPosBill =
+    (order.orderType as string) === 'Quick Order' ||
+    (order.orderType as string) === 'Walk-in Order' ||
+    (order.orderType as string) === 'POS Quick Order' ||
+    order.orderNumber.startsWith('POS-');
+
+  if (isPosBill) {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA] text-[#111111] pb-24 font-sans space-y-6">
+        
+        {/* Top POS Header */}
+        <div className="bg-[#111111] text-white p-6 shadow-md border-b border-gray-800">
+          <div className="max-w-7xl mx-auto space-y-4">
+            
+            {/* Header Top Row: Navigation + Title */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800/80 pb-4">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    if (window.history.length > 1) {
+                      navigate(-1);
+                    } else {
+                      navigate('/admin/offline-orders/today');
+                    }
+                  }}
+                  className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                >
+                  <ArrowLeft size={20} />
+                </button>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono text-[#F97316] font-bold uppercase tracking-widest">
+                      SHOP COUNTER POS BILL DETAIL
+                    </span>
+                    <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase border border-emerald-500/30">
+                      POS COUNTER SALE
+                    </span>
+                  </div>
+                  <h1 className="font-heading font-black text-2xl text-white mt-0.5 flex items-center gap-3">
+                    #{order.orderNumber}
+                    <span className="text-xs font-mono text-gray-400 font-normal">
+                      ({new Date(order.createdAt).toLocaleDateString('en-IN')} {new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })})
+                    </span>
+                  </h1>
+                </div>
+              </div>
+
+              {/* Customer Quick Badge */}
+              <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3.5 py-2 rounded-xl text-xs font-mono">
+                <User size={14} className="text-[#F97316]" />
+                <span className="text-gray-200 font-sans font-bold">{order.customerName}</span>
+                <span className="text-gray-500">|</span>
+                <span className="text-gray-400">{order.customerPhone}</span>
+              </div>
+            </div>
+
+            {/* Header Action Toolbar Section */}
+            <div className="bg-white/5 p-3 rounded-2xl border border-white/10 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                {order.remainingBalance > 0 && (
+                  <button
+                    onClick={() => setPaymentModalOpen(true)}
+                    className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs px-3.5 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+                  >
+                    <CreditCard size={15} /> Collect Balance (₹{order.remainingBalance.toLocaleString('en-IN')})
+                  </button>
+                )}
+
+                <button
+                  onClick={handleReduceAmount}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-heading font-black text-xs px-3.5 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+                >
+                  <Sparkles size={15} /> Reduce / Discount
+                </button>
+
+                <button
+                  onClick={() => setReceiptModalOpen(true)}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-black text-xs px-3.5 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+                >
+                  <Printer size={15} /> Thermal POS Bill
+                </button>
+
+                <button
+                  onClick={() => setPdfModalOpen(true)}
+                  className="bg-white/10 hover:bg-white/20 text-white font-heading font-black text-xs px-3.5 py-2.5 rounded-xl border border-white/15 flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+                >
+                  <FileText size={15} /> Tax Invoice (A4)
+                </button>
+
+                <a
+                  href={waUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-[#25D366] hover:bg-[#20ba5a] text-white font-heading font-black text-xs px-3.5 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+                >
+                  <MessageCircle size={15} /> WhatsApp
+                </a>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleDeleteOrder}
+                  className="bg-red-600 hover:bg-red-700 text-white font-heading font-black text-xs px-3.5 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+                >
+                  <Trash2 size={15} /> Delete Bill
+                </button>
+              </div>
+            </div>
+
+            {/* POS Banner Key Metrics */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono pt-3 border-t border-gray-800">
+              <div>
+                <span className="text-gray-400 block text-[10px]">Customer Name:</span>
+                <strong className="text-white text-sm font-sans">{order.customerName}</strong>
+              </div>
+              <div>
+                <span className="text-gray-400 block text-[10px]">Mobile Phone:</span>
+                <strong className="text-white text-sm">{order.customerPhone}</strong>
+              </div>
+              <div>
+                <span className="text-gray-400 block text-[10px]">Total Billed Amount:</span>
+                <strong className="text-white text-sm font-bold">₹{order.finalPrice.toLocaleString('en-IN')}</strong>
+              </div>
+              <div>
+                <span className="text-gray-400 block text-[10px]">Payment Status:</span>
+                <strong className={order.remainingBalance > 0 ? 'text-red-400 text-sm' : 'text-emerald-400 text-sm'}>
+                  {order.remainingBalance > 0 ? `DUE ₹${order.remainingBalance.toLocaleString('en-IN')}` : 'FULLY PAID ✓'}
+                </strong>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Dashboard Grid (2 Columns) */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          {/* Left Column (8 Cols): Items & Pricing Summary */}
+          <div className="lg:col-span-8 space-y-6">
+            
+            {/* Itemized Table Card */}
+            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs space-y-4">
+              <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                <h3 className="font-heading font-black text-sm text-[#111111] uppercase tracking-wider flex items-center gap-2">
+                  <Building2 size={18} className="text-[#F97316]" /> BOUGHT POS ITEMS ({order.items.length})
+                </h3>
+                <span className="text-xs font-mono text-gray-500 font-bold">POS Counter Sale</span>
+              </div>
+
+              <div className="overflow-x-auto border rounded-xl">
+                <table className="w-full text-left text-xs font-sans">
+                  <thead>
+                    <tr className="bg-[#111111] text-white font-heading font-extrabold uppercase text-[10px]">
+                      <th className="p-3">Item Name</th>
+                      <th className="p-3 text-center">Qty</th>
+                      <th className="p-3 text-right">Unit Price</th>
+                      <th className="p-3 text-right">Total Price</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 font-mono text-xs">
+                    {order.items.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50">
+                        <td className="p-3 font-sans">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={item.image || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=300&q=80'}
+                              alt={item.productName}
+                              className="w-12 h-12 rounded-lg object-cover border"
+                            />
+                            <div>
+                              <strong className="font-heading font-black text-xs text-[#111111] block">{item.productName}</strong>
+                              {item.variant?.size && <span className="text-[10px] text-gray-500 font-mono block">Variant: {item.variant.size}</span>}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-3 text-center font-bold text-sm font-sans">{item.quantity}</td>
+                        <td className="p-3 text-right text-gray-600">₹{item.unitPrice.toLocaleString('en-IN')}</td>
+                        <td className="p-3 text-right font-black text-[#111111] text-sm">₹{item.totalPrice.toLocaleString('en-IN')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pricing breakdown box */}
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-2 text-xs font-mono">
+                <div className="flex justify-between text-gray-600">
+                  <span>Items Subtotal:</span>
+                  <span>₹{order.basePrice.toLocaleString('en-IN')}</span>
+                </div>
+                {order.reducedAmount > 0 && (
+                  <div className="flex justify-between text-emerald-700 font-bold">
+                    <span>Manual Discount / Reduce:</span>
+                    <span>- ₹{order.reducedAmount.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm font-black text-[#111111] border-t pt-2 font-sans">
+                  <span>Total Billed Amount:</span>
+                  <span className="text-base text-[#F97316]">₹{order.finalPrice.toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Customer Details Card */}
+            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs space-y-4">
+              <h3 className="font-heading font-black text-sm text-[#111111] uppercase tracking-wider flex items-center gap-2">
+                <User size={18} className="text-[#F97316]" /> CUSTOMER INFORMATION
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-sans">
+                <div>
+                  <span className="text-gray-400 text-[10px] block font-mono">Customer Name:</span>
+                  <strong className="text-base text-[#111111] font-heading font-bold">{order.customerName}</strong>
+                </div>
+                <div>
+                  <span className="text-gray-400 text-[10px] block font-mono">Mobile Phone:</span>
+                  <strong className="text-sm font-mono text-[#F97316]">{order.customerPhone}</strong>
+                </div>
+                <div className="sm:col-span-2">
+                  <span className="text-gray-400 text-[10px] block font-mono">Address:</span>
+                  <p className="text-gray-800 font-medium">{order.customerAddress || 'Kallimandhayam Walk-in Counter'}</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Right Column (4 Cols): Payment History Audit Ledger & Quick Print Buttons */}
+          <div className="lg:col-span-4 space-y-6">
+            
+            {/* Financial Status Summary */}
+            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs space-y-4">
+              <h3 className="font-heading font-black text-sm text-[#111111] uppercase tracking-wider flex items-center gap-2">
+                <CreditCard size={18} className="text-[#F97316]" /> PAYMENT BREAKDOWN
+              </h3>
+
+              <div className="space-y-3 font-mono text-xs">
+                <div className="flex justify-between items-center text-gray-700">
+                  <span>Amount Paid:</span>
+                  <strong className="text-emerald-700 text-sm font-bold">₹{order.advancePaid.toLocaleString('en-IN')}</strong>
+                </div>
+
+                <div className="flex justify-between items-center pt-2 border-t text-sm font-black">
+                  <span>Remaining Due Balance:</span>
+                  <strong className={order.remainingBalance > 0 ? 'text-red-600 text-base' : 'text-emerald-600 text-base'}>
+                    ₹{order.remainingBalance.toLocaleString('en-IN')}
+                  </strong>
+                </div>
+
+                {order.remainingBalance > 0 ? (
+                  <button
+                    onClick={() => setPaymentModalOpen(true)}
+                    className="w-full mt-2 py-3 bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs rounded-xl shadow-md cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <CreditCard size={16} /> Collect Remaining Balance
+                  </button>
+                ) : (
+                  <div className="p-3 bg-emerald-50 border border-emerald-300 rounded-xl text-center text-emerald-800 font-bold text-xs">
+                    ✓ Fully Paid & Settled
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Payment History Audit Ledger */}
+            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs space-y-4">
+              <h3 className="font-heading font-black text-sm text-[#111111] uppercase tracking-wider flex items-center gap-2">
+                <Activity size={18} className="text-[#F97316]" /> PAYMENT HISTORY LEDGER
+              </h3>
+
+              {order.paymentHistory && order.paymentHistory.length > 0 ? (
+                <div className="space-y-2 font-mono text-xs">
+                  {order.paymentHistory.map((tx) => (
+                    <div key={tx.id} className="p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] text-gray-500">{tx.date} {tx.time}</span>
+                        <span className="bg-orange-100 text-[#F97316] font-bold text-[10px] px-2 py-0.5 rounded uppercase">{tx.mode}</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-1 font-bold">
+                        <span>Collected:</span>
+                        <span className="text-emerald-700 text-sm">+ ₹{tx.amount.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="text-[10px] text-gray-500 flex justify-between">
+                        <span>Receipt #{tx.receiptNumber}</span>
+                        <span>Due After: ₹{tx.remainingBalanceAfter.toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-gray-500 font-mono italic">No payment history records found.</p>
+              )}
+            </div>
+
+            {/* Quick Print Receipt Buttons Card */}
+            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs space-y-3 text-center">
+              <h3 className="font-heading font-black text-sm text-[#111111] uppercase">PRINT BILL & INVOICE</h3>
+              
+              <div className="space-y-2">
+                <button
+                  onClick={() => setReceiptModalOpen(true)}
+                  className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-black text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Printer size={15} /> Open Thermal POS Receipt
+                </button>
+
+                <button
+                  onClick={() => setPdfModalOpen(true)}
+                  className="w-full py-2.5 bg-[#111111] hover:bg-black text-white font-heading font-black text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <FileText size={15} /> Open Tax Invoice PDF (A4)
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* Modals */}
+        <AdminPaymentCollectionModal
+          order={order}
+          isOpen={paymentModalOpen}
+          onClose={() => setPaymentModalOpen(false)}
+        />
+
+        <RazorpayQRModal
+          order={order}
+          isOpen={qrModalOpen}
+          onClose={() => setQrModalOpen(false)}
+        />
+
+        <PDFInvoiceModal
+          order={order}
+          isOpen={pdfModalOpen}
+          onClose={() => setPdfModalOpen(false)}
+        />
+
+        <AdminPOSReceiptModal
+          order={order}
+          isOpen={receiptModalOpen}
+          onClose={() => setReceiptModalOpen(false)}
+        />
+
+        <ReduceDiscountModal
+          order={order}
+          isOpen={reduceModalOpen}
+          onClose={() => setReduceModalOpen(false)}
+        />
+
+        <DeleteOrderConfirmationModal
+          order={order}
+          isOpen={deleteModalOpen}
+          onClose={() => setDeleteModalOpen(false)}
+          onSuccess={() => navigate('/admin/offline-orders/today')}
+        />
+
+      </div>
+    );
+  }
 
   // Timeline statuses
   const timelinePipeline: Array<{ status: OrderStatus; label: string; desc: string }> = [
@@ -137,10 +514,17 @@ export const AdminOfflineOrderDetailPage: React.FC = () => {
       <div className="bg-[#111111] text-white p-6 shadow-md border-b border-gray-800">
         <div className="max-w-7xl mx-auto space-y-4">
           
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          {/* Header Top Row: Navigation + Title */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800/80 pb-4">
             <div className="flex items-center gap-3">
               <button
-                onClick={() => navigate('/admin/offline-orders/today')}
+                onClick={() => {
+                  if (window.history.length > 1) {
+                    navigate(-1);
+                  } else {
+                    navigate('/admin/offline-orders/today');
+                  }
+                }}
                 className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
               >
                 <ArrowLeft size={20} />
@@ -163,30 +547,63 @@ export const AdminOfflineOrderDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Quick Header Actions */}
+            {/* Customer Quick Badge */}
+            <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3.5 py-2 rounded-xl text-xs font-mono">
+              <User size={14} className="text-[#F97316]" />
+              <span className="text-gray-200 font-sans font-bold">{order.customerName}</span>
+              <span className="text-gray-500">|</span>
+              <span className="text-gray-400">{order.customerPhone}</span>
+            </div>
+          </div>
+
+          {/* Header Quick Action Toolbar */}
+          <div className="bg-white/5 p-3 rounded-2xl border border-white/10 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => setPaymentModalOpen(true)}
-                className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs px-4 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer"
+                className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs px-3.5 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
               >
-                <CreditCard size={15} /> Collect Payment
+                <CreditCard size={15} /> Collect Payment / Pay Balance
+              </button>
+
+              <button
+                onClick={handleReduceAmount}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-heading font-black text-xs px-3.5 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+              >
+                <Sparkles size={15} /> Reduce / Discount
+              </button>
+
+              <button
+                onClick={() => setReceiptModalOpen(true)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-black text-xs px-3.5 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+              >
+                <Printer size={15} /> POS Thermal Bill
               </button>
 
               <button
                 onClick={() => setPdfModalOpen(true)}
-                className="bg-white/10 hover:bg-white/20 text-white font-heading font-black text-xs px-4 py-2.5 rounded-xl border border-white/10 flex items-center gap-1.5 cursor-pointer"
+                className="bg-white/10 hover:bg-white/20 text-white font-heading font-black text-xs px-3.5 py-2.5 rounded-xl border border-white/15 flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
               >
-                <Printer size={15} /> Tax Invoice
+                <FileText size={15} /> Tax Invoice (A4)
               </button>
 
               <a
                 href={waUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-[#25D366] hover:bg-[#20ba5a] text-white font-heading font-black text-xs px-4 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer"
+                className="bg-[#25D366] hover:bg-[#20ba5a] text-white font-heading font-black text-xs px-3.5 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
               >
-                <MessageCircle size={15} /> WhatsApp Customer
+                <MessageCircle size={15} /> WhatsApp
               </a>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleDeleteOrder}
+                className="bg-red-600 hover:bg-red-700 text-white font-heading font-black text-xs px-3.5 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+              >
+                <Trash2 size={15} /> Delete Order
+              </button>
             </div>
           </div>
 
@@ -722,6 +1139,26 @@ export const AdminOfflineOrderDetailPage: React.FC = () => {
         order={order}
         isOpen={pdfModalOpen}
         onClose={() => setPdfModalOpen(false)}
+      />
+
+      {/* POS Thermal Receipt Modal */}
+      <AdminPOSReceiptModal
+        order={order}
+        isOpen={receiptModalOpen}
+        onClose={() => setReceiptModalOpen(false)}
+      />
+
+      <ReduceDiscountModal
+        order={order}
+        isOpen={reduceModalOpen}
+        onClose={() => setReduceModalOpen(false)}
+      />
+
+      <DeleteOrderConfirmationModal
+        order={order}
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onSuccess={() => navigate('/admin/offline-orders/today')}
       />
 
     </div>

@@ -80,11 +80,10 @@ export const AdminQuickOrderPage: React.FC = () => {
   // Instant Discount
   const [discountAmount, setDiscountAmount] = useState<number>(0);
 
-  // Payment Selection: Cash, Dynamic QR, Split, Partial
-  const [paymentMode, setPaymentMode] = useState<'Cash' | 'UPI' | 'Split' | 'Partial'>('Cash');
+  // Payment Selection: 3 Methods (Cash, UPI QR, Split Pay)
+  const [paymentMode, setPaymentMode] = useState<'Cash' | 'UPI' | 'Split'>('Cash');
   const [cashReceived, setCashReceived] = useState<number>(0);
   const [upiPaidAmount, setUpiPaidAmount] = useState<number>(0);
-  const [partialPaidAmount, setPartialPaidAmount] = useState<number>(0);
   const [utrNumber, setUtrNumber] = useState<string>('');
 
   // POS Submission & Receipt Modal
@@ -216,12 +215,16 @@ export const AdminQuickOrderPage: React.FC = () => {
   let cashAmount = grandTotal;
   let upiAmount = 0;
 
-  if (paymentMode === 'Split') {
+  if (paymentMode === 'Cash') {
+    advancePaid = cashReceived > 0 ? Math.min(grandTotal, cashReceived) : grandTotal;
+    cashAmount = advancePaid;
+  } else if (paymentMode === 'UPI') {
+    advancePaid = upiPaidAmount > 0 ? Math.min(grandTotal, upiPaidAmount) : grandTotal;
+    upiAmount = advancePaid;
+  } else if (paymentMode === 'Split') {
     cashAmount = cashReceived;
     upiAmount = upiPaidAmount;
     advancePaid = Math.min(grandTotal, cashAmount + upiAmount);
-  } else if (paymentMode === 'Partial') {
-    advancePaid = Math.min(grandTotal, partialPaidAmount);
   }
 
   const balanceDue = Math.max(0, grandTotal - advancePaid);
@@ -632,15 +635,14 @@ export const AdminQuickOrderPage: React.FC = () => {
                 </h2>
               </div>
 
-              {/* Payment Method Selector */}
+              {/* Payment Method Selector (3 Methods) */}
               <div className="space-y-2">
                 <label className="font-bold text-xs text-gray-700 block">Choose Payment Method *</label>
-                <div className="grid grid-cols-4 gap-1.5 text-xs font-heading">
+                <div className="grid grid-cols-3 gap-2 text-xs font-heading">
                   {[
                     { id: 'Cash', title: 'Cash', icon: Banknote },
                     { id: 'UPI', title: 'UPI QR', icon: QrCode },
                     { id: 'Split', title: 'Split Pay', icon: Layers },
-                    { id: 'Partial', title: 'Balance', icon: CreditCard },
                   ].map((m) => {
                     const Icon = m.icon;
                     const active = paymentMode === (m.id as any);
@@ -649,13 +651,13 @@ export const AdminQuickOrderPage: React.FC = () => {
                         type="button"
                         key={m.id}
                         onClick={() => setPaymentMode(m.id as any)}
-                        className={`p-2 rounded-xl font-bold flex flex-col items-center justify-center gap-1 border transition-all cursor-pointer text-[11px] ${
+                        className={`p-2.5 rounded-xl font-bold flex flex-col items-center justify-center gap-1 border transition-all cursor-pointer text-xs ${
                           active
                             ? 'bg-[#F97316] text-white border-[#F97316] shadow-sm'
-                            : 'bg-gray-100 text-gray-700 border-gray-200'
+                            : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
                         }`}
                       >
-                        <Icon size={14} />
+                        <Icon size={16} />
                         <span>{m.title}</span>
                       </button>
                     );
@@ -663,30 +665,37 @@ export const AdminQuickOrderPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* CASH PAYMENT CALCULATOR */}
+              {/* CASH PAYMENT CALCULATOR & PARTIAL BALANCE */}
               {paymentMode === 'Cash' && (
                 <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 space-y-2 font-mono text-xs">
                   <div className="flex justify-between items-center">
-                    <label className="font-bold text-amber-900">Cash Received (₹):</label>
+                    <label className="font-bold text-amber-900">Cash Received / Paid Amount (₹):</label>
                     <input
                       type="number"
-                      min={grandTotal}
+                      min="0"
                       value={cashReceived || grandTotal}
                       onChange={(e) => setCashReceived(parseInt(e.target.value) || 0)}
                       className="w-32 bg-white p-2 rounded-lg border border-amber-300 font-bold text-right text-black outline-none"
                     />
                   </div>
 
-                  <div className="flex justify-between items-center text-sm font-black pt-1 border-t border-amber-200">
-                    <span className="text-amber-900">Balance Return to Customer:</span>
-                    <span className="text-emerald-700 font-heading">₹{balanceReturn.toLocaleString('en-IN')}</span>
-                  </div>
+                  {balanceDue > 0 ? (
+                    <div className="flex justify-between items-center text-xs font-black pt-1 border-t border-amber-200">
+                      <span className="text-amber-900">Remaining Balance Due:</span>
+                      <span className="text-red-600 font-heading">₹{balanceDue.toLocaleString('en-IN')} (Payable Later)</span>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between items-center text-xs font-black pt-1 border-t border-amber-200">
+                      <span className="text-amber-900">Change Return to Customer:</span>
+                      <span className="text-emerald-700 font-heading">₹{balanceReturn.toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* UPI DYNAMIC QR CODE */}
+              {/* UPI DYNAMIC QR CODE & PARTIAL BALANCE */}
               {paymentMode === 'UPI' && (
-                <div className="p-3 bg-gray-50 rounded-2xl border border-gray-200 space-y-2 text-xs font-sans">
+                <div className="p-3.5 bg-gray-50 rounded-2xl border border-gray-200 space-y-3.5 text-xs font-sans">
                   <div className="flex items-center gap-3">
                     <img src={qrData.qrCodeUrl} alt="POS QR" className="w-20 h-20 rounded-lg border border-gray-300 shrink-0" />
                     <div>
@@ -694,6 +703,25 @@ export const AdminQuickOrderPage: React.FC = () => {
                       <p className="text-[10px] text-gray-500">Supports GPay, PhonePe, Paytm, BHIM.</p>
                     </div>
                   </div>
+
+                  <div className="flex justify-between items-center font-mono">
+                    <label className="font-bold text-gray-800">UPI Amount Paid (₹):</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={upiPaidAmount || grandTotal}
+                      onChange={(e) => setUpiPaidAmount(parseInt(e.target.value) || 0)}
+                      className="w-32 bg-white p-2 rounded-lg border border-gray-300 font-bold text-right text-black outline-none"
+                    />
+                  </div>
+
+                  {balanceDue > 0 && (
+                    <div className="flex justify-between items-center text-xs font-mono font-black pt-2 border-t border-gray-200">
+                      <span className="text-gray-700">Remaining Balance Due:</span>
+                      <span className="text-red-600 font-heading">₹{balanceDue.toLocaleString('en-IN')} (Payable Later)</span>
+                    </div>
+                  )}
+
                   <input
                     type="text"
                     placeholder="Enter UTR / Transaction Ref No (Optional)"
@@ -734,27 +762,6 @@ export const AdminQuickOrderPage: React.FC = () => {
                     <span className={balanceDue > 0 ? 'text-red-600' : 'text-emerald-700'}>
                       {balanceDue > 0 ? `Balance Due: ₹${balanceDue.toLocaleString('en-IN')}` : '✓ Fully Paid'}
                     </span>
-                  </div>
-                </div>
-              )}
-
-              {/* PARTIAL PAYMENT */}
-              {paymentMode === 'Partial' && (
-                <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 space-y-2 font-mono text-xs">
-                  <div className="flex justify-between items-center">
-                    <label className="font-bold text-amber-900">Amount Paid Now (₹):</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max={grandTotal}
-                      value={partialPaidAmount}
-                      onChange={(e) => setPartialPaidAmount(parseInt(e.target.value) || 0)}
-                      className="w-32 bg-white p-2 rounded-lg border border-amber-300 font-bold text-right outline-none"
-                    />
-                  </div>
-                  <div className="flex justify-between items-center text-xs font-bold pt-1 border-t border-amber-200">
-                    <span className="text-amber-900">Remaining Balance Due:</span>
-                    <span className="text-red-600 font-heading font-black">₹{balanceDue.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
               )}

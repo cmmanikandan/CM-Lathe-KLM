@@ -125,11 +125,7 @@ export const ProfileCompletionWizard: React.FC = () => {
 
   // Step 1
   const [name, setName] = useState(user?.googleName || user?.name || '');
-  const [phone, setPhone] = useState(user?.phone || '');
-  const [phoneVerified, setPhoneVerified] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [otpError, setOtpError] = useState('');
+  const [phone, setPhone] = useState(user?.phone?.replace(/\D/g, '').slice(-10) || '');
   const [avatarUrl, setAvatarUrl] = useState(user?.googlePhotoURL || user?.avatarUrl || '');
   const [useGooglePhoto, setUseGooglePhoto] = useState(true);
 
@@ -173,36 +169,6 @@ export const ProfileCompletionWizard: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleSendOtp = () => {
-    if (phone.replace(/\D/g, '').length !== 10) {
-      setOtpError('Please enter a valid 10-digit mobile number.');
-      return;
-    }
-    setOtpError('');
-    setOtpSent(true);
-  };
-
-  const handleOtpChange = (val: string, idx: number) => {
-    const newOtp = [...otp];
-    newOtp[idx] = val.slice(-1);
-    setOtp(newOtp);
-    if (val && idx < 5) {
-      const next = document.getElementById(`otp-${idx + 1}`);
-      if (next) (next as HTMLInputElement).focus();
-    }
-  };
-
-  const handleVerifyOtp = () => {
-    const code = otp.join('');
-    if (code.length === 6) {
-      setPhoneVerified(true);
-      setOtpSent(false);
-      setOtpError('');
-    } else {
-      setOtpError('Please enter all 6 OTP digits.');
-    }
-  };
-
   const goNext = () => {
     setDirection(1);
     setStep((s) => Math.min(s + 1, 4));
@@ -223,7 +189,7 @@ export const ProfileCompletionWizard: React.FC = () => {
     completeProfile({
       name,
       phone: '+91 ' + phone.replace(/\D/g, '').slice(-10),
-      phoneVerified,
+      phoneVerified: true,
       avatarUrl: useGooglePhoto ? googlePhoto : avatarUrl,
       address: fullAddress,
       addressDetails,
@@ -383,71 +349,22 @@ export const ProfileCompletionWizard: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Mobile + OTP */}
-                  <div className="space-y-3">
+                  {/* Mobile Number */}
+                  <div className="space-y-1">
                     <label className="text-xs font-bold text-gray-700 block">Mobile Number *</label>
-
-                    {phoneVerified ? (
-                      <div className="w-full bg-green-50 border border-green-300 rounded-xl px-4 py-3 flex items-center gap-2 text-sm text-green-800 font-bold">
-                        <CheckCircle2 size={16} className="text-green-600" /> +91 {phone} — Verified ✓
+                    <div className="flex gap-2">
+                      <div className="bg-gray-100 border border-gray-300 rounded-xl px-3 py-3 text-sm font-mono font-bold text-gray-700 shrink-0">
+                        +91
                       </div>
-                    ) : (
-                      <>
-                        <div className="flex gap-2">
-                          <div className="bg-gray-100 border border-gray-300 rounded-xl px-3 py-3 text-sm font-mono font-bold text-gray-700 shrink-0">
-                            +91
-                          </div>
-                          <input
-                            type="tel"
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                            placeholder="9876543210"
-                            disabled={otpSent}
-                            className="flex-1 bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-sm font-mono font-medium text-gray-900 outline-none focus:border-[#F97316] disabled:bg-gray-100 transition-colors"
-                          />
-
-                          <button
-                            onClick={handleSendOtp}
-                            disabled={otpSent}
-                            className="shrink-0 bg-[#111111] hover:bg-[#F97316] text-white text-xs font-heading font-black px-4 rounded-xl transition-colors disabled:bg-gray-400"
-                          >
-                            {otpSent ? 'Sent ✓' : 'Send OTP'}
-                          </button>
-                        </div>
-
-                        {otpSent && (
-                          <div className="space-y-3">
-                            <p className="text-xs text-gray-500 font-mono">
-                              Enter the 6-digit OTP sent to +91 {phone}
-                            </p>
-                            <div className="flex gap-2 justify-center">
-                              {otp.map((digit, idx) => (
-                                <input
-                                  key={idx}
-                                  id={`otp-${idx}`}
-                                  type="text"
-                                  inputMode="numeric"
-                                  maxLength={1}
-                                  value={digit}
-                                  onChange={(e) => handleOtpChange(e.target.value, idx)}
-                                  className="w-11 h-12 text-center text-base font-heading font-black text-[#111111] bg-gray-50 border-2 border-gray-300 rounded-xl outline-none focus:border-[#F97316]"
-                                />
-                              ))}
-                            </div>
-                            <button
-                              onClick={handleVerifyOtp}
-                              className="w-full bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs py-2.5 rounded-xl shadow-xs"
-                            >
-                              Verify OTP
-                            </button>
-                          </div>
-                        )}
-
-                        {otpError && (
-                          <p className="text-xs text-red-600 font-bold">⚠️ {otpError}</p>
-                        )}
-                      </>
-                    )}
+                      <input
+                        type="tel"
+                        required
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                        placeholder="9876543210"
+                        className="flex-1 bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-sm font-mono font-medium text-gray-900 outline-none focus:border-[#F97316] transition-colors"
+                      />
+                    </div>
                   </div>
                 </div>
               )}
@@ -662,7 +579,7 @@ export const ProfileCompletionWizard: React.FC = () => {
 
                     {[
                       { label: 'Email', value: user?.googleEmail || user?.email, icon: '📧', verified: true },
-                      { label: 'Mobile', value: phone ? `+91 ${phone}` : 'Not provided', icon: '📱', verified: phoneVerified },
+                      { label: 'Mobile', value: phone ? `+91 ${phone}` : 'Not provided', icon: '📱', verified: Boolean(phone) },
                       { label: 'Address', value: [houseNo, street, area, village, district, state, pincode].filter(Boolean).join(', ') || 'Not provided', icon: '📍' },
                       { label: 'Language', value: language === 'Tamil' ? '🇮🇳 தமிழ்' : '🌐 English', icon: '🌐' },
                       { label: 'Notifications', value: [notifPush && 'Push', notifEmail && 'Email', notifWhatsApp && 'WhatsApp', notifSms && 'SMS'].filter(Boolean).join(' • ') || 'None', icon: '🔔' },
@@ -734,11 +651,11 @@ export const ProfileCompletionWizard: React.FC = () => {
               <button
                 onClick={goNext}
                 disabled={
-                  (step === 1 && (!name.trim() || !phoneVerified)) ||
+                  (step === 1 && (!name.trim() || phone.replace(/\D/g, '').length !== 10)) ||
                   (step === 2 && (!houseNo || !village || !pincode || pincode.length !== 6))
                 }
                 className={`flex items-center gap-1.5 text-xs font-heading font-black px-5 py-2.5 rounded-xl transition-all shadow-xs ${
-                  (step === 1 && (!name.trim() || !phoneVerified)) ||
+                  (step === 1 && (!name.trim() || phone.replace(/\D/g, '').length !== 10)) ||
                   (step === 2 && (!houseNo || !village || !pincode || pincode.length !== 6))
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                     : 'bg-[#111111] hover:bg-[#F97316] text-white'

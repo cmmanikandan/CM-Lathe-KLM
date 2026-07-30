@@ -1,23 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { uploadToCloudinary } from '../../services/cloudinaryService';
-import { fetchGallery, insertGalleryItem, deleteGalleryItem, GalleryItem as DBGalleryItem } from '../../services/supabaseService';
+import {
+  fetchGallery,
+  insertGalleryItem,
+  deleteGalleryItem,
+  fetchHeroBanners,
+  insertHeroBanner,
+  deleteHeroBanner,
+  HeroBanner,
+  GalleryItem as DBGalleryItem,
+} from '../../services/supabaseService';
+import { ImageViewerModal } from '../../components/common/ImageViewerModal';
 import {
   Image as ImageIcon,
-  Video,
   Plus,
   Trash2,
   Eye,
-  EyeOff,
   Search,
   Upload,
   CheckCircle2,
-  Sparkles,
   Folder,
   FolderOpen,
   Star,
   Loader2,
   X,
-  Check
+  AlertTriangle,
+  Sparkles
 } from 'lucide-react';
 
 interface GalleryItem {
@@ -33,11 +41,28 @@ interface GalleryItem {
   uploadDate: string;
 }
 
+interface DeleteConfirmState {
+  show: boolean;
+  targetType: 'item' | 'photo';
+  itemId?: string;
+  photoUrl?: string;
+  itemTitle?: string;
+}
+
 export const AdminGalleryPage: React.FC = () => {
   const [galleryList, setGalleryList] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
+
+  // Full Screen Lightbox Viewer State
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerImages, setViewerImages] = useState<string[]>([]);
+  const [viewerIndex, setViewerIndex] = useState(0);
+  const [viewerTitle, setViewerTitle] = useState('');
+
+  // Confirmation Delete Popup Modal State
+  const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirmState | null>(null);
 
   // Upload Modal State
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -45,7 +70,6 @@ export const AdminGalleryPage: React.FC = () => {
   const [newCategory, setNewCategory] = useState('Steel Gates');
   const [newMediaType, setNewMediaType] = useState<'image' | 'video'>('image');
   const [newDescription, setNewDescription] = useState('');
-  const [isFolderFormat, setIsFolderFormat] = useState(false);
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
   const [mainCoverIndex, setMainCoverIndex] = useState<number>(0);
   const [isFeatured, setIsFeatured] = useState(false);
@@ -94,36 +118,8 @@ export const AdminGalleryPage: React.FC = () => {
           })
         );
       } else {
-        // Default initial items
-        setGalleryList([
-          {
-            id: 'gal-1',
-            title: '9-Tine Hardened Kalappai Assembly',
-            category: 'Kalappai',
-            mediaType: 'image',
-            mediaUrl: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80',
-            description: 'Lathe machined cultivator tines forged for red soil.',
-            folderImages: ['https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80'],
-            isFeatured: true,
-            isHidden: false,
-            uploadDate: '2026-07-25',
-          },
-          {
-            id: 'gal-2',
-            title: 'CNC Laser Cut SS 304 Main Safety Gate Folder',
-            category: 'Steel Gates',
-            mediaType: 'image',
-            mediaUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80',
-            description: 'Architectural safety gate with heavy bearing hinges.',
-            folderImages: [
-              'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80',
-              'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80',
-            ],
-            isFeatured: true,
-            isHidden: false,
-            uploadDate: '2026-07-22',
-          },
-        ]);
+        // No dummy items, show empty state cleanly
+        setGalleryList([]);
       }
     } catch (err) {
       console.error('Failed to load gallery from Supabase:', err);
@@ -132,9 +128,146 @@ export const AdminGalleryPage: React.FC = () => {
     }
   };
 
+  // Hero Banners Tab State
+  const [activeTab, setActiveTab] = useState<'gallery' | 'banners'>('gallery');
+  const [heroBannersList, setHeroBannersList] = useState<HeroBanner[]>([]);
+  const [showAddBannerModal, setShowAddBannerModal] = useState(false);
+  const [bannerTitle, setBannerTitle] = useState('');
+  const [bannerSubtitle, setBannerSubtitle] = useState('');
+  const [bannerTag, setBannerTag] = useState('AGRICULTURAL MACHINERY');
+  const [bannerImage, setBannerImage] = useState('');
+  const [bannerCtaText, setBannerCtaText] = useState('Explore Catalog');
+  const [bannerCtaLink, setBannerCtaLink] = useState('/products');
+  const [bannerUploading, setBannerUploading] = useState(false);
+
+  const loadBanners = async () => {
+    const banners = await fetchHeroBanners();
+    setHeroBannersList(banners);
+  };
+
   useEffect(() => {
     loadGallery();
+    loadBanners();
   }, []);
+
+  const handleBannerImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBannerUploading(true);
+    try {
+      const url = await uploadToCloudinary(file);
+      setBannerImage(url);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setBannerUploading(false);
+    }
+  };
+
+  const handleSaveBanner = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bannerTitle || !bannerImage) {
+      alert('Please enter banner title and upload an image.');
+      return;
+    }
+    const newB: HeroBanner = {
+      id: `banner-${Date.now()}`,
+      title: bannerTitle,
+      subtitle: bannerSubtitle,
+      tag: bannerTag,
+      image: bannerImage,
+      ctaText: bannerCtaText,
+      ctaLink: bannerCtaLink,
+      isActive: true,
+      displayOrder: heroBannersList.length + 1,
+      createdAt: new Date().toISOString(),
+    };
+    await insertHeroBanner(newB);
+    await loadBanners();
+    setShowAddBannerModal(false);
+    setBannerTitle('');
+    setBannerSubtitle('');
+    setBannerImage('');
+  };
+
+  const handleToggleBanner = async (b: HeroBanner) => {
+    const updated = { ...b, isActive: !b.isActive };
+    await insertHeroBanner(updated);
+    await loadBanners();
+  };
+
+  const handleDeleteBanner = async (id: string) => {
+    await deleteHeroBanner(id);
+    await loadBanners();
+  };
+
+  // Open Lightbox Image Viewer
+  const openImageViewer = (images: string[], index: number = 0, title: string = '') => {
+    setViewerImages(images);
+    setViewerIndex(index);
+    setViewerTitle(title);
+    setViewerOpen(true);
+  };
+
+  // Trigger Delete Confirmation Popup for Gallery Item or Album Folder
+  const promptDeleteItem = (item: GalleryItem) => {
+    setDeleteConfirm({
+      show: true,
+      targetType: 'item',
+      itemId: item.id,
+      itemTitle: item.title,
+    });
+  };
+
+  // Trigger Delete Confirmation Popup for a specific Photo inside a Folder Album
+  const promptDeletePhotoFromFolder = (folderItem: GalleryItem, photoUrl: string) => {
+    if (folderItem.folderImages.length <= 1) {
+      alert('Cannot delete the only photo in an album. Delete the entire folder instead.');
+      return;
+    }
+    setDeleteConfirm({
+      show: true,
+      targetType: 'photo',
+      itemId: folderItem.id,
+      photoUrl: photoUrl,
+      itemTitle: folderItem.title,
+    });
+  };
+
+  // Execute Confirmed Delete Action
+  const executeConfirmedDelete = async () => {
+    if (!deleteConfirm) return;
+
+    if (deleteConfirm.targetType === 'item' && deleteConfirm.itemId) {
+      const targetId = deleteConfirm.itemId;
+      await deleteGalleryItem(targetId);
+      setGalleryList((prev) => prev.filter((i) => i.id !== targetId));
+      if (activeFolderItem?.id === targetId) setActiveFolderItem(null);
+    } else if (deleteConfirm.targetType === 'photo' && deleteConfirm.itemId && deleteConfirm.photoUrl && activeFolderItem) {
+      const targetUrl = deleteConfirm.photoUrl;
+      const folderItem = activeFolderItem;
+      const updatedFolder = folderItem.folderImages.filter((url) => url !== targetUrl);
+      const newCover = folderItem.mediaUrl === targetUrl ? updatedFolder[0] : folderItem.mediaUrl;
+      const updatedItem = { ...folderItem, mediaUrl: newCover, folderImages: updatedFolder };
+
+      setGalleryList((prev) => prev.map((i) => (i.id === folderItem.id ? updatedItem : i)));
+      setActiveFolderItem(updatedItem);
+
+      const dbDescription = `${updatedItem.description}__FOLD_IMGS__${JSON.stringify(updatedFolder)}`;
+      await insertGalleryItem({
+        id: updatedItem.id,
+        title: updatedItem.title,
+        category: updatedItem.category,
+        mediaType: updatedItem.mediaType,
+        mediaUrl: newCover,
+        description: dbDescription,
+        isFeatured: updatedItem.isFeatured,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    setDeleteConfirm(null);
+  };
 
   // Multi-file upload for main upload modal
   const handleMultipleFilesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -151,7 +284,7 @@ export const AdminGalleryPage: React.FC = () => {
         newUrls.push(url);
         setUploadProgress(Math.round(((i + 1) / files.length) * 100));
       } catch (err) {
-        console.error(err);
+        console.error('Cloudinary Upload error:', err);
       }
     }
 
@@ -176,7 +309,7 @@ export const AdminGalleryPage: React.FC = () => {
         addedUrls.push(url);
         setFolderUploadProgress(Math.round(((i + 1) / files.length) * 100));
       } catch (err) {
-        console.error(err);
+        console.error('Cloudinary Folder Upload error:', err);
       }
     }
 
@@ -186,11 +319,10 @@ export const AdminGalleryPage: React.FC = () => {
       folderImages: updatedFolderImages,
     };
 
-    // Save to State & Supabase
     setGalleryList((prev) => prev.map((item) => (item.id === activeFolderItem.id ? updatedItem : item)));
     setActiveFolderItem(updatedItem);
 
-    // Save in DB
+    // Save/Upsert in DB
     const dbDescription = `${updatedItem.description}__FOLD_IMGS__${JSON.stringify(updatedFolderImages)}`;
     await insertGalleryItem({
       id: updatedItem.id,
@@ -221,7 +353,6 @@ export const AdminGalleryPage: React.FC = () => {
 
     const coverUrl = uploadedPhotos[mainCoverIndex] || uploadedPhotos[0];
     const folderPhotos = uploadedPhotos;
-
     const dbDescription = `${newDescription}__FOLD_IMGS__${JSON.stringify(folderPhotos)}`;
 
     const newItem: DBGalleryItem = {
@@ -264,18 +395,6 @@ export const AdminGalleryPage: React.FC = () => {
     }, 1500);
   };
 
-  const toggleHide = (id: string) => {
-    setGalleryList((prev) => prev.map((i) => (i.id === id ? { ...i, isHidden: !i.isHidden } : i)));
-  };
-
-  const deleteItem = async (id: string) => {
-    if (confirm('Are you sure you want to delete this gallery item/folder?')) {
-      await deleteGalleryItem(id);
-      setGalleryList((prev) => prev.filter((i) => i.id !== id));
-      if (activeFolderItem?.id === id) setActiveFolderItem(null);
-    }
-  };
-
   const setCoverInFolder = async (folderItem: GalleryItem, coverUrl: string) => {
     const updatedItem = { ...folderItem, mediaUrl: coverUrl };
     setGalleryList((prev) => prev.map((i) => (i.id === folderItem.id ? updatedItem : i)));
@@ -294,31 +413,6 @@ export const AdminGalleryPage: React.FC = () => {
     });
   };
 
-  const deletePhotoFromFolder = async (folderItem: GalleryItem, targetUrl: string) => {
-    if (folderItem.folderImages.length <= 1) {
-      alert('Cannot delete the last image in the folder album.');
-      return;
-    }
-    const updatedFolder = folderItem.folderImages.filter((url) => url !== targetUrl);
-    const newCover = folderItem.mediaUrl === targetUrl ? updatedFolder[0] : folderItem.mediaUrl;
-    const updatedItem = { ...folderItem, mediaUrl: newCover, folderImages: updatedFolder };
-
-    setGalleryList((prev) => prev.map((i) => (i.id === folderItem.id ? updatedItem : i)));
-    setActiveFolderItem(updatedItem);
-
-    const dbDescription = `${updatedItem.description}__FOLD_IMGS__${JSON.stringify(updatedFolder)}`;
-    await insertGalleryItem({
-      id: updatedItem.id,
-      title: updatedItem.title,
-      category: updatedItem.category,
-      mediaType: updatedItem.mediaType,
-      mediaUrl: newCover,
-      description: dbDescription,
-      isFeatured: updatedItem.isFeatured,
-      createdAt: new Date().toISOString(),
-    });
-  };
-
   const filteredItems = galleryList.filter((item) => {
     const matchesCat = categoryFilter === 'All' || item.category === categoryFilter;
     const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
@@ -328,14 +422,39 @@ export const AdminGalleryPage: React.FC = () => {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 font-sans max-w-7xl mx-auto">
       
-      {/* Header & Upload Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-4">
-        <div>
-          <h1 className="font-heading font-black text-2xl text-[#111111] flex items-center gap-2">
-            <ImageIcon size={24} className="text-[#F97316]" /> GALLERY & ALBUM MANAGEMENT
-          </h1>
-          <p className="text-xs text-gray-500">Upload photos directly, manage cover images & add photos to folder albums</p>
-        </div>
+      {/* Top Tab Bar: Gallery vs Hero Banners */}
+      <div className="flex items-center gap-2 border-b border-gray-200 pb-3">
+        <button
+          onClick={() => setActiveTab('gallery')}
+          className={`px-4 py-2 rounded-xl font-heading font-black text-xs transition-all flex items-center gap-2 cursor-pointer ${
+            activeTab === 'gallery'
+              ? 'bg-[#111111] text-white shadow-md'
+              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+          }`}
+        >
+          <ImageIcon size={16} /> Gallery & Folder Albums
+        </button>
+        <button
+          onClick={() => setActiveTab('banners')}
+          className={`px-4 py-2 rounded-xl font-heading font-black text-xs transition-all flex items-center gap-2 cursor-pointer ${
+            activeTab === 'banners'
+              ? 'bg-[#F97316] text-white shadow-md'
+              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+          }`}
+        >
+          <Sparkles size={16} /> Hero Slide Banners ({heroBannersList.length})
+        </button>
+      </div>
+
+      {activeTab === 'gallery' && (
+        <>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-4">
+            <div>
+              <h1 className="font-heading font-black text-2xl text-[#111111] flex items-center gap-2">
+                <ImageIcon size={24} className="text-[#F97316]" /> GALLERY & ALBUM MANAGEMENT
+              </h1>
+              <p className="text-xs text-gray-500">Upload photos directly, manage cover images & view folder albums</p>
+            </div>
 
         <button
           onClick={() => {
@@ -395,8 +514,8 @@ export const AdminGalleryPage: React.FC = () => {
             <button
               key={cat}
               onClick={() => setCategoryFilter(cat)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-heading font-extrabold shrink-0 border transition-all cursor-pointer ${
-                categoryFilter === cat ? 'bg-[#111111] text-white border-[#111111]' : 'bg-gray-50 text-gray-700 border-gray-200'
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-heading font-extrabold shrink-0 border transition-all cursor-pointer ${
+                categoryFilter === cat ? 'bg-[#111111] text-white border-[#111111]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
               }`}
             >
               {cat}
@@ -406,71 +525,292 @@ export const AdminGalleryPage: React.FC = () => {
       </div>
 
       {/* Gallery & Folder Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filteredItems.map((item) => {
-          const isFolder = item.folderImages.length > 1;
-          return (
-            <div
-              key={item.id}
-              className={`bg-white rounded-2xl border overflow-hidden shadow-xs space-y-3 p-3 transition-all hover:border-[#F97316] ${
-                item.isHidden ? 'opacity-50 border-dashed border-gray-300' : 'border-gray-200'
-              }`}
-            >
+      {loading ? (
+        <div className="py-16 text-center space-y-2">
+          <Loader2 size={32} className="animate-spin mx-auto text-[#F97316]" />
+          <p className="text-xs font-bold text-gray-500">Loading gallery items...</p>
+        </div>
+      ) : filteredItems.length === 0 ? (
+        <div className="bg-white rounded-2xl p-12 text-center border border-gray-200 shadow-xs space-y-3">
+          <ImageIcon size={44} className="mx-auto text-gray-300" />
+          <h3 className="font-heading font-black text-base text-[#111111]">No Gallery Works Found</h3>
+          <p className="text-xs text-gray-500 max-w-sm mx-auto">
+            {searchQuery || categoryFilter !== 'All'
+              ? 'No items match your search filter.'
+              : 'Your gallery is empty. Click "Upload New Gallery Work" to upload photos and folder albums.'}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {filteredItems.map((item) => {
+            const isFolder = item.folderImages.length > 1;
+            return (
               <div
-                onClick={() => setActiveFolderItem(item)}
-                className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center cursor-pointer group"
+                key={item.id}
+                className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs space-y-3 p-3 transition-all hover:border-[#F97316] flex flex-col justify-between"
               >
-                <img src={item.mediaUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                
-                <div className="absolute top-2 left-2 flex flex-wrap gap-1">
-                  <span className="bg-black/70 text-white text-[9px] font-mono font-bold px-2 py-0.5 rounded">
-                    {item.category}
-                  </span>
-                  {item.isFeatured && (
-                    <span className="bg-[#F97316] text-white text-[9px] font-black px-2 py-0.5 rounded">
-                      FEATURED
+                {/* Image / Folder Card Cover Thumbnail */}
+                <div
+                  onClick={() => {
+                    if (isFolder) {
+                      setActiveFolderItem(item);
+                    } else {
+                      openImageViewer(item.folderImages, 0, item.title);
+                    }
+                  }}
+                  className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center cursor-pointer group"
+                >
+                  <img
+                    src={item.mediaUrl}
+                    alt={item.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  
+                  <div className="absolute top-2 left-2 flex flex-wrap gap-1">
+                    <span className="bg-black/70 text-white text-[9px] font-mono font-bold px-2 py-0.5 rounded">
+                      {item.category}
                     </span>
+                    {item.isFeatured && (
+                      <span className="bg-[#F97316] text-white text-[9px] font-black px-2 py-0.5 rounded">
+                        FEATURED
+                      </span>
+                    )}
+                  </div>
+
+                  {isFolder ? (
+                    <div className="absolute bottom-2 right-2 bg-blue-600/90 text-white text-[10px] font-mono font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-md">
+                      <Folder size={12} /> {item.folderImages.length} Photos
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <span className="bg-white text-black text-[11px] font-black px-3 py-1.5 rounded-full shadow-md flex items-center gap-1">
+                        <Eye size={14} className="text-[#F97316]" /> View Photo
+                      </span>
+                    </div>
                   )}
                 </div>
 
-                {isFolder && (
-                  <div className="absolute bottom-2 right-2 bg-blue-600/90 text-white text-[10px] font-mono font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-md">
-                    <Folder size={12} /> {item.folderImages.length} Photos
+                <div className="space-y-1">
+                  <h3
+                    onClick={() => {
+                      if (isFolder) {
+                        setActiveFolderItem(item);
+                      } else {
+                        openImageViewer(item.folderImages, 0, item.title);
+                      }
+                    }}
+                    className="font-heading font-extrabold text-xs text-[#111111] line-clamp-1 cursor-pointer hover:text-[#F97316]"
+                  >
+                    {item.title}
+                  </h3>
+                  <p className="text-[11px] text-gray-500 line-clamp-2">{item.description || 'No description'}</p>
+                </div>
+
+                {/* Card Actions */}
+                <div className="flex items-center justify-between border-t border-gray-100 pt-2 text-xs">
+                  {isFolder ? (
+                    <button
+                      onClick={() => setActiveFolderItem(item)}
+                      className="text-blue-600 hover:text-blue-800 font-bold text-[11px] flex items-center gap-1 cursor-pointer"
+                    >
+                      <FolderOpen size={13} /> Open Folder Album
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => openImageViewer(item.folderImages, 0, item.title)}
+                      className="text-[#F97316] hover:text-[#EA580C] font-bold text-[11px] flex items-center gap-1 cursor-pointer"
+                    >
+                      <Eye size={13} /> View Full Image
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => promptDeleteItem(item)}
+                    className="text-red-600 hover:text-red-800 font-bold text-[11px] flex items-center gap-1 cursor-pointer"
+                  >
+                    <Trash2 size={13} /> Delete
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+        </>
+      )}
+
+      {/* Hero Banners Management Tab */}
+      {activeTab === 'banners' && (
+        <div className="space-y-6 animate-in fade-in font-sans">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-xs">
+            <div>
+              <h2 className="font-heading font-black text-xl text-[#111111] flex items-center gap-2">
+                <Sparkles size={20} className="text-[#F97316]" /> HERO SLIDE BANNERS (STORED & DYNAMIC)
+              </h2>
+              <p className="text-xs text-gray-500 font-mono">
+                Manage hero slider banners displayed on homepage. Synchronized with Supabase & database storage.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowAddBannerModal(true)}
+              className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs px-5 py-3 rounded-xl shadow-md flex items-center gap-2 transition-all cursor-pointer"
+            >
+              <Plus size={16} /> Add Hero Banner
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {heroBannersList.map((banner) => (
+              <div
+                key={banner.id}
+                className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs space-y-3 flex flex-col justify-between"
+              >
+                <div className="relative aspect-video bg-gray-900">
+                  <img
+                    src={banner.image}
+                    alt={banner.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <span className="absolute top-3 left-3 bg-[#111111]/80 backdrop-blur-md text-white text-[10px] font-mono font-bold px-2.5 py-1 rounded-md">
+                    {banner.tag}
+                  </span>
+                  <button
+                    onClick={() => handleDeleteBanner(banner.id)}
+                    className="absolute top-3 right-3 p-2 bg-red-600/90 text-white rounded-lg hover:bg-red-700 transition-colors cursor-pointer"
+                    title="Delete Banner"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+
+                <div className="p-4 space-y-2 flex-1">
+                  <h3 className="font-heading font-black text-sm text-[#111111] line-clamp-1">
+                    {banner.title}
+                  </h3>
+                  <p className="text-xs text-gray-500 line-clamp-2">{banner.subtitle}</p>
+                </div>
+
+                <div className="px-4 pb-4 flex items-center justify-between border-t border-gray-100 pt-3 text-xs font-mono">
+                  <button
+                    onClick={() => handleToggleBanner(banner)}
+                    className={`px-3 py-1 rounded-full font-bold text-[11px] cursor-pointer ${
+                      banner.isActive
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        : 'bg-gray-100 text-gray-600 border border-gray-300'
+                    }`}
+                  >
+                    {banner.isActive ? 'Active Live' : 'Hidden'}
+                  </button>
+                  <span className="text-gray-400">Order: #{banner.displayOrder}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Add Hero Banner Modal */}
+          {showAddBannerModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+              <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 space-y-4 font-sans">
+                <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                  <h3 className="font-heading font-black text-lg text-[#111111] flex items-center gap-2">
+                    <Sparkles size={18} className="text-[#F97316]" /> Add New Hero Banner
+                  </h3>
+                  <button onClick={() => setShowAddBannerModal(false)} className="p-1 rounded-full hover:bg-gray-100 text-gray-400">
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSaveBanner} className="space-y-3.5 text-xs">
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1">Banner Headline Title *</label>
+                    <input
+                      type="text"
+                      required
+                      value={bannerTitle}
+                      onChange={(e) => setBannerTitle(e.target.value)}
+                      placeholder="e.g. TRACTOR KALAPPAI & HEAVY CULTIVATORS"
+                      className="w-full bg-gray-50 hover:bg-white focus:bg-white p-3 rounded-xl border border-gray-300 font-bold outline-none focus:border-[#F97316]"
+                    />
                   </div>
-                )}
-              </div>
 
-              <div className="space-y-1">
-                <h3
-                  onClick={() => setActiveFolderItem(item)}
-                  className="font-heading font-extrabold text-xs text-[#111111] line-clamp-1 cursor-pointer hover:text-[#F97316]"
-                >
-                  {item.title}
-                </h3>
-                <p className="text-[11px] text-gray-500 line-clamp-2">{item.description || 'No description'}</p>
-              </div>
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1">Subheadline Description</label>
+                    <textarea
+                      rows={2}
+                      value={bannerSubtitle}
+                      onChange={(e) => setBannerSubtitle(e.target.value)}
+                      placeholder="Precision forged lathe-machined tines engineered for tough soil..."
+                      className="w-full bg-gray-50 hover:bg-white focus:bg-white p-3 rounded-xl border border-gray-300 outline-none focus:border-[#F97316]"
+                    />
+                  </div>
 
-              <div className="flex items-center justify-between border-t border-gray-100 pt-2 text-xs">
-                <button
-                  onClick={() => setActiveFolderItem(item)}
-                  className="text-blue-600 hover:text-blue-800 font-bold text-[11px] flex items-center gap-1 cursor-pointer"
-                >
-                  <FolderOpen size={13} /> {isFolder ? 'Open Folder' : 'View Media'}
-                </button>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-bold text-gray-700 block mb-1">Tag Category</label>
+                      <input
+                        type="text"
+                        value={bannerTag}
+                        onChange={(e) => setBannerTag(e.target.value)}
+                        placeholder="AGRICULTURAL MACHINERY"
+                        className="w-full bg-gray-50 hover:bg-white focus:bg-white p-2.5 rounded-xl border border-gray-300 font-mono text-[11px] outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold text-gray-700 block mb-1">CTA Button Text</label>
+                      <input
+                        type="text"
+                        value={bannerCtaText}
+                        onChange={(e) => setBannerCtaText(e.target.value)}
+                        placeholder="Explore Products"
+                        className="w-full bg-gray-50 hover:bg-white focus:bg-white p-2.5 rounded-xl border border-gray-300 outline-none"
+                      />
+                    </div>
+                  </div>
 
-                <button
-                  onClick={() => deleteItem(item.id)}
-                  className="text-red-600 hover:text-red-800 font-bold text-[11px] flex items-center gap-1 cursor-pointer"
-                >
-                  <Trash2 size={13} /> Delete
-                </button>
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1">Upload Banner Image *</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleBannerImageUpload}
+                      className="w-full bg-gray-50 p-2 rounded-xl border border-gray-300 text-xs"
+                    />
+                    {bannerUploading && (
+                      <p className="text-[11px] text-[#F97316] font-bold mt-1 flex items-center gap-1">
+                        <Loader2 size={12} className="animate-spin" /> Uploading to Cloudinary...
+                      </p>
+                    )}
+                    {bannerImage && (
+                      <div className="mt-2 aspect-video rounded-xl overflow-hidden border border-gray-200">
+                        <img src={bannerImage} alt="Preview" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddBannerModal(false)}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 font-bold rounded-xl"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={bannerUploading || !bannerImage}
+                      className="px-5 py-2 bg-[#F97316] hover:bg-[#EA580C] disabled:opacity-50 text-white font-heading font-black rounded-xl shadow-md cursor-pointer"
+                    >
+                      Save Hero Banner ✓
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
-          );
-        })}
-      </div>
+          )}
+        </div>
+      )}
 
-      {/* 📁 FOLDER ALBUM VIEWER & ADD IMAGES MODAL */}
+      {/* 📁 FOLDER ALBUM VIEWER MODAL */}
       {activeFolderItem && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-[22px] max-w-3xl w-full p-6 space-y-5 shadow-2xl border border-gray-200 font-sans my-8">
@@ -497,10 +837,10 @@ export const AdminGalleryPage: React.FC = () => {
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-gray-800">
-                  Existing Photos in Folder ({activeFolderItem.folderImages.length})
+                  Photos in Album ({activeFolderItem.folderImages.length})
                 </span>
                 <span className="text-gray-500 font-mono text-[10px]">
-                  ⭐ Tap "Set Main Cover" to change album thumbnail
+                  🔍 Tap image to expand full view • ⭐ Set main cover
                 </span>
               </div>
 
@@ -508,29 +848,50 @@ export const AdminGalleryPage: React.FC = () => {
                 {activeFolderItem.folderImages.map((imgUrl, idx) => {
                   const isCover = activeFolderItem.mediaUrl === imgUrl;
                   return (
-                    <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-gray-300 bg-black">
+                    <div
+                      key={idx}
+                      className="relative group aspect-square rounded-xl overflow-hidden border border-gray-300 bg-black cursor-pointer"
+                      onClick={() => openImageViewer(activeFolderItem.folderImages, idx, activeFolderItem.title)}
+                    >
                       <img src={imgUrl} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
 
                       {isCover && (
-                        <span className="absolute top-1.5 left-1.5 bg-[#F97316] text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-md flex items-center gap-1">
+                        <span className="absolute top-1.5 left-1.5 bg-[#F97316] text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-md flex items-center gap-1 z-10">
                           <Star size={10} /> Main Cover
                         </span>
                       )}
 
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-2">
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-2 z-10">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openImageViewer(activeFolderItem.folderImages, idx, activeFolderItem.title);
+                          }}
+                          className="bg-white hover:bg-gray-100 text-black text-[10px] font-black px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1 cursor-pointer"
+                        >
+                          <Eye size={12} className="text-[#F97316]" /> View Full Image
+                        </button>
+
                         {!isCover && (
                           <button
-                            onClick={() => setCoverInFolder(activeFolderItem, imgUrl)}
-                            className="bg-[#F97316] hover:bg-[#EA580C] text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg shadow-sm cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCoverInFolder(activeFolderItem, imgUrl);
+                            }}
+                            className="bg-[#F97316] hover:bg-[#EA580C] text-white text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm cursor-pointer"
                           >
                             Set Main Cover
                           </button>
                         )}
+                        
                         <button
-                          onClick={() => deletePhotoFromFolder(activeFolderItem, imgUrl)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            promptDeletePhotoFromFolder(activeFolderItem, imgUrl);
+                          }}
                           className="bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-sm flex items-center gap-1 cursor-pointer"
                         >
-                          <Trash2 size={12} /> Delete
+                          <Trash2 size={12} /> Delete Photo
                         </button>
                       </div>
                     </div>
@@ -544,9 +905,9 @@ export const AdminGalleryPage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="font-heading font-black text-xs text-amber-900 flex items-center gap-1.5">
-                    <Plus size={16} className="text-[#F97316]" /> Add More Images to This Folder
+                    <Plus size={16} className="text-[#F97316]" /> Add More Images to This Folder Album
                   </h4>
-                  <p className="text-[11px] text-amber-700">Select new photos to upload directly into this album folder.</p>
+                  <p className="text-[11px] text-amber-700">Upload new photos directly into this folder.</p>
                 </div>
 
                 <label className="bg-[#111111] hover:bg-black text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md cursor-pointer flex items-center gap-1.5 shrink-0">
@@ -564,7 +925,7 @@ export const AdminGalleryPage: React.FC = () => {
               {folderUploading && (
                 <div className="space-y-1 pt-1">
                   <div className="flex justify-between text-[11px] font-mono font-bold text-amber-900">
-                    <span>Uploading photos to folder...</span>
+                    <span>Uploading photos to folder album...</span>
                     <span>{folderUploadProgress}%</span>
                   </div>
                   <div className="w-full bg-amber-200 h-2 rounded-full overflow-hidden">
@@ -597,7 +958,7 @@ export const AdminGalleryPage: React.FC = () => {
               <div className="text-center py-6 space-y-2">
                 <CheckCircle2 size={40} className="mx-auto text-green-600" />
                 <h3 className="font-heading font-black text-lg text-[#111111]">Gallery Work Published!</h3>
-                <p className="text-xs text-gray-500">Live in workshop gallery with cover image set.</p>
+                <p className="text-xs text-gray-500">Saved to Supabase live workshop gallery.</p>
               </div>
             ) : (
               <>
@@ -765,6 +1126,54 @@ export const AdminGalleryPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ⚠️ DELETE CONFIRMATION POPUP MODAL */}
+      {deleteConfirm && deleteConfirm.show && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-[24px] max-w-sm w-full p-6 space-y-4 shadow-2xl border border-gray-200 text-center font-sans">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto text-red-600">
+              <AlertTriangle size={24} />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="font-heading font-black text-lg text-[#111111]">
+                Confirm Deletion
+              </h3>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                {deleteConfirm.targetType === 'item' ? (
+                  <>Are you sure you want to delete <span className="font-bold text-black">{deleteConfirm.itemTitle}</span>? This action cannot be undone.</>
+                ) : (
+                  <>Are you sure you want to remove this photo from <span className="font-bold text-black">{deleteConfirm.itemTitle}</span> album?</>
+                )}
+              </p>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs rounded-xl cursor-pointer transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeConfirmedDelete}
+                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl cursor-pointer transition-colors shadow-md"
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🔍 FULLSCREEN LIGHTBOX IMAGE VIEWER MODAL */}
+      <ImageViewerModal
+        images={viewerImages}
+        initialIndex={viewerIndex}
+        isOpen={viewerOpen}
+        onClose={() => setViewerOpen(false)}
+        title={viewerTitle}
+      />
 
     </div>
   );

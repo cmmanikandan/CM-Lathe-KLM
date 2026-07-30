@@ -266,7 +266,7 @@ export const fetchGallery = async (): Promise<GalleryItem[]> => {
 export const insertGalleryItem = async (item: GalleryItem): Promise<GalleryItem | null> => {
   const { data, error } = await supabase
     .from('admin_gallery')
-    .insert({
+    .upsert({
       id: item.id || `gal-${Date.now()}`,
       title: item.title,
       category: item.category,
@@ -301,6 +301,155 @@ export const deleteGalleryItem = async (id: string): Promise<boolean> => {
     console.error('deleteGalleryItem error:', error);
     return false;
   }
+  return true;
+};
+
+// ─── HERO BANNERS ─────────────────────────────────────────────────────────────
+
+export interface HeroBanner {
+  id: string;
+  title: string;
+  subtitle: string;
+  tag: string;
+  image: string;
+  ctaText?: string;
+  ctaLink?: string;
+  isActive: boolean;
+  displayOrder: number;
+  createdAt: string;
+}
+
+const HERO_BANNERS_STORAGE_KEY = 'cmlathe_hero_banners_v1';
+
+export const DEFAULT_HERO_BANNERS: HeroBanner[] = [
+  {
+    id: 'banner-1',
+    title: 'TRACTOR KALAPPAI & CULTIVATORS',
+    subtitle: 'Precision forged lathe-machined tines engineered for tough agricultural soil.',
+    tag: 'AGRICULTURAL MACHINERY',
+    image: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=1000&q=80',
+    ctaText: 'Explore Kalappai',
+    ctaLink: '/products',
+    isActive: true,
+    displayOrder: 1,
+    createdAt: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'banner-2',
+    title: 'HEAVY DUTY STEEL SAFETY GATES',
+    subtitle: 'Custom laser cut architectural main gates with lifetime anti-rust warranty.',
+    tag: 'HOME ARCHITECTURAL STEEL',
+    image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1000&q=80',
+    ctaText: 'View Steel Gates',
+    ctaLink: '/products',
+    isActive: true,
+    displayOrder: 2,
+    createdAt: '2026-01-02T00:00:00.000Z',
+  },
+  {
+    id: 'banner-3',
+    title: 'PRECISION LATHE TURNING & REPAIRS',
+    subtitle: 'Shaft turning, gear welding, tractor axle re-facing & heavy industrial turning.',
+    tag: 'WORKSHOP LATHE SERVICES',
+    image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1000&q=80',
+    ctaText: 'Custom Order',
+    ctaLink: '/quick-order',
+    isActive: true,
+    displayOrder: 3,
+    createdAt: '2026-01-03T00:00:00.000Z',
+  },
+];
+
+export const fetchHeroBanners = async (): Promise<HeroBanner[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('hero_banners')
+      .select('*')
+      .order('display_order', { ascending: true });
+
+    if (!error && data && data.length > 0) {
+      const mapped = data.map((r) => ({
+        id: r.id as string,
+        title: r.title as string,
+        subtitle: r.subtitle as string,
+        tag: r.tag as string,
+        image: r.image_url || r.image as string,
+        ctaText: r.cta_text as string | undefined,
+        ctaLink: r.cta_link as string | undefined,
+        isActive: r.is_active !== false,
+        displayOrder: Number(r.display_order || 1),
+        createdAt: r.created_at as string,
+      }));
+      localStorage.setItem(HERO_BANNERS_STORAGE_KEY, JSON.stringify(mapped));
+      return mapped;
+    }
+  } catch (e) {
+    console.warn('Supabase hero_banners query offline, loading stored banners.', e);
+  }
+
+  try {
+    const local = localStorage.getItem(HERO_BANNERS_STORAGE_KEY);
+    if (local) {
+      const parsed = JSON.parse(local);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {}
+
+  localStorage.setItem(HERO_BANNERS_STORAGE_KEY, JSON.stringify(DEFAULT_HERO_BANNERS));
+  return DEFAULT_HERO_BANNERS;
+};
+
+export const insertHeroBanner = async (banner: HeroBanner): Promise<HeroBanner> => {
+  const newBanner: HeroBanner = {
+    ...banner,
+    id: banner.id || `banner-${Date.now()}`,
+    createdAt: banner.createdAt || new Date().toISOString(),
+  };
+
+  try {
+    await supabase.from('hero_banners').upsert({
+      id: newBanner.id,
+      title: newBanner.title,
+      subtitle: newBanner.subtitle,
+      tag: newBanner.tag,
+      image_url: newBanner.image,
+      cta_text: newBanner.ctaText || null,
+      cta_link: newBanner.ctaLink || null,
+      is_active: newBanner.isActive,
+      display_order: newBanner.displayOrder,
+      created_at: newBanner.createdAt,
+    });
+  } catch (e) {
+    console.warn('Supabase upsert hero_banners failed, storing locally', e);
+  }
+
+  try {
+    const existing = await fetchHeroBanners();
+    const idx = existing.findIndex((b) => b.id === newBanner.id);
+    let updated: HeroBanner[];
+    if (idx >= 0) {
+      updated = [...existing];
+      updated[idx] = newBanner;
+    } else {
+      updated = [...existing, newBanner];
+    }
+    localStorage.setItem(HERO_BANNERS_STORAGE_KEY, JSON.stringify(updated));
+  } catch (e) {}
+
+  return newBanner;
+};
+
+export const deleteHeroBanner = async (id: string): Promise<boolean> => {
+  try {
+    await supabase.from('hero_banners').delete().eq('id', id);
+  } catch (e) {}
+
+  try {
+    const existing = await fetchHeroBanners();
+    const filtered = existing.filter((b) => b.id !== id);
+    localStorage.setItem(HERO_BANNERS_STORAGE_KEY, JSON.stringify(filtered));
+  } catch (e) {}
+
   return true;
 };
 

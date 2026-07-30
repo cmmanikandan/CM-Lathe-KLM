@@ -290,15 +290,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <div className="flex-1 min-w-0 overflow-y-auto relative">
         {children}
 
-        {/* Floating Global ERP Search Trigger Button */}
-        <button
-          onClick={() => setIsSearchOpen(true)}
-          className="fixed bottom-6 right-6 z-40 bg-[#111111] hover:bg-[#FF6A00] text-white p-3.5 rounded-full shadow-2xl border-2 border-white/20 transition-all active:scale-95 flex items-center gap-2 font-mono text-xs cursor-pointer group"
-          title="Search ERP Database (Ctrl+K)"
-        >
-          <Search size={18} className="text-[#FF6A00] group-hover:text-white transition-colors" />
-          <span className="hidden sm:inline font-bold">Search ERP (Ctrl+K)</span>
-        </button>
+
 
         <GlobalSearchModal
           isOpen={isSearchOpen}

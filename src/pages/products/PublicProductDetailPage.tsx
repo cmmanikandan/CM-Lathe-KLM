@@ -194,10 +194,16 @@ export const PublicProductDetailPage: React.FC = () => {
         {/* Breadcrumb */}
         <div className="flex items-center justify-between text-xs border-b border-gray-200/80 pb-3">
           <button
-            onClick={() => navigate('/products')}
-            className="inline-flex items-center gap-1.5 font-heading font-extrabold text-gray-600 hover:text-black transition-colors"
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate('/products');
+              }
+            }}
+            className="inline-flex items-center gap-1.5 font-heading font-extrabold text-gray-600 hover:text-black transition-colors cursor-pointer"
           >
-            <ArrowLeft size={16} className="text-[#F97316]" /> Back to Public Product Catalog
+            <ArrowLeft size={16} className="text-[#F97316]" /> Back to Products Catalog
           </button>
           <span className="font-mono text-gray-400 uppercase font-bold">{product.category}</span>
         </div>

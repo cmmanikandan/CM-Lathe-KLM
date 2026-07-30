@@ -23,6 +23,8 @@ import {
   Shield,
 } from 'lucide-react';
 
+import { GenericDeleteModal } from '../../components/common/GenericDeleteModal';
+
 export const AdminCustomersPage: React.FC = () => {
   const { orders } = useOrders();
   const [customers, setCustomers] = useState<CustomerUser[]>([]);
@@ -34,6 +36,7 @@ export const AdminCustomersPage: React.FC = () => {
   // Modal States
   const [isAddEditModalOpen, setIsAddEditModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<CustomerUser | null>(null);
+  const [deletingCustomer, setDeletingCustomer] = useState<{ id: string; name: string } | null>(null);
 
   const [viewingCustomer, setViewingCustomer] = useState<CustomerUser | null>(null);
 
@@ -175,10 +178,8 @@ export const AdminCustomersPage: React.FC = () => {
   };
 
   // Delete Customer
-  const handleDeleteCustomer = async (id: string, name: string) => {
-    if (!window.confirm(`Are you sure you want to remove customer "${name}"?`)) return;
-    await deleteCustomerProfile(id);
-    loadCustomers();
+  const handleDeleteCustomer = (id: string, name: string) => {
+    setDeletingCustomer({ id, name });
   };
 
   // Filter logic
@@ -774,6 +775,20 @@ export const AdminCustomersPage: React.FC = () => {
         </div>
       )}
 
+      {/* Delete Customer Confirmation Modal */}
+      <GenericDeleteModal
+        isOpen={!!deletingCustomer}
+        title="Remove Customer Profile"
+        itemTitle={deletingCustomer?.name}
+        description={`Are you sure you want to remove customer "${deletingCustomer?.name}"?`}
+        onClose={() => setDeletingCustomer(null)}
+        onConfirm={async () => {
+          if (deletingCustomer) {
+            await deleteCustomerProfile(deletingCustomer.id);
+            loadCustomers();
+          }
+        }}
+      />
     </div>
   );
 };

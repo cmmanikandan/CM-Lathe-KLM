@@ -76,12 +76,9 @@ export const AdminEnquiriesPage: React.FC = () => {
   };
 
   const handleApprove = async (e: CustomerEnquiry) => {
-    if (confirm(`Approve enquiry #${e.enquiryNumber} and convert to production order?`)) {
-      const orderId = await adminApproveEnquiry(e.id);
-      if (orderId) {
-        alert(`Order created successfully! Redirecting to order details...`);
-        navigate(`/admin/orders/${orderId}`);
-      }
+    const orderId = await adminApproveEnquiry(e.id);
+    if (orderId) {
+      navigate(`/admin/orders/${orderId}`);
     }
   };
 

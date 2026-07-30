@@ -48,20 +48,11 @@ export const PublicGalleryPage: React.FC = () => {
             category: i.category,
             type: i.mediaType || 'image',
             mediaUrl: i.mediaUrl,
-            date: i.createdAt ? i.createdAt.split('T')[0] : '2026-07-25',
+            date: i.createdAt ? i.createdAt.split('T')[0] : new Date().toISOString().split('T')[0],
           }))
         );
       } else {
-        setGalleryItems([
-          { id: 1, title: '9-Tine Hardened Tractor Kalappai', category: 'Kalappai', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80', date: '2026-07-20' },
-          { id: 2, title: 'CNC Laser Cut SS 304 Main Safety Gate', category: 'Steel Gates', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', date: '2026-07-22' },
-          { id: 3, title: 'Precision Lathe Turning Machine Shafts', category: 'Lathe Works', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80', date: '2026-07-18' },
-          { id: 4, title: 'Decorative Security Window Grill', category: 'Windows Grill', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=800&q=80', date: '2026-07-15' },
-          { id: 5, title: 'Heavy Duty Structural Steel Door', category: 'Steel Doors', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', date: '2026-07-10' },
-          { id: 6, title: '5-Tine Compact Cultivator Assembly', category: 'Kalappai', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80', date: '2026-07-08' },
-          { id: 7, title: 'Industrial Lathe Bush & Bearing Fitting', category: 'Machine Works', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80', date: '2026-07-05' },
-          { id: 8, title: 'Kallimandhayam Factory Gate Installation', category: 'New Installations', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', date: '2026-07-01' }
-        ]);
+        setGalleryItems([]);
       }
     } catch (err) {
       console.error('Failed to load gallery:', err);
