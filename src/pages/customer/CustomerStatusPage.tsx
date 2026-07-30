@@ -93,41 +93,11 @@ export const CustomerStatusPage: React.FC = () => {
             mediaUrl: i.mediaUrl,
             images: (i as any).images || [i.mediaUrl],
             isFolder: (i as any).isFolder || ((i as any).images && (i as any).images.length > 1) || false,
-            date: i.createdAt ? i.createdAt.split('T')[0] : '2026-07-28',
+            date: i.createdAt ? i.createdAt.split('T')[0] : new Date().toISOString().split('T')[0],
           }))
         );
       } else {
-        setGalleryItems([
-          {
-            id: 'g1',
-            title: '9-Tine Hardened Tractor Kalappai Folder',
-            category: 'Kalappai',
-            mediaUrl: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80',
-            images: [
-              'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80',
-              'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80',
-              'https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=800&q=80'
-            ],
-            isFolder: true,
-            date: '2026-07-28'
-          },
-          { id: 'g2', title: 'CNC Laser Cut SS 304 Main Safety Gate', category: 'Steel Gates', mediaUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', isFolder: false, date: '2026-07-26' },
-          { id: 'g3', title: 'Precision Lathe Turning Machine Shafts', category: 'Lathe Works', mediaUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80', isFolder: false, date: '2026-07-24' },
-          {
-            id: 'g4',
-            title: 'Steel Chair & Bench Fabrication Album',
-            category: 'Steel Doors',
-            mediaUrl: 'https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=800&q=80',
-            images: [
-              'https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=800&q=80',
-              'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80'
-            ],
-            isFolder: true,
-            date: '2026-07-22'
-          },
-          { id: 'g5', title: 'Heavy Duty Structural Steel Door', category: 'Steel Doors', mediaUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', isFolder: false, date: '2026-07-20' },
-          { id: 'g6', title: '5-Tine Compact Cultivator Assembly', category: 'Kalappai', mediaUrl: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80', isFolder: false, date: '2026-07-18' }
-        ]);
+        setGalleryItems([]);
       }
       setGalleryLoading(false);
     });

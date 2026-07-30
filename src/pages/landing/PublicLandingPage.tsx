@@ -43,12 +43,7 @@ export const PublicLandingPage: React.FC = () => {
           }))
         );
       } else {
-        setLiveGallery([
-          { title: "Heavy Duty 9-Tine Kalappai", tag: "Agricultural Machinery", image: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=500&q=80" },
-          { title: "CNC Laser Cut Main Safety Gate", tag: "Architectural Gates", image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=500&q=80" },
-          { title: "Precision Lathe Machine Shafts", tag: "Lathe Machining", image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=500&q=80" },
-          { title: "Decorative Security Window Grill", tag: "Residential Window Grill", image: "https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=500&q=80" }
-        ]);
+        setLiveGallery([]);
       }
     });
   }, []);
