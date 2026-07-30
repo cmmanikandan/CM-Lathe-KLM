@@ -247,9 +247,11 @@ export interface PaymentRequest {
 export interface Order {
   id: string;
   orderNumber: string;
+  customerId?: string;
   customerName: string;
   customerPhone: string;
   customerAddress: string;
+  customerGstin?: string;
   items: OrderItem[];
   basePrice: number;
   labourCharge?: number;

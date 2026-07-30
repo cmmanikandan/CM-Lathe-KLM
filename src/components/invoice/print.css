@@ -1,13 +1,13 @@
-/* Production Print & PDF Stylesheet for MANIKANDAN LATHE Invoice System */
+/* Production Print & PDF Stylesheet for MANIKANDAN LATHE Shop System */
 
 @media print {
   @page {
-    size: A4 portrait;
+    size: auto;
     margin: 5mm;
   }
 
   html, body {
-    background: white !important;
+    background: #ffffff !important;
     color: #111111 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -15,16 +15,36 @@
     padding: 0 !important;
     box-shadow: none !important;
     overflow: visible !important;
+    width: 100% !important;
+    height: auto !important;
   }
 
-  /* Reset fixed modal overlays during print so print output is clean */
+  /* Hide interactive web UI controls & explicitly marked non-printable elements */
+  .no-print,
+  .invoice-toolbar {
+    display: none !important;
+  }
+
+  /* When an invoice modal or printable container is active, hide main web UI background */
+  body:has(.invoice-a4-container, .invoice-thermal-container) header,
+  body:has(.invoice-a4-container, .invoice-thermal-container) nav,
+  body:has(.invoice-a4-container, .invoice-thermal-container) aside,
+  body:has(.invoice-a4-container, .invoice-thermal-container) footer,
+  body:has(.invoice-a4-container, .invoice-thermal-container) .sidebar {
+    display: none !important;
+  }
+
+  /* Reset fixed modal overlay wrappers so printable invoices display naturally without background mask */
   .fixed.inset-0 {
     position: static !important;
-    background: transparent !important;
+    background: #ffffff !important;
     padding: 0 !important;
     margin: 0 !important;
     overflow: visible !important;
     display: block !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    transform: none !important;
   }
 
   .max-h-\[95vh\],
@@ -35,42 +55,46 @@
     overflow: visible !important;
     border: none !important;
     box-shadow: none !important;
-    background: white !important;
+    background: #ffffff !important;
+    transform: none !important;
   }
 
-  /* Hide interactive UI elements from browser print */
-  .no-print,
-  .invoice-toolbar,
-  button,
-  header,
-  nav,
-  aside,
-  form,
-  .sidebar {
-    display: none !important;
-  }
-
-  /* Page break rules */
+  /* Prevent page breaks inside invoice cards */
   .avoid-break {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
+  /* Dedicated Printable A4 Container */
   .invoice-a4-container {
+    width: 210mm !important;
+    min-height: 297mm !important;
+    max-width: 210mm !important;
     box-shadow: none !important;
     border: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 8mm 10mm !important;
+    box-sizing: border-box !important;
     border-radius: 0 !important;
+    background: #ffffff !important;
+    transform: none !important;
+    display: block !important;
+    visibility: visible !important;
   }
 
+  /* Dedicated Printable 80mm Thermal Container */
   .invoice-thermal-container {
     width: 80mm !important;
+    max-width: 80mm !important;
     margin: 0 auto !important;
     box-shadow: none !important;
     border: none !important;
-    padding: 2mm !important;
+    padding: 3mm !important;
+    box-sizing: border-box !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+    transform: none !important;
+    display: block !important;
+    visibility: visible !important;
   }
 }

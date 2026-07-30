@@ -82,8 +82,8 @@ export const AdminQuickOrderPage: React.FC = () => {
 
   // Payment Selection: 3 Methods (Cash, UPI QR, Split Pay)
   const [paymentMode, setPaymentMode] = useState<'Cash' | 'UPI' | 'Split'>('Cash');
-  const [cashReceived, setCashReceived] = useState<number>(0);
-  const [upiPaidAmount, setUpiPaidAmount] = useState<number>(0);
+  const [cashReceived, setCashReceived] = useState<number | ''>('');
+  const [upiPaidAmount, setUpiPaidAmount] = useState<number | ''>('');
   const [utrNumber, setUtrNumber] = useState<string>('');
 
   // POS Submission & Receipt Modal
@@ -211,28 +211,33 @@ export const AdminQuickOrderPage: React.FC = () => {
   const grandTotal = Math.max(0, subtotal - discountAmount);
 
   // Payment Breakdown Calculations
+  const numCash = cashReceived === '' ? 0 : Number(cashReceived);
+  const numUpi = upiPaidAmount === '' ? 0 : Number(upiPaidAmount);
+
   let advancePaid = grandTotal;
   let cashAmount = grandTotal;
   let upiAmount = 0;
 
   if (paymentMode === 'Cash') {
-    advancePaid = cashReceived > 0 ? Math.min(grandTotal, cashReceived) : grandTotal;
+    const enteredCash = cashReceived === '' ? grandTotal : numCash;
+    advancePaid = Math.min(grandTotal, Math.max(0, enteredCash));
     cashAmount = advancePaid;
   } else if (paymentMode === 'UPI') {
-    advancePaid = upiPaidAmount > 0 ? Math.min(grandTotal, upiPaidAmount) : grandTotal;
+    const enteredUpi = upiPaidAmount === '' ? grandTotal : numUpi;
+    advancePaid = Math.min(grandTotal, Math.max(0, enteredUpi));
     upiAmount = advancePaid;
   } else if (paymentMode === 'Split') {
-    cashAmount = cashReceived;
-    upiAmount = upiPaidAmount;
+    cashAmount = numCash;
+    upiAmount = numUpi;
     advancePaid = Math.min(grandTotal, cashAmount + upiAmount);
   }
 
   const balanceDue = Math.max(0, grandTotal - advancePaid);
-  const actualCashReceived = paymentMode === 'Cash' && cashReceived > 0 ? cashReceived : grandTotal;
+  const actualCashReceived = paymentMode === 'Cash' ? (cashReceived === '' ? grandTotal : numCash) : grandTotal;
   const balanceReturn = paymentMode === 'Cash' ? Math.max(0, actualCashReceived - grandTotal) : 0;
 
   const qrData = generateRazorpayQRData(
-    paymentMode === 'Split' ? upiPaidAmount || grandTotal : grandTotal,
+    paymentMode === 'Split' ? (numUpi || grandTotal) : grandTotal,
     `POS-${Date.now().toString().slice(-4)}`,
     customerName
   );
@@ -673,9 +678,19 @@ export const AdminQuickOrderPage: React.FC = () => {
                     <input
                       type="number"
                       min="0"
-                      value={cashReceived || grandTotal}
-                      onChange={(e) => setCashReceived(parseInt(e.target.value) || 0)}
-                      className="w-32 bg-white p-2 rounded-lg border border-amber-300 font-bold text-right text-black outline-none"
+                      placeholder={grandTotal.toString()}
+                      value={cashReceived}
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '') {
+                          setCashReceived('');
+                        } else {
+                          const num = parseFloat(val);
+                          setCashReceived(isNaN(num) ? '' : num);
+                        }
+                      }}
+                      className="w-36 bg-white p-2 rounded-xl border border-amber-300 font-bold text-right text-black outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:ring-2 focus:ring-amber-400 transition-all"
                     />
                   </div>
 
@@ -709,9 +724,19 @@ export const AdminQuickOrderPage: React.FC = () => {
                     <input
                       type="number"
                       min="0"
-                      value={upiPaidAmount || grandTotal}
-                      onChange={(e) => setUpiPaidAmount(parseInt(e.target.value) || 0)}
-                      className="w-32 bg-white p-2 rounded-lg border border-gray-300 font-bold text-right text-black outline-none"
+                      placeholder={grandTotal.toString()}
+                      value={upiPaidAmount}
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '') {
+                          setUpiPaidAmount('');
+                        } else {
+                          const num = parseFloat(val);
+                          setUpiPaidAmount(isNaN(num) ? '' : num);
+                        }
+                      }}
+                      className="w-36 bg-white p-2 rounded-xl border border-gray-300 font-bold text-right text-black outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:ring-2 focus:ring-gray-400 transition-all"
                     />
                   </div>
 
@@ -741,9 +766,19 @@ export const AdminQuickOrderPage: React.FC = () => {
                       <input
                         type="number"
                         min="0"
+                        placeholder="0"
                         value={cashReceived}
-                        onChange={(e) => setCashReceived(parseInt(e.target.value) || 0)}
-                        className="w-full bg-white p-2 rounded-lg border border-blue-300 font-bold text-right"
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '') {
+                            setCashReceived('');
+                          } else {
+                            const num = parseFloat(val);
+                            setCashReceived(isNaN(num) ? '' : num);
+                          }
+                        }}
+                        className="w-full bg-white p-2 rounded-xl border border-blue-300 font-bold text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </div>
                     <div>
@@ -751,14 +786,24 @@ export const AdminQuickOrderPage: React.FC = () => {
                       <input
                         type="number"
                         min="0"
+                        placeholder="0"
                         value={upiPaidAmount}
-                        onChange={(e) => setUpiPaidAmount(parseInt(e.target.value) || 0)}
-                        className="w-full bg-white p-2 rounded-lg border border-blue-300 font-bold text-right"
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '') {
+                            setUpiPaidAmount('');
+                          } else {
+                            const num = parseFloat(val);
+                            setUpiPaidAmount(isNaN(num) ? '' : num);
+                          }
+                        }}
+                        className="w-full bg-white p-2 rounded-xl border border-blue-300 font-bold text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </div>
                   </div>
                   <div className="flex justify-between items-center text-xs font-bold pt-1 border-t border-blue-200">
-                    <span>Total Paid: ₹{(cashReceived + upiPaidAmount).toLocaleString('en-IN')}</span>
+                    <span>Total Paid: ₹{(numCash + numUpi).toLocaleString('en-IN')}</span>
                     <span className={balanceDue > 0 ? 'text-red-600' : 'text-emerald-700'}>
                       {balanceDue > 0 ? `Balance Due: ₹${balanceDue.toLocaleString('en-IN')}` : '✓ Fully Paid'}
                     </span>

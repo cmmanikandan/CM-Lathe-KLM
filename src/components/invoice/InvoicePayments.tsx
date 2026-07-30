@@ -3,45 +3,40 @@ import { Order } from '../../types';
 
 interface InvoicePaymentsProps {
   order: Order;
+  isCompact?: boolean;
 }
 
-export const InvoicePayments: React.FC<InvoicePaymentsProps> = ({ order }) => {
+export const InvoicePayments: React.FC<InvoicePaymentsProps> = ({ order, isCompact = false }) => {
   if (!order.paymentHistory || order.paymentHistory.length === 0) return null;
 
   return (
-    <div className="space-y-2 font-sans avoid-break pt-2">
-      <span className="text-[10px] font-mono font-black text-gray-500 uppercase tracking-wider block">
-        PAYMENT TRANSACTION HISTORY & RECEIPT LOGS
+    <div className="space-y-1 font-sans avoid-break pt-1">
+      <span className="text-[9px] font-mono font-black text-[#6B7280] uppercase tracking-wider block">
+        PAYMENT RECEIPTS ({order.paymentHistory.length})
       </span>
 
-      <div className="border border-gray-200 rounded-xl overflow-hidden text-xs">
+      <div className="border border-[#E5E7EB] rounded-xl overflow-hidden text-xs">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-gray-100 font-mono text-[10px] uppercase text-gray-600 border-b border-gray-200">
-              <th className="py-2 px-3">Date & Time</th>
-              <th className="py-2 px-3">Receipt No</th>
-              <th className="py-2 px-3">Payment Mode</th>
-              <th className="py-2 px-3">Collected By</th>
-              <th className="py-2 px-3 text-right">Amount Paid</th>
-              <th className="py-2 px-3 text-center">Status</th>
+            <tr className="bg-[#F3F4F6] font-mono text-[9px] uppercase text-[#4B5563] border-b border-[#E5E7EB]">
+              <th className={`px-2.5 ${isCompact ? 'py-1' : 'py-1.5'}`}>Date & Time</th>
+              <th className={`px-2.5 ${isCompact ? 'py-1' : 'py-1.5'}`}>Receipt No</th>
+              <th className={`px-2.5 ${isCompact ? 'py-1' : 'py-1.5'}`}>Mode</th>
+              <th className={`px-2.5 ${isCompact ? 'py-1' : 'py-1.5'}`}>Collected By</th>
+              <th className={`px-2.5 text-right ${isCompact ? 'py-1' : 'py-1.5'}`}>Amount</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 font-mono text-[11px]">
+          <tbody className="divide-y divide-[#F3F4F6] font-mono text-[10px] bg-[#FFFFFF]">
             {order.paymentHistory.map((p, idx) => (
-              <tr key={p.id || idx} className="hover:bg-gray-50">
-                <td className="py-2.5 px-3">
+              <tr key={p.id || idx} className="hover:bg-[#F9FAFB]">
+                <td className={`px-2.5 ${isCompact ? 'py-1' : 'py-1.5'}`}>
                   {p.date} {p.time ? `· ${p.time}` : ''}
                 </td>
-                <td className="py-2.5 px-3 font-bold text-gray-800">{p.receiptNumber}</td>
-                <td className="py-2.5 px-3">{p.mode}</td>
-                <td className="py-2.5 px-3 text-gray-600">{p.collectedBy || 'Cash Counter'}</td>
-                <td className="py-2.5 px-3 text-right font-black text-green-700">
+                <td className={`px-2.5 font-bold text-[#111111] ${isCompact ? 'py-1' : 'py-1.5'}`}>{p.receiptNumber}</td>
+                <td className={`px-2.5 ${isCompact ? 'py-1' : 'py-1.5'}`}>{p.mode}</td>
+                <td className={`px-2.5 text-[#4B5563] ${isCompact ? 'py-1' : 'py-1.5'}`}>{p.collectedBy || 'Admin'}</td>
+                <td className={`px-2.5 text-right font-black text-[#15803D] ${isCompact ? 'py-1' : 'py-1.5'}`}>
                   ₹{p.amount.toLocaleString('en-IN')}
-                </td>
-                <td className="py-2.5 px-3 text-center">
-                  <span className="bg-green-100 text-green-800 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
-                    {p.paymentStatus || 'SUCCESS'}
-                  </span>
                 </td>
               </tr>
             ))}

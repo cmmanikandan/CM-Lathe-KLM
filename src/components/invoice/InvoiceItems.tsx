@@ -3,79 +3,94 @@ import { Order } from '../../types';
 
 interface InvoiceItemsProps {
   order: Order;
+  isCompact?: boolean;
 }
 
-export const InvoiceItems: React.FC<InvoiceItemsProps> = ({ order }) => {
-  return (
-    <div className="space-y-2 font-sans avoid-break">
-      <span className="text-[10px] font-mono font-black text-gray-500 uppercase tracking-wider block">
-        LINE ITEMS & FABRICATION PARTICULARS
-      </span>
+export const InvoiceItems: React.FC<InvoiceItemsProps> = ({ order, isCompact = false }) => {
+  // Ensure line items are never empty (fall back to custom fabrication job entry matching subtotal)
+  const displayItems =
+    order.items && order.items.length > 0
+      ? order.items
+      : [
+          {
+            productName: 'Custom Lathe Machining & Heavy Steel Fabrication Work',
+            quantity: 1,
+            unitPrice: order.basePrice || order.finalPrice,
+            totalPrice: order.basePrice || order.finalPrice,
+            variant: { size: 'Custom Workshop Job Order' },
+          },
+        ];
 
-      <div className="border border-gray-900 rounded-2xl overflow-hidden">
+  return (
+    <div className="space-y-1 font-sans avoid-break">
+      <div className="flex justify-between items-center text-[9px] font-mono font-black text-[#6B7280] uppercase tracking-wider">
+        <span>LINE ITEMS & FABRICATION PARTICULARS ({displayItems.length} ITEMS)</span>
+        <span>HSN CODE: 73089090</span>
+      </div>
+
+      <div className="border border-[#111111] rounded-xl overflow-hidden">
         <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="bg-[#111111] text-white font-mono text-[10px] uppercase">
-              <th className="py-2.5 px-3">#</th>
-              <th className="py-2.5 px-3">Item & Specifications</th>
-              <th className="py-2.5 px-3">HSN/SAC</th>
-              <th className="py-2.5 px-3 text-center">Qty</th>
-              <th className="py-2.5 px-3 text-right">Unit Rate</th>
-              <th className="py-2.5 px-3 text-right">GST %</th>
-              <th className="py-2.5 px-3 text-right">Amount (₹)</th>
+            <tr className="bg-[#111111] text-[#FFFFFF] font-mono text-[9px] uppercase">
+              <th className={`px-2.5 ${isCompact ? 'py-1.5' : 'py-2'}`}>#</th>
+              <th className={`px-2.5 ${isCompact ? 'py-1.5' : 'py-2'}`}>Item & Specifications</th>
+              <th className={`px-2.5 ${isCompact ? 'py-1.5' : 'py-2'}`}>HSN</th>
+              <th className={`px-2.5 text-center ${isCompact ? 'py-1.5' : 'py-2'}`}>Qty</th>
+              <th className={`px-2.5 text-right ${isCompact ? 'py-1.5' : 'py-2'}`}>Rate</th>
+              <th className={`px-2.5 text-right ${isCompact ? 'py-1.5' : 'py-2'}`}>GST</th>
+              <th className={`px-2.5 text-right ${isCompact ? 'py-1.5' : 'py-2'}`}>Amount (₹)</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
-            {order.items.map((item, idx) => {
-              const hsnCode = '73089090'; // HSN for Steel Structures / Lathe Goods
+          <tbody className="divide-y divide-[#E5E7EB] bg-[#FFFFFF] font-sans">
+            {displayItems.map((item, idx) => {
+              const hsnCode = '73089090';
               const gstRate = 18;
 
               return (
-                <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="py-3 px-3 font-mono text-gray-500 text-[11px]">{idx + 1}</td>
+                <tr key={idx} className="hover:bg-[#F9FAFB] transition-colors">
+                  <td className={`px-2.5 font-mono text-[#6B7280] ${isCompact ? 'py-1 text-[10px]' : 'py-2 text-[11px]'}`}>
+                    {idx + 1}
+                  </td>
                   
-                  <td className="py-3 px-3">
-                    <div className="flex items-start gap-2.5">
+                  <td className={`px-2.5 ${isCompact ? 'py-1' : 'py-2'}`}>
+                    <div className="flex items-center gap-2">
                       {item.image && (
                         <img
                           src={item.image}
                           alt={item.productName}
-                          className="w-10 h-10 rounded-lg object-cover border border-gray-300 shrink-0"
+                          className={`${isCompact ? 'w-6 h-6' : 'w-9 h-9'} rounded object-cover border border-[#D1D5DB] shrink-0`}
                         />
                       )}
                       <div>
-                        <div className="font-heading font-black text-xs text-[#111111]">
+                        <div className={`font-heading font-bold text-[#111111] ${isCompact ? 'text-[11px]' : 'text-xs'}`}>
                           {item.productName}
                         </div>
-                        {item.variant && (
-                          <div className="text-[10px] text-gray-500 font-mono">
+                        {item.variant && (item.variant.size || item.variant.material) && (
+                          <div className="text-[9px] text-[#6B7280] font-mono">
                             {item.variant.size || item.variant.material} {item.variant.thickness ? `· ${item.variant.thickness}` : ''}
-                          </div>
-                        )}
-                        {item.customMeasurements && (
-                          <div className="text-[9px] text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded font-mono inline-block mt-0.5 border border-amber-200">
-                            📏 {item.customMeasurements}
                           </div>
                         )}
                       </div>
                     </div>
                   </td>
 
-                  <td className="py-3 px-3 font-mono text-[11px] text-gray-600">{hsnCode}</td>
+                  <td className={`px-2.5 font-mono text-[#4B5563] ${isCompact ? 'py-1 text-[10px]' : 'py-2 text-[11px]'}`}>
+                    {hsnCode}
+                  </td>
 
-                  <td className="py-3 px-3 text-center font-mono font-bold text-gray-900">
+                  <td className={`px-2.5 text-center font-mono font-bold text-[#111111] ${isCompact ? 'py-1 text-[10px]' : 'py-2 text-[11px]'}`}>
                     {item.quantity}
                   </td>
 
-                  <td className="py-3 px-3 text-right font-mono text-gray-800">
+                  <td className={`px-2.5 text-right font-mono text-[#1F2937] ${isCompact ? 'py-1 text-[10px]' : 'py-2 text-[11px]'}`}>
                     ₹{item.unitPrice.toLocaleString('en-IN')}
                   </td>
 
-                  <td className="py-3 px-3 text-right font-mono text-gray-600">
+                  <td className={`px-2.5 text-right font-mono text-[#4B5563] ${isCompact ? 'py-1 text-[10px]' : 'py-2 text-[11px]'}`}>
                     {gstRate}%
                   </td>
 
-                  <td className="py-3 px-3 text-right font-mono font-black text-[#111111]">
+                  <td className={`px-2.5 text-right font-mono font-black text-[#111111] ${isCompact ? 'py-1 text-[10px]' : 'py-2 text-[11px]'}`}>
                     ₹{item.totalPrice.toLocaleString('en-IN')}
                   </td>
                 </tr>
