@@ -1,31 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { StatusStory, HomeBanner } from '../types';
 import { supabase } from '../services/supabase';
-import { fetchActiveStories, insertStory, deleteStoryById } from '../services/supabaseService';
-
-const defaultBanners: HomeBanner[] = [
-  {
-    id: 'b-1',
-    title: 'TRACTOR KALAPPAI & CULTIVATORS',
-    subtitle: 'Forged lathe-machined tines engineered for heavy agricultural soil.',
-    tag: 'AGRICULTURAL MACHINERY',
-    image: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=1000&q=80'
-  },
-  {
-    id: 'b-2',
-    title: 'STAINLESS STEEL & MS MAIN GATES',
-    subtitle: 'Custom architectural gates crafted with laser cut panels & heavy duty bearings.',
-    tag: 'MAIN SAFETY GATES',
-    image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1000&q=80'
-  },
-  {
-    id: 'b-3',
-    title: 'PRECISION LATHE MACHINE WORKS',
-    subtitle: 'Expert lathe turning, shaft grinding & machine repairs in Kallimandhayam.',
-    tag: 'LATHE TURNING WORKS',
-    image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1000&q=80'
-  }
-];
+import {
+  fetchActiveStories,
+  fetchHeroBanners,
+  insertHeroBanner,
+  deleteHeroBanner,
+  HeroBanner,
+} from '../services/supabaseService';
 
 interface StatusContextType {
   stories: StatusStory[];
@@ -35,8 +17,9 @@ interface StatusContextType {
   addStory: (mediaUrl: string, mediaType: 'image' | 'video', title: string, tag: StatusStory['tag'], subtitle?: string) => Promise<void>;
   deleteStory: (id: string) => Promise<void>;
   incrementSeenCount: (id: string) => void;
-  addBanner: (title: string, subtitle: string, tag: string, image: string, linkUrl?: string) => void;
-  deleteBanner: (id: string) => void;
+  addBanner: (title: string, subtitle: string, tag: string, image: string, linkUrl?: string) => Promise<void>;
+  deleteBanner: (id: string) => Promise<void>;
+  refreshBanners: () => Promise<void>;
 }
 
 const StatusContext = createContext<StatusContextType | undefined>(undefined);
@@ -44,38 +27,55 @@ const StatusContext = createContext<StatusContextType | undefined>(undefined);
 export const StatusProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [stories, setStories] = useState<StatusStory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [banners, setBanners] = useState<HomeBanner[]>([]);
 
-  // Dynamic Banners state stored in localStorage
-  const [banners, setBanners] = useState<HomeBanner[]>(() => {
+  // Refresh banners from Supabase / localStorage persistence
+  const refreshBanners = useCallback(async () => {
     try {
-      const saved = localStorage.getItem('ml_home_banners');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return defaultBanners;
-  });
+      const heroList = await fetchHeroBanners();
+      setBanners(
+        heroList.map((b) => ({
+          id: b.id,
+          title: b.title,
+          subtitle: b.subtitle,
+          tag: b.tag,
+          image: b.image,
+          linkUrl: b.ctaLink,
+          createdAt: b.createdAt,
+        }))
+      );
+    } catch (e) {
+      console.error('Failed to load hero banners in StatusContext:', e);
+    }
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem('ml_home_banners', JSON.stringify(banners));
-  }, [banners]);
+    refreshBanners();
+  }, [refreshBanners]);
 
-  const addBanner = (title: string, subtitle: string, tag: string, image: string, linkUrl?: string) => {
-    const newBanner: HomeBanner = {
-      id: 'b-' + Date.now(),
+  const addBanner = async (title: string, subtitle: string, tag: string, image: string, linkUrl?: string) => {
+    const newB: HeroBanner = {
+      id: 'banner-' + Date.now(),
       title,
       subtitle,
       tag,
       image,
-      linkUrl,
-      createdAt: new Date().toISOString()
+      ctaLink: linkUrl,
+      isActive: true,
+      displayOrder: banners.length + 1,
+      createdAt: new Date().toISOString(),
     };
-    setBanners((prev) => [newBanner, ...prev]);
+    await insertHeroBanner(newB);
+    await refreshBanners();
   };
 
-  const deleteBanner = (id: string) => {
+  const deleteBanner = async (id: string) => {
     setBanners((prev) => prev.filter((b) => b.id !== id));
+    await deleteHeroBanner(id);
+    await refreshBanners();
   };
 
-  const refresh = useCallback(async () => {
+  const refreshStories = useCallback(async () => {
     setLoading(true);
     try {
       const data = await fetchActiveStories();
@@ -88,44 +88,49 @@ export const StatusProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, []);
 
   useEffect(() => {
-    refresh();
+    refreshStories();
     const channel = supabase
       .channel('stories-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'status_stories' }, () => refresh())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'status_stories' }, () => refreshStories())
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
-  }, [refresh]);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refreshStories]);
 
   const activeStories = stories.filter((s) => new Date(s.expiresAt).getTime() > Date.now());
 
+  const incrementSeenCount = (id: string) => {
+    setStories((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, seenCount: (s.seenCount || 0) + 1 } : s))
+    );
+  };
+
   const addStory = async (
-    mediaUrl: string, mediaType: 'image' | 'video', title: string,
-    tag: StatusStory['tag'], subtitle?: string
+    mediaUrl: string,
+    mediaType: 'image' | 'video',
+    title: string,
+    tag: StatusStory['tag'],
+    subtitle?: string
   ) => {
-    const now = new Date();
-    const story: StatusStory = {
-      id: 'st-' + Date.now(), mediaUrl, mediaType, title, subtitle, tag,
-      createdAt: now.toISOString(),
-      expiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+    const newStory: StatusStory = {
+      id: 'story-' + Date.now(),
+      mediaUrl,
+      mediaType,
+      title,
+      tag,
+      subtitle,
       seenCount: 0,
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     };
-    await insertStory(story);
-    await refresh();
+    setStories((prev) => [newStory, ...prev]);
+    refreshStories();
   };
 
   const deleteStory = async (id: string) => {
-    await deleteStoryById(id);
     setStories((prev) => prev.filter((s) => s.id !== id));
-  };
-
-  const incrementSeenCount = (id: string) => {
-    setStories((prev) => prev.map((s) => s.id === id ? { ...s, seenCount: s.seenCount + 1 } : s));
-    supabase.from('status_stories').select('seen_count').eq('id', id).single().then(({ data }) => {
-      if (data) {
-        supabase.from('status_stories').update({ seen_count: (data.seen_count as number) + 1 }).eq('id', id);
-      }
-    });
   };
 
   return (
@@ -139,7 +144,8 @@ export const StatusProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         deleteStory,
         incrementSeenCount,
         addBanner,
-        deleteBanner
+        deleteBanner,
+        refreshBanners,
       }}
     >
       {children}

@@ -41,15 +41,7 @@ export const CustomerHomePage: React.FC = () => {
     return 'Good Evening 🌙';
   };
 
-  const heroBanners = banners && banners.length > 0 ? banners : [
-    {
-      id: 'b-1',
-      title: "TRACTOR KALAPPAI & CULTIVATORS",
-      subtitle: "Forged lathe-machined tines engineered for heavy agricultural soil.",
-      tag: "AGRICULTURAL MACHINERY",
-      image: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=1000&q=80"
-    }
-  ];
+  const heroBanners = banners || [];
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -269,34 +261,36 @@ export const CustomerHomePage: React.FC = () => {
       </div>
 
       {/* 4. HERO SLIDER */}
-      <div className="relative rounded-[22px] overflow-hidden shadow-md h-[170px] sm:h-[200px] bg-black">
-        {heroBanners.map((b, idx) => (
-          <div
-            key={idx}
-            className={`absolute inset-0 transition-opacity duration-700 ${idx === bannerIndex ? 'opacity-100' : 'opacity-0'}`}
-          >
-            <img src={b.image} alt={b.title} className="w-full h-full object-cover opacity-60" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent p-4 flex flex-col justify-end">
-              <span className="text-[#F97316] font-mono text-[9px] uppercase font-black tracking-widest">
-                {b.tag}
-              </span>
-              <h3 className="font-heading font-black text-sm sm:text-base text-white leading-tight mt-0.5">
-                {b.title}
-              </h3>
-              <p className="text-gray-300 text-[11px] line-clamp-1 mt-0.5">{b.subtitle}</p>
+      {heroBanners.length > 0 && (
+        <div className="relative rounded-[22px] overflow-hidden shadow-md h-[170px] sm:h-[200px] bg-black">
+          {heroBanners.map((b, idx) => (
+            <div
+              key={idx}
+              className={`absolute inset-0 transition-opacity duration-700 ${idx === bannerIndex ? 'opacity-100' : 'opacity-0'}`}
+            >
+              <img src={b.image} alt={b.title} className="w-full h-full object-cover opacity-60" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent p-4 flex flex-col justify-end">
+                <span className="text-[#F97316] font-mono text-[9px] uppercase font-black tracking-widest">
+                  {b.tag}
+                </span>
+                <h3 className="font-heading font-black text-sm sm:text-base text-white leading-tight mt-0.5">
+                  {b.title}
+                </h3>
+                <p className="text-gray-300 text-[11px] line-clamp-1 mt-0.5">{b.subtitle}</p>
+              </div>
             </div>
-          </div>
-        ))}
-
-        <div className="absolute bottom-2 right-3 flex gap-1 z-10">
-          {heroBanners.map((_, i) => (
-            <span
-              key={i}
-              className={`w-1.5 h-1.5 rounded-full transition-all ${i === bannerIndex ? 'bg-[#F97316] w-4' : 'bg-white/50'}`}
-            />
           ))}
+
+          <div className="absolute bottom-2 right-3 flex gap-1 z-10">
+            {heroBanners.map((_, i) => (
+              <span
+                key={i}
+                className={`w-1.5 h-1.5 rounded-full transition-all ${i === bannerIndex ? 'bg-[#F97316] w-4' : 'bg-white/50'}`}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
 
 
