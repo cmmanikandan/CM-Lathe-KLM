@@ -214,9 +214,6 @@ export const AdminCustomersPage: React.FC = () => {
             <h1 className="font-heading font-black text-3xl text-white mt-1">
               CUSTOMER DIRECTORY & MANAGEMENT
             </h1>
-            <p className="text-gray-400 text-xs mt-1">
-              Manage online app users, offline shop walk-in buyers, VIP clients, purchase histories, and direct messaging.
-            </p>
           </div>
 
           <button

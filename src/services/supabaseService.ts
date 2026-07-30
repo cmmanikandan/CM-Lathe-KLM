@@ -367,7 +367,7 @@ export const fetchHeroBanners = async (): Promise<HeroBanner[]> => {
       .select('*')
       .order('display_order', { ascending: true });
 
-    if (!error && data && data.length > 0) {
+    if (!error && data) {
       const mapped = data.map((r) => ({
         id: r.id as string,
         title: r.title as string,
@@ -389,9 +389,9 @@ export const fetchHeroBanners = async (): Promise<HeroBanner[]> => {
 
   try {
     const local = localStorage.getItem(HERO_BANNERS_STORAGE_KEY);
-    if (local) {
+    if (local !== null) {
       const parsed = JSON.parse(local);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch (e) {}
 
@@ -445,7 +445,13 @@ export const deleteHeroBanner = async (id: string): Promise<boolean> => {
   } catch (e) {}
 
   try {
-    const existing = await fetchHeroBanners();
+    const local = localStorage.getItem(HERO_BANNERS_STORAGE_KEY);
+    let existing: HeroBanner[] = [];
+    if (local !== null) {
+      existing = JSON.parse(local);
+    } else {
+      existing = DEFAULT_HERO_BANNERS;
+    }
     const filtered = existing.filter((b) => b.id !== id);
     localStorage.setItem(HERO_BANNERS_STORAGE_KEY, JSON.stringify(filtered));
   } catch (e) {}

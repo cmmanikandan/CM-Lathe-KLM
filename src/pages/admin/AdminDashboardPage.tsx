@@ -56,9 +56,6 @@ export const AdminDashboardPage: React.FC = () => {
             <h1 className="font-heading font-black text-3xl text-white mt-1">
               MANIKANDAN LATHE DASHBOARD
             </h1>
-            <p className="text-gray-400 text-xs mt-1">
-              Real-time revenue monitoring, customer directory, online vs offline walk-in orders, and payment tracking.
-            </p>
           </div>
 
           <div className="flex items-center gap-3">

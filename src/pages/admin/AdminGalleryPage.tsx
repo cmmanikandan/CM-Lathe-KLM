@@ -453,7 +453,6 @@ export const AdminGalleryPage: React.FC = () => {
               <h1 className="font-heading font-black text-2xl text-[#111111] flex items-center gap-2">
                 <ImageIcon size={24} className="text-[#F97316]" /> GALLERY & ALBUM MANAGEMENT
               </h1>
-              <p className="text-xs text-gray-500">Upload photos directly, manage cover images & view folder albums</p>
             </div>
 
         <button
@@ -645,11 +644,8 @@ export const AdminGalleryPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-xs">
             <div>
               <h2 className="font-heading font-black text-xl text-[#111111] flex items-center gap-2">
-                <Sparkles size={20} className="text-[#F97316]" /> HERO SLIDE BANNERS (STORED & DYNAMIC)
+                <Sparkles size={20} className="text-[#F97316]" /> HERO SLIDE BANNERS ({heroBannersList.length})
               </h2>
-              <p className="text-xs text-gray-500 font-mono">
-                Manage hero slider banners displayed on homepage. Synchronized with Supabase & database storage.
-              </p>
             </div>
             <button
               onClick={() => setShowAddBannerModal(true)}

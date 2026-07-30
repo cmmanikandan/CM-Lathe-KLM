@@ -219,9 +219,6 @@ export const AdminPaymentsPage: React.FC = () => {
             <h1 className="font-heading font-black text-3xl text-white mt-1">
               SHOP PAYMENTS & RECEIPT LEDGER
             </h1>
-            <p className="text-gray-400 text-xs mt-1">
-              Complete history of advance collected, Razorpay online payments, cash & bank receipts permanently linked to customer orders.
-            </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
