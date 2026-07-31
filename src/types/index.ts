@@ -265,7 +265,7 @@ export interface Order {
   advancePaid: number;
   remainingBalance: number;
   status: OrderStatus;
-  orderType?: 'Quick Order' | 'Walk-in Order' | 'Custom Fabrication' | 'Repair Order' | 'Lathe Turning' | 'Installation Order';
+  orderType?: 'Quick Order' | 'Walk-in Order' | 'Custom Fabrication' | 'Repair Order' | 'Lathe Turning' | 'Installation Order' | 'Enquiry Order' | 'Customer Order';
   priority?: 'Normal' | 'High' | 'Urgent';
   assignedMachine?: string;
   assignedWorker?: string;

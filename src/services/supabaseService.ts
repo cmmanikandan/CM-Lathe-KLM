@@ -585,6 +585,8 @@ export const updateOrderStatus = async (orderId: string, status: string, extraFi
 export const deleteOrderFromDb = async (orderId: string): Promise<void> => {
   await supabase.from('order_items').delete().eq('order_id', orderId);
   await supabase.from('payment_transactions').delete().eq('order_id', orderId);
+  await supabase.from('payment_requests').delete().eq('order_id', orderId);
+  await supabase.from('enquiries').update({ order_id: null, status: 'ENQUIRY_RECEIVED' }).eq('order_id', orderId);
   const { error } = await supabase.from('orders').delete().eq('id', orderId);
   if (error) console.error('deleteOrderFromDb error:', error);
 };
@@ -592,6 +594,8 @@ export const deleteOrderFromDb = async (orderId: string): Promise<void> => {
 export const deleteOrdersFromDb = async (orderIds: string[]): Promise<void> => {
   await supabase.from('order_items').delete().in('order_id', orderIds);
   await supabase.from('payment_transactions').delete().in('order_id', orderIds);
+  await supabase.from('payment_requests').delete().in('order_id', orderIds);
+  await supabase.from('enquiries').update({ order_id: null, status: 'ENQUIRY_RECEIVED' }).in('order_id', orderIds);
   const { error } = await supabase.from('orders').delete().in('id', orderIds);
   if (error) console.error('deleteOrdersFromDb error:', error);
 };

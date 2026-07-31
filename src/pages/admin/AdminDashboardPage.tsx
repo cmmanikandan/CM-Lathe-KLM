@@ -23,11 +23,12 @@ export const AdminDashboardPage: React.FC = () => {
   const { activeStories } = useStatus();
   const navigate = useNavigate();
 
-  // Metrics Calculations
-  const onlineOrders = orders.filter((o) => !o.isOfflineOrder);
-  const offlineOrders = orders.filter((o) => Boolean(o.isOfflineOrder));
+  // Metrics Calculations (Exclude REJECTED orders)
+  const validOrders = orders.filter((o) => o.status !== 'REJECTED');
+  const onlineOrders = validOrders.filter((o) => !o.isOfflineOrder);
+  const offlineOrders = validOrders.filter((o) => Boolean(o.isOfflineOrder));
 
-  const totalRevenue = orders.reduce((sum, o) => {
+  const totalRevenue = validOrders.reduce((sum, o) => {
     const paid = o.paymentHistory.reduce((s, p) => s + p.amount, 0);
     return sum + paid;
   }, 0);
@@ -35,13 +36,13 @@ export const AdminDashboardPage: React.FC = () => {
   const onlineRevenue = onlineOrders.reduce((sum, o) => sum + o.paymentHistory.reduce((s, p) => s + p.amount, 0), 0);
   const offlineRevenue = offlineOrders.reduce((sum, o) => sum + o.paymentHistory.reduce((s, p) => s + p.amount, 0), 0);
 
-  const pendingBalanceTotal = orders.reduce((sum, o) => sum + o.remainingBalance, 0);
-  const todayOrders = orders.filter((o) => new Date(o.createdAt).toDateString() === new Date().toDateString()).length;
+  const pendingBalanceTotal = validOrders.reduce((sum, o) => sum + o.remainingBalance, 0);
+  const todayOrders = validOrders.filter((o) => new Date(o.createdAt).toDateString() === new Date().toDateString()).length;
 
   // Inventory & Sales Metrics
   const lowStockProducts = products.filter((p) => (p.stock || 0) <= 5);
   const totalProductsCount = products.length;
-  const totalQuantitySold = orders.reduce((sum, o) => sum + o.items.reduce((isum, item) => isum + item.quantity, 0), 0);
+  const totalQuantitySold = validOrders.reduce((sum, o) => sum + o.items.reduce((isum, item) => isum + item.quantity, 0), 0);
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-[#111111] pb-24">

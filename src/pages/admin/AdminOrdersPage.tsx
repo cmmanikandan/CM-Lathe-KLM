@@ -66,8 +66,8 @@ export const AdminOrdersPage: React.FC = () => {
   const countOnline = orders.filter((o) => !o.isOfflineOrder).length;
   const countOffline = orders.filter((o) => Boolean(o.isOfflineOrder)).length;
 
-  const revenueToday = todayOrders.reduce((sum, o) => sum + o.advancePaid, 0);
-  const totalOutstandingBalance = orders.reduce((sum, o) => sum + o.remainingBalance, 0);
+  const revenueToday = todayOrders.filter((o) => o.status !== 'REJECTED').reduce((sum, o) => sum + o.advancePaid, 0);
+  const totalOutstandingBalance = orders.filter((o) => o.status !== 'REJECTED').reduce((sum, o) => sum + o.remainingBalance, 0);
 
   // Filter Logic — ONLY ONLINE CUSTOMER ORDERS
   const OFFLINE_ORDER_TYPES = ['POS', 'Quick Order', 'Walk-in Order'];

@@ -88,6 +88,11 @@ export const EnquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const enq = enquiries.find((e) => e.id === enquiryId);
     if (!enq) return;
 
+    if (enq.status === 'ORDER_ACCEPTED' && enq.orderId) {
+      console.log('Enquiry already converted to order:', enq.orderId);
+      return enq.orderId;
+    }
+
     const now = new Date().toISOString();
     const finalPrice = adjustedPrice ?? enq.adjustedPrice ?? enq.estimatedPrice;
 

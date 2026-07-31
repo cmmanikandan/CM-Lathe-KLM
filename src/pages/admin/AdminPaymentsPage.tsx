@@ -113,7 +113,7 @@ export const AdminPaymentsPage: React.FC = () => {
     .filter((t) => t.mode === 'Bank Transfer' || t.mode === 'Cheque')
     .reduce((s, t) => s + t.amount, 0);
 
-  const totalOutstandingBalance = orders.reduce((s, o) => s + o.remainingBalance, 0);
+  const totalOutstandingBalance = orders.filter((o) => o.status !== 'REJECTED').reduce((s, o) => s + o.remainingBalance, 0);
   const totalFilteredAmount = filteredTransactions.reduce((s, t) => s + t.amount, 0);
 
   // Handlers

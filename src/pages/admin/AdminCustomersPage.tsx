@@ -56,10 +56,10 @@ export const AdminCustomersPage: React.FC = () => {
     try {
       const profiles = await fetchAllCustomerProfiles();
       
-      // Extract unique customers from existing orders to ensure comprehensive tracking
+      // Extract unique customers from existing orders (excluding REJECTED orders)
       const orderCustomerMap = new Map<string, { name: string; phone: string; address: string; count: number; spent: number }>();
       
-      orders.forEach((o) => {
+      orders.filter((o) => o.status !== 'REJECTED').forEach((o) => {
         const normPhone = o.customerPhone.replace(/\D/g, '').slice(-10);
         if (!normPhone) return;
         
@@ -101,10 +101,10 @@ export const AdminCustomersPage: React.FC = () => {
         }
       });
 
-      // Update metrics for profiles
+      // Update metrics for profiles (excluding REJECTED orders)
       mergedCustomers.forEach((c) => {
         const normPhone = c.phone.replace(/\D/g, '').slice(-10);
-        const custOrders = orders.filter((o) => o.customerPhone.replace(/\D/g, '').slice(-10) === normPhone);
+        const custOrders = orders.filter((o) => o.customerPhone.replace(/\D/g, '').slice(-10) === normPhone && o.status !== 'REJECTED');
         c.totalOrdersCount = custOrders.length;
         c.totalSpent = custOrders.reduce((sum, o) => sum + o.paymentHistory.reduce((s, p) => s + p.amount, 0), 0);
       });
@@ -692,7 +692,7 @@ export const AdminCustomersPage: React.FC = () => {
               {/* Stats overview for this customer */}
               {(() => {
                 const normPhone = viewingCustomer.phone.replace(/\D/g, '').slice(-10);
-                const custOrders = orders.filter((o) => o.customerPhone.replace(/\D/g, '').slice(-10) === normPhone);
+                const custOrders = orders.filter((o) => o.customerPhone.replace(/\D/g, '').slice(-10) === normPhone && o.status !== 'REJECTED');
                 const totalSpent = custOrders.reduce((sum, o) => sum + o.paymentHistory.reduce((s, p) => s + p.amount, 0), 0);
                 const pendingBalance = custOrders.reduce((sum, o) => sum + o.remainingBalance, 0);
 
