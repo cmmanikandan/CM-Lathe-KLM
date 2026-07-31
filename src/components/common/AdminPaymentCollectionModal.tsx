@@ -142,11 +142,11 @@ export const AdminPaymentCollectionModal: React.FC<AdminPaymentCollectionModalPr
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-[24px] max-w-xl w-full overflow-hidden shadow-2xl border border-gray-200 animate-in fade-in zoom-in-95 duration-150 font-sans">
+    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl border border-slate-100 animate-fade-in font-sans relative">
         
         {/* Top Header */}
-        <div className="bg-[#111111] text-white p-5 flex justify-between items-center border-b border-gray-800">
+        <div className="bg-slate-900 text-white p-5 sm:p-6 flex justify-between items-center border-b border-slate-800">
           <div>
             <span className="text-[10px] font-mono text-[#F97316] uppercase tracking-widest block font-bold">
               WORKSHOP ERP • PAYMENT COLLECTION
@@ -154,13 +154,13 @@ export const AdminPaymentCollectionModal: React.FC<AdminPaymentCollectionModalPr
             <h3 className="font-heading font-black text-lg text-white mt-0.5">
               COLLECT PAYMENT — ORDER #{order.orderNumber}
             </h3>
-            <p className="text-gray-400 text-xs mt-0.5">
-              Customer: <strong>{order.customerName}</strong> ({order.customerPhone})
+            <p className="text-slate-400 text-xs mt-0.5">
+              Customer: <strong className="text-white">{order.customerName}</strong> ({order.customerPhone})
             </p>
           </div>
 
-          <button onClick={onClose} className="text-gray-400 hover:text-white p-1 cursor-pointer">
-            <X size={22} />
+          <button onClick={onClose} className="p-2 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer">
+            <X size={20} />
           </button>
         </div>
 

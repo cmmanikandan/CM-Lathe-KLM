@@ -101,8 +101,8 @@ export const PublicLandingPage: React.FC = () => {
       <PublicNavbar />
 
       {/* 2. HERO SECTION */}
-      <section className="relative bg-gradient-to-r from-[#111111] via-[#1A1A1A] to-[#232323] text-white py-16 sm:py-24 overflow-hidden border-b border-gray-800">
-        <div className="absolute inset-0 opacity-50">
+      <section className="relative bg-gradient-to-r from-slate-900 via-slate-950 to-slate-900 text-white py-16 sm:py-24 overflow-hidden border-b border-slate-800">
+        <div className="absolute inset-0 opacity-40">
           <img
             src="/assets/hero_shop.png"
             alt="Manikandan Lathe Workshop Shop - Kallimandhayam"
@@ -111,7 +111,7 @@ export const PublicLandingPage: React.FC = () => {
         </div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-          <div className="inline-flex items-center gap-2 bg-[#F97316]/20 border border-[#F97316]/50 text-[#F97316] font-mono text-xs font-bold px-3.5 py-1 rounded-full uppercase tracking-widest">
+          <div className="inline-flex items-center gap-2 bg-[#F97316]/20 border border-[#F97316]/50 text-[#F97316] font-mono text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest backdrop-blur-md">
             <Award size={14} /> 25+ Years Experience • Owner: Chellamuthu K
           </div>
 
@@ -119,7 +119,7 @@ export const PublicLandingPage: React.FC = () => {
             PRECISION LATHE WORKS & CUSTOM STEEL FABRICATION
           </h1>
 
-          <p className="text-gray-300 text-sm sm:text-lg max-w-2xl leading-relaxed">
+          <p className="text-slate-300 text-sm sm:text-lg max-w-2xl leading-relaxed">
             Specialist in tractor cultivator kalappai, CNC laser cut main safety gates, stainless steel grills & heavy lathe turning machine works in Kallimandhayam, Dindigul District.
           </p>
 
@@ -127,14 +127,14 @@ export const PublicLandingPage: React.FC = () => {
           <div className="pt-4 flex flex-wrap items-center gap-3">
             <Link
               to="/products"
-              className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs sm:text-sm px-6 py-3.5 rounded-xl shadow-lg flex items-center gap-2 transition-all active:scale-95"
+              className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs sm:text-sm px-7 py-4 rounded-2xl shadow-xl shadow-orange-500/20 flex items-center gap-2 transition-all active:scale-98 cursor-pointer"
             >
               Explore Products Catalog <ArrowRight size={16} />
             </Link>
 
             <button
               onClick={() => navigate('/login')}
-              className="bg-white hover:bg-gray-100 text-[#111111] font-heading font-black text-xs sm:text-sm px-6 py-3.5 rounded-xl shadow-md flex items-center gap-2 transition-all active:scale-95"
+              className="bg-white hover:bg-slate-100 text-slate-900 font-heading font-black text-xs sm:text-sm px-7 py-4 rounded-2xl shadow-lg flex items-center gap-2 transition-all active:scale-98 cursor-pointer"
             >
               <LogIn size={16} className="text-[#F97316]" /> Open Customer App
             </button>
@@ -143,14 +143,14 @@ export const PublicLandingPage: React.FC = () => {
               href="https://wa.me/919659286268"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-[#25D366] hover:bg-[#20ba5a] text-white font-heading font-black text-xs sm:text-sm px-6 py-3.5 rounded-xl shadow-md flex items-center gap-2 transition-all active:scale-95"
+              className="bg-[#25D366] hover:bg-[#20ba5a] text-white font-heading font-black text-xs sm:text-sm px-7 py-4 rounded-2xl shadow-lg flex items-center gap-2 transition-all active:scale-98"
             >
               <MessageCircle size={16} /> WhatsApp Quote
             </a>
           </div>
 
           {/* Trust Highlights */}
-          <div className="pt-8 grid grid-cols-2 sm:grid-cols-4 gap-4 border-t border-white/10 text-xs text-gray-300 font-heading font-bold">
+          <div className="pt-8 grid grid-cols-2 sm:grid-cols-4 gap-4 border-t border-slate-800 text-xs text-slate-300 font-heading font-bold">
             <div className="flex items-center gap-2">
               <CheckCircle2 size={18} className="text-[#F97316]" />
               <span>25+ Years Experience</span>
@@ -171,16 +171,45 @@ export const PublicLandingPage: React.FC = () => {
         </div>
       </section>
 
+      {/* QUICK CATEGORY PILLS BAR (FLIPKART STYLE) */}
+      <section className="bg-white border-b border-slate-200/80 py-4 sticky top-16 z-30 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar py-1 text-xs font-heading font-bold">
+            <span className="text-slate-400 font-mono text-[11px] uppercase tracking-wider shrink-0 pr-2 border-r border-slate-200">
+              Categories:
+            </span>
+            {[
+              { name: 'All Products', icon: '⚡', path: '/products' },
+              { name: 'Tractor Kalappai', icon: '🚜', path: '/products?cat=Tractor%20Kalappai' },
+              { name: 'Windows Grill', icon: '🪟', path: '/products?cat=Windows%20Grill' },
+              { name: 'Gates', icon: '🚪', path: '/products?cat=Gates' },
+              { name: 'Steel Furniture', icon: '🪑', path: '/products?cat=Steel%20Furniture' },
+              { name: 'Machine Works', icon: '⚙️', path: '/products?cat=Machine%20Works' },
+              { name: 'Custom Fabrication', icon: '🔧', path: '/products?cat=Custom%20Fabrication' },
+            ].map((cat) => (
+              <Link
+                key={cat.name}
+                to={cat.path}
+                className="bg-slate-100 hover:bg-[#F97316] hover:text-white text-slate-700 px-4 py-2 rounded-full shrink-0 transition-all shadow-2xs flex items-center gap-1.5 active:scale-95"
+              >
+                <span>{cat.icon}</span>
+                <span>{cat.name}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* 3. OUR FABRICATION SERVICES */}
       <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="text-center max-w-2xl mx-auto space-y-2">
           <span className="text-[#F97316] font-mono text-xs font-bold uppercase tracking-widest block">
             What We Manufacture & Fabricate
           </span>
-          <h2 className="font-heading font-black text-2xl sm:text-3xl text-[#111111]">
+          <h2 className="font-heading font-black text-2xl sm:text-3xl text-slate-900">
             OUR FABRICATION SERVICES
           </h2>
-          <p className="text-gray-600 text-xs sm:text-sm">
+          <p className="text-slate-600 text-xs sm:text-sm">
             Expert lathe machining, kalappai forging, window grills, gates, roofing & welding — all under one roof in Kallimandhayam.
           </p>
         </div>
@@ -190,17 +219,17 @@ export const PublicLandingPage: React.FC = () => {
             <Link
               key={idx}
               to="/services"
-              className="bg-white rounded-[22px] border border-gray-200/80 overflow-hidden shadow-xs hover:border-[#F97316] hover:shadow-lg transition-all flex flex-col group"
+              className="bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-xs hover:border-[#F97316] hover:shadow-xl transition-all duration-300 flex flex-col group hover:-translate-y-1"
             >
-              <div className="aspect-square bg-gray-50 overflow-hidden flex items-center justify-center p-3 border-b border-gray-100">
-                <img src={srv.image} alt={srv.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 rounded-xl" />
+              <div className="aspect-square bg-slate-50 overflow-hidden flex items-center justify-center p-3 border-b border-slate-100">
+                <img src={srv.image} alt={srv.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 rounded-2xl" />
               </div>
-              <div className="p-3 space-y-1 flex-1 flex flex-col justify-between">
+              <div className="p-4 space-y-1 flex-1 flex flex-col justify-between">
                 <div>
-                  <h3 className="font-heading font-black text-xs text-[#111111] group-hover:text-[#F97316] transition-colors leading-tight">{srv.title}</h3>
-                  <p className="text-[10px] text-gray-500 leading-relaxed mt-1 line-clamp-3">{srv.desc}</p>
+                  <h3 className="font-heading font-black text-xs text-slate-900 group-hover:text-[#F97316] transition-colors leading-tight">{srv.title}</h3>
+                  <p className="text-[10px] text-slate-500 leading-relaxed mt-1 line-clamp-3">{srv.desc}</p>
                 </div>
-                <span className="pt-2 text-[10px] font-heading font-black text-[#F97316] flex items-center gap-1">
+                <span className="pt-2.5 text-[10px] font-heading font-black text-[#F97316] flex items-center gap-1">
                   Enquire Now <ArrowRight size={11} />
                 </span>
               </div>
@@ -210,42 +239,46 @@ export const PublicLandingPage: React.FC = () => {
       </section>
 
       {/* 4. FEATURED PRODUCTS */}
-      <section className="py-12 bg-white border-y border-gray-200/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
+      <section className="py-12 bg-white border-y border-slate-200/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="flex items-center justify-between">
-            <span className="text-[#F97316] font-mono text-xs font-bold uppercase tracking-widest">Our Products</span>
+            <div>
+              <span className="text-[#F97316] font-mono text-xs font-bold uppercase tracking-widest block">Top Rated Workshop Catalog</span>
+              <h2 className="font-heading font-black text-xl sm:text-2xl text-slate-900">Featured Products Showcase</h2>
+            </div>
             <Link
               to="/products"
-              className="bg-[#111111] hover:bg-[#F97316] text-white text-xs font-heading font-black px-5 py-2.5 rounded-xl transition-all shadow-sm"
+              className="bg-[#111111] hover:bg-[#F97316] text-white text-xs font-heading font-black px-5 py-3 rounded-2xl transition-all shadow-md active:scale-95 cursor-pointer"
             >
               Browse Entire Catalog →
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5">
             {featuredProducts.map((p) => (
               <div
                 key={p.id}
                 onClick={() => navigate(`/products/${p.id}`)}
-                className="bg-white rounded-[22px] border border-gray-200/80 p-3 shadow-xs flex flex-col justify-between cursor-pointer hover:border-[#F97316] hover:shadow-md transition-all group"
+                className="bg-white rounded-3xl border border-slate-200/90 p-3.5 shadow-xs flex flex-col justify-between cursor-pointer hover:border-[#F97316] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
               >
-                <div className="relative rounded-2xl overflow-hidden bg-gray-100 aspect-square flex items-center justify-center">
-                  <img src={p.images[0]} alt={p.name} className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300" />
-                  <span className="absolute top-2 left-2 bg-[#F97316] text-white text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase">
+                <div className="relative rounded-2xl overflow-hidden bg-slate-50 aspect-square flex items-center justify-center border border-slate-100">
+                  <img src={p.images[0]} alt={p.name} className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300" />
+                  <span className="absolute top-2 left-2 bg-[#F97316] text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase shadow-xs">
                     {p.badgeText || 'Best Seller'}
                   </span>
                 </div>
 
-                <div className="mt-2.5 space-y-1">
-                  <h3 className="font-heading font-black text-xs text-[#111111] line-clamp-2 leading-tight group-hover:text-[#F97316] transition-colors">
+                <div className="mt-3 space-y-1.5">
+                  <span className="text-[9px] font-mono text-slate-400 font-bold uppercase tracking-wider block">{p.category}</span>
+                  <h3 className="font-heading font-black text-xs text-slate-900 line-clamp-2 leading-tight group-hover:text-[#F97316] transition-colors">
                     {p.name}
                   </h3>
-                  <div className="flex items-center justify-between pt-1.5 border-t border-gray-100">
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100">
                     <span className="font-heading font-black text-sm text-[#F97316]">
                       ₹{p.price.toLocaleString('en-IN')}
                     </span>
-                    <span className="text-[10px] font-bold text-gray-500 group-hover:text-[#F97316]">
-                      View →
+                    <span className="text-[10px] font-heading font-black text-slate-900 group-hover:text-[#F97316]">
+                      View Details →
                     </span>
                   </div>
                 </div>

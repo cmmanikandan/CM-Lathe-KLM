@@ -306,15 +306,15 @@ export const AdminQuickOrderPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-[#111111] font-sans">
       
-      {/* POS Top Header */}
-      <div className="bg-[#111111] text-white p-4 shadow-lg border-b border-gray-800 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      {/* POS Top Header Banner */}
+      <div className="bg-[#111111] text-white py-6 px-4 sm:px-6 lg:px-8 border-b border-gray-800">
+        <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-[#F97316] rounded-xl text-white font-black shadow-md">
-              <Zap size={20} />
+            <div className="w-10 h-10 rounded-xl bg-[#F97316] text-white flex items-center justify-center font-bold shadow-md">
+              <Zap size={22} />
             </div>
             <div>
-              <span className="text-[10px] font-mono text-[#F97316] font-bold uppercase tracking-widest block">
+              <span className="text-[#F97316] font-mono text-[10px] font-bold uppercase tracking-widest block">
                 INSTANT COUNTER BILLING (30-60 SECONDS)
               </span>
               <h1 className="font-heading font-black text-xl text-white mt-0.5">
@@ -342,7 +342,7 @@ export const AdminQuickOrderPage: React.FC = () => {
       </div>
 
       {/* 2-PANEL POS SOFTWARE MAIN INTERFACE */}
-      <div className="max-w-7xl mx-auto p-4 sm:p-6">
+      <div className="max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
           {/* LEFT PANEL: PRODUCT CATALOG GRID */}

@@ -391,6 +391,7 @@ export interface CustomerEnquiry {
   customerPhone: string;
   customerEmail?: string;
   customerAddress: string;
+  location?: string;
   productId: string;
   productName: string;
   productImage: string;

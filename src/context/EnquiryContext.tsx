@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { CustomerEnquiry, EnquiryStatus, EnquiryTimelineEvent } from '../types';
+import { supabase } from '../services/supabase';
 import {
   fetchAllEnquiries,
   fetchCustomerEnquiries,
@@ -9,7 +10,7 @@ import {
 } from '../services/supabaseService';
 import { useOrders } from './OrderContext';
 import { useRefunds } from './RefundContext';
-import { generateEnquiryNumber } from '../services/idGeneratorService';
+import { generateEnquiryNumber, generateOnlineOrderNumber } from '../services/idGeneratorService';
 
 interface EnquiryContextType {
   enquiries: CustomerEnquiry[];
@@ -20,6 +21,8 @@ interface EnquiryContextType {
   adminRejectEnquiry: (enquiryId: string, reason: string) => Promise<void>;
   requestMoreInfo: (enquiryId: string, message: string) => Promise<void>;
   adjustEnquiryPrice: (enquiryId: string, newPrice: number) => Promise<void>;
+  deleteEnquiry: (enquiryId: string) => Promise<void>;
+  editEnquiry: (enquiryId: string, updatedData: Partial<CustomerEnquiry>) => Promise<void>;
   getCustomerEnquiries: (phone: string) => CustomerEnquiry[];
   getEnquiryById: (id: string) => CustomerEnquiry | undefined;
 }
@@ -29,7 +32,7 @@ const EnquiryContext = createContext<EnquiryContextType | undefined>(undefined);
 export const EnquiryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [enquiries, setEnquiries] = useState<CustomerEnquiry[]>([]);
   const [loading, setLoading] = useState(true);
-  const { createOfflineOrder } = useOrders();
+  const { createOfflineOrder, refreshOrders } = useOrders();
   const refundContext = useRefunds();
 
   const refreshEnquiries = useCallback(async () => {
@@ -52,7 +55,7 @@ export const EnquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     data: Omit<CustomerEnquiry, 'id' | 'enquiryNumber' | 'status' | 'createdAt' | 'timeline'>
   ): Promise<CustomerEnquiry> => {
     const id = `enq-${Date.now()}`;
-    const enquiryNumber = generateEnquiryNumber();
+    const enquiryNumber = await generateEnquiryNumber();
     const now = new Date().toISOString();
 
     const initialTimeline: EnquiryTimelineEvent[] = [
@@ -117,13 +120,30 @@ export const EnquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
     );
 
+    // 1b. Patch the created order to mark as Online (Enquiry Order) with an ORD- prefix
+    const onlineOrderNum = await generateOnlineOrderNumber();
+    try {
+      await supabase
+        .from('orders')
+        .update({
+          is_offline_order: false,
+          order_type: 'Enquiry Order',
+          order_number: onlineOrderNum,
+        })
+        .eq('id', createdOrder.id);
+      createdOrder.orderNumber = onlineOrderNum;
+      await refreshOrders();
+    } catch (patchErr) {
+      console.error('Failed to patch order as online enquiry order:', patchErr);
+    }
+
     // 2. Add audit log events to enquiry
     const approveTimelineEvent: EnquiryTimelineEvent = {
       id: `tl-${Date.now()}`,
       timestamp: now,
       action: 'Order Accepted',
       performedBy: 'Owner Admin',
-      details: `Enquiry approved & converted to Order #${createdOrder.orderNumber}. Inventory reserved. Production queue updated.`,
+      details: `Enquiry approved & converted to Order #${onlineOrderNum}. Inventory reserved. Production queue updated.`,
     };
 
     const updatedTimeline = [...enq.timeline, approveTimelineEvent];
@@ -271,6 +291,26 @@ export const EnquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return enquiries.filter((e) => e.customerPhone.replace(/\D/g, '').slice(-10) === last10);
   };
 
+  const deleteEnquiry = async (enquiryId: string) => {
+    setEnquiries((prev) => prev.filter((e) => e.id !== enquiryId));
+    try {
+      await supabase.from('customer_enquiries').delete().eq('id', enquiryId);
+    } catch (err) {
+      console.error('Delete enquiry error:', err);
+    }
+  };
+
+  const editEnquiry = async (enquiryId: string, updatedData: Partial<CustomerEnquiry>) => {
+    setEnquiries((prev) =>
+      prev.map((e) => (e.id === enquiryId ? { ...e, ...updatedData } : e))
+    );
+    try {
+      await supabase.from('customer_enquiries').update(updatedData).eq('id', enquiryId);
+    } catch (err) {
+      console.error('Edit enquiry error:', err);
+    }
+  };
+
   const getEnquiryById = (id: string) => enquiries.find((e) => e.id === id);
 
   return (
@@ -284,6 +324,8 @@ export const EnquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
         adminRejectEnquiry,
         requestMoreInfo,
         adjustEnquiryPrice,
+        deleteEnquiry,
+        editEnquiry,
         getCustomerEnquiries,
         getEnquiryById,
       }}

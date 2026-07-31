@@ -22,7 +22,7 @@ const mapOrder = (row: Record<string, unknown>, items: OrderItem[] = [], payment
   advancePaid: Number(row.advance_paid),
   remainingBalance: Number(row.remaining_balance),
   status: row.status as Order['status'],
-  orderType: (row.order_type as Order['orderType']) || (row.is_offline_order ? 'Walk-in Order' : 'Quick Order'),
+  orderType: (row.order_type as Order['orderType']) || (row.is_offline_order ? 'Walk-in Order' : 'Customer Order'),
   priority: (row.priority as Order['priority']) || 'Normal',
   assignedMachine: row.assigned_machine as string | undefined,
   assignedWorker: (row.delivery_details as any)?.personName as string | undefined,
@@ -820,40 +820,43 @@ export const cancelPaymentRequest = async (requestId: string): Promise<boolean> 
   return true;
 };
 
-/* ====================================================================
-   ENQUIRIES (ONLINE ORDER ENQUIRY WORKFLOW)
-   ==================================================================== */
-export const mapEnquiry = (row: Record<string, unknown>): CustomerEnquiry => ({
-  id: row.id as string,
-  enquiryNumber: (row.enquiry_number as string) || `ENQ-${row.id}`,
-  customerName: row.customer_name as string,
-  customerPhone: row.customer_phone as string,
-  customerEmail: row.customer_email as string | undefined,
-  customerAddress: (row.customer_address as string) || '',
-  productId: row.product_id as string,
-  productName: row.product_name as string,
-  productImage: (row.product_image as string) || '',
-  variantName: row.variant_name as string | undefined,
-  measurements: row.measurements as string | undefined,
-  referenceImages: (row.reference_images as string[]) || [],
-  notes: row.notes as string | undefined,
-  quantity: Number(row.quantity || 1),
-  estimatedPrice: Number(row.estimated_price || 0),
-  adjustedPrice: row.adjusted_price ? Number(row.adjusted_price) : undefined,
-  paymentOption: (row.payment_option as CustomerEnquiry['paymentOption']) || 'Pay Later',
-  advancePaid: Number(row.advance_paid || 0),
-  advancePaymentDetails: row.advance_payment_details as PaymentTransaction | undefined,
-  deliveryType: (row.delivery_type as CustomerEnquiry['deliveryType']) || 'Pickup',
-  status: (row.status as CustomerEnquiry['status']) || 'ENQUIRY_RECEIVED',
-  rejectionReason: row.rejection_reason as string | undefined,
-  infoRequestedMessage: row.info_requested_message as string | undefined,
-  suggestedVariant: row.suggested_variant as string | undefined,
-  quotationUrl: row.quotation_url as string | undefined,
-  orderId: row.order_id as string | undefined,
-  createdAt: row.created_at as string,
-  updatedAt: (row.updated_at as string) || (row.created_at as string),
-  timeline: (row.timeline as EnquiryTimelineEvent[]) || [],
-});
+export const mapEnquiry = (row: Record<string, unknown>): CustomerEnquiry => {
+  let statusVal = (row.status as CustomerEnquiry['status']) || 'ENQUIRY_RECEIVED';
+  if ((statusVal as string) === 'ACCEPTED_CONVERTED') statusVal = 'ORDER_ACCEPTED';
+  if ((statusVal as string) === 'REJECTED_BY_ADMIN') statusVal = 'REJECTED';
+
+  return {
+    id: row.id as string,
+    enquiryNumber: (row.enquiry_number as string) || `ENQ-${row.id}`,
+    customerName: row.customer_name as string,
+    customerPhone: row.customer_phone as string,
+    customerEmail: row.customer_email as string | undefined,
+    customerAddress: (row.customer_address as string) || '',
+    productId: row.product_id as string,
+    productName: row.product_name as string,
+    productImage: (row.product_image as string) || '',
+    variantName: row.variant_name as string | undefined,
+    measurements: row.measurements as string | undefined,
+    referenceImages: (row.reference_images as string[]) || [],
+    notes: row.notes as string | undefined,
+    quantity: Number(row.quantity || 1),
+    estimatedPrice: Number(row.estimated_price || 0),
+    adjustedPrice: row.adjusted_price ? Number(row.adjusted_price) : undefined,
+    paymentOption: (row.payment_option as CustomerEnquiry['paymentOption']) || 'Pay Later',
+    advancePaid: Number(row.advance_paid || 0),
+    advancePaymentDetails: row.advance_payment_details as PaymentTransaction | undefined,
+    deliveryType: (row.delivery_type as CustomerEnquiry['deliveryType']) || 'Pickup',
+    status: statusVal,
+    rejectionReason: row.rejection_reason as string | undefined,
+    infoRequestedMessage: row.info_requested_message as string | undefined,
+    suggestedVariant: row.suggested_variant as string | undefined,
+    quotationUrl: row.quotation_url as string | undefined,
+    orderId: row.order_id as string | undefined,
+    createdAt: row.created_at as string,
+    updatedAt: (row.updated_at as string) || (row.created_at as string),
+    timeline: (row.timeline as EnquiryTimelineEvent[]) || [],
+  };
+};
 
 export const insertEnquiry = async (enquiry: CustomerEnquiry): Promise<CustomerEnquiry | null> => {
   const payload = {

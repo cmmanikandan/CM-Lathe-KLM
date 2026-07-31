@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Loader2, ShieldCheck, Cpu } from 'lucide-react';
+import { MapPin, Loader2 } from 'lucide-react';
+import { BrandLogo } from './BrandLogo';
 
 interface SplashScreenProps {
   onComplete?: () => void;
@@ -40,98 +41,74 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
       {isVisible && (
         <motion.div
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0, transition: { duration: 0.4, ease: 'easeInOut' } }}
-          className="fixed inset-0 z-[9999] bg-[#111111] text-white flex flex-col items-center justify-between p-6 sm:p-10 select-none overflow-hidden font-sans"
+          exit={{ opacity: 0, transition: { duration: 0.35, ease: 'easeInOut' } }}
+          className="fixed inset-0 w-screen h-screen min-h-screen z-[999999] bg-white text-[#111111] flex flex-col items-center justify-center p-6 select-none overflow-hidden font-sans"
         >
-          {/* Ambient Background Gradients */}
-          <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#F97316]/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#F97316]/15 rounded-full blur-3xl pointer-events-none" />
-          
-          {/* Top Location Badge — Prominently displaying Kallimandhayam */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.4 }}
-            className="flex items-center gap-1.5 bg-white/10 border border-[#F97316]/40 text-white font-mono text-xs font-bold px-4 py-1.5 rounded-full shadow-lg mt-2 backdrop-blur-md"
-          >
-            <MapPin size={14} className="text-[#F97316] animate-bounce" />
-            <span className="text-[#F97316] uppercase tracking-wider">Kallimandhayam</span>
-            <span className="text-gray-400 font-normal">• Dindigul District</span>
-          </motion.div>
+          {/* Vibrant Warm Soft Glow Background */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-orange-100/60 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Center Brand Logo & Info */}
-          <div className="flex flex-col items-center text-center space-y-5 max-w-sm my-auto">
-            {/* Logo Image */}
+          {/* Center Content Container */}
+          <div className="relative z-10 flex flex-col items-center text-center space-y-6 max-w-sm my-auto">
+            
+            {/* Top Location Badge */}
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-              className="relative group"
+              initial={{ opacity: 0, y: -15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.35 }}
+              className="inline-flex items-center gap-2 bg-slate-900 text-white font-mono text-xs font-black px-5 py-2 rounded-full shadow-xl border border-orange-500/50"
             >
-              <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl bg-gradient-to-tr from-[#1A1A1A] via-[#222222] to-[#111111] border-2 border-[#F97316]/50 p-3 flex items-center justify-center shadow-[0_0_60px_rgba(249,115,22,0.35)] overflow-hidden">
+              <MapPin size={16} className="text-[#F97316] animate-bounce" />
+              <span className="text-[#F97316] uppercase tracking-wider font-extrabold">Kallimandhayam</span>
+              <span className="text-slate-300 font-normal">• Dindigul District</span>
+            </motion.div>
+
+            {/* Solid White Logo Card with Bold Orange Border */}
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 240, damping: 22 }}
+              className="relative"
+            >
+              <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-3xl bg-white border-4 border-[#F97316] p-4 flex items-center justify-center shadow-2xl shadow-orange-500/30 overflow-hidden">
                 <img
                   src="/logo.png"
                   alt="MANIKANDAN LATHE Logo"
-                  className="w-full h-full object-contain filter drop-shadow-md"
+                  className="w-full h-full object-contain filter drop-shadow-lg"
                   onError={(e) => {
-                    // Fallback to text logo if image load fails
-                    (e.target as HTMLElement).style.display = 'none';
+                    (e.target as HTMLImageElement).src = '/assets/logo.png';
                   }}
                 />
               </div>
-
-              {/* Decorative Corner Badge */}
-              <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-[#F97316] text-white text-[10px] font-black flex items-center justify-center shadow-md">
-                ★
-              </span>
             </motion.div>
 
-            {/* Brand Title */}
+            {/* Ultra High Contrast Brand Title */}
             <motion.div
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.4 }}
-              className="space-y-1"
+              transition={{ delay: 0.15, duration: 0.35 }}
+              className="space-y-2.5"
             >
-              <h1 className="font-heading font-black text-2xl sm:text-3xl text-white tracking-tight leading-none">
+              <h1 className="font-heading font-black text-3xl sm:text-5xl text-black tracking-tight leading-none">
                 MANIKANDAN <span className="text-[#F97316]">LATHE</span>
               </h1>
-              <p className="text-xs sm:text-sm font-medium text-gray-400">
-                Heavy Machining & Gate Fabrication Workshop
+              <p className="text-xs sm:text-sm font-mono font-extrabold uppercase tracking-widest bg-slate-900 text-white px-5 py-2 rounded-full shadow-lg border border-slate-800 inline-block">
+                LATHE MACHINES & STEEL FABRICATION
               </p>
             </motion.div>
 
-            {/* Feature Badges */}
+            {/* Ultra Bold Spinner Icon Only */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="flex items-center justify-center gap-2 flex-wrap pt-1"
+              transition={{ delay: 0.25 }}
+              className="pt-2"
             >
-              <span className="bg-white/5 border border-white/10 text-gray-300 text-[10px] font-mono px-2.5 py-1 rounded-full flex items-center gap-1">
-                <Cpu size={12} className="text-[#F97316]" /> PWA App
-              </span>
-              <span className="bg-white/5 border border-white/10 text-gray-300 text-[10px] font-mono px-2.5 py-1 rounded-full flex items-center gap-1">
-                <ShieldCheck size={12} className="text-green-500" /> Realtime Orders
-              </span>
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white border-4 border-[#F97316] shadow-2xl shadow-orange-500/20">
+                <Loader2 size={26} className="animate-spin text-[#F97316] stroke-[3]" />
+              </div>
             </motion.div>
-          </div>
 
-          {/* Bottom Clean Loading Text (Progress bar removed) */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="pb-4 text-center space-y-1.5"
-          >
-            <div className="flex items-center justify-center gap-2 text-xs font-mono font-bold text-[#F97316]">
-              <Loader2 size={16} className="animate-spin text-[#F97316]" />
-              <span className="tracking-widest uppercase animate-pulse">Loading...</span>
-            </div>
-            <p className="text-[10px] text-gray-500 font-mono">
-              Chellamuthu K • 25+ Yrs Industry Experience
-            </p>
-          </motion.div>
+          </div>
 
         </motion.div>
       )}

@@ -113,8 +113,8 @@ export const AdminMediaGalleryPage: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-[#111111] text-white py-8 px-4 sm:px-6 border-b border-gray-800">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="bg-[#111111] text-white py-8 px-4 sm:px-6 lg:px-8 border-b border-gray-800">
+        <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <span className="text-[#F97316] font-mono font-bold text-xs uppercase tracking-widest flex items-center gap-1.5">
               <Image size={16} /> PRODUCT CATALOG • MEDIA GALLERY
@@ -131,7 +131,7 @@ export const AdminMediaGalleryPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

@@ -219,8 +219,8 @@ export const AdminVariantsPage: React.FC = () => {
     <div className="min-h-screen bg-[#FAFAFA] text-[#111111] pb-24 font-sans space-y-6">
       
       {/* Top Banner */}
-      <div className="bg-[#111111] text-white py-8 px-4 sm:px-6 border-b border-gray-800">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="bg-[#111111] text-white py-8 px-4 sm:px-6 lg:px-8 border-b border-gray-800">
+        <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <span className="text-[#F97316] font-mono font-bold text-xs uppercase tracking-widest flex items-center gap-1.5">
               <Layers size={16} /> PRODUCT CATALOG • VARIANTS MATRIX
@@ -244,7 +244,7 @@ export const AdminVariantsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
         {/* Metric Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

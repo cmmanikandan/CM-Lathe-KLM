@@ -28,7 +28,7 @@ import {
 
 export const AdminOrdersPage: React.FC = () => {
   const navigate = useNavigate();
-  const { orders, getDraftOrders, deleteOrder } = useOrders();
+  const { orders, getDraftOrders, deleteOrder, updateOrderStatus } = useOrders();
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
@@ -70,7 +70,10 @@ export const AdminOrdersPage: React.FC = () => {
   const totalOutstandingBalance = orders.reduce((sum, o) => sum + o.remainingBalance, 0);
 
   // Filter Logic — ONLY ONLINE CUSTOMER ORDERS
-  const onlineOrders = orders.filter((o) => !o.isOfflineOrder && (o.orderType as string) !== 'POS' && o.orderType !== 'Quick Order');
+  const OFFLINE_ORDER_TYPES = ['POS', 'Quick Order', 'Walk-in Order'];
+  const onlineOrders = orders.filter(
+    (o) => !o.isOfflineOrder && !OFFLINE_ORDER_TYPES.includes(o.orderType as string)
+  );
 
   const filteredOrders = onlineOrders.filter((o) => {
     // 1. Search Query
@@ -100,8 +103,8 @@ export const AdminOrdersPage: React.FC = () => {
     <div className="min-h-screen bg-[#FAFAFA] text-[#111111] pb-24 font-sans space-y-6">
       
       {/* Top Banner Header */}
-      <div className="bg-[#111111] text-white py-8 px-4 sm:px-6 border-b border-gray-800">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="bg-[#111111] text-white py-8 px-4 sm:px-6 lg:px-8 border-b border-gray-800">
+        <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <span className="text-[#F97316] font-mono font-bold text-xs uppercase tracking-widest flex items-center gap-1.5">
               <ShoppingBag size={16} /> PRODUCTION ERP • ORDER MANAGEMENT
@@ -129,7 +132,7 @@ export const AdminOrdersPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
         {/* Top ERP Statistics Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 text-xs font-sans">
@@ -359,15 +362,28 @@ export const AdminOrdersPage: React.FC = () => {
 
                   {/* Status & Priority Badge Row */}
                   <div className="flex items-center justify-between gap-2 border-t border-b border-gray-100 py-2 text-[11px] font-mono">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
-                      ord.status === 'COMPLETED'
-                        ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                        : ord.status === 'IN_PRODUCTION'
-                        ? 'bg-purple-100 text-purple-800 border-purple-300'
-                        : 'bg-amber-100 text-amber-800 border-amber-300'
-                    }`}>
-                      {ord.status}
-                    </span>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <select
+                        value={ord.status}
+                        onChange={(e) => updateOrderStatus(ord.id, e.target.value as any)}
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border outline-none cursor-pointer ${
+                          ord.status === 'COMPLETED'
+                            ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                            : ord.status === 'IN_PRODUCTION'
+                            ? 'bg-purple-100 text-purple-800 border-purple-300'
+                            : ord.status === 'ACCEPTED'
+                            ? 'bg-blue-100 text-blue-800 border-blue-300'
+                            : 'bg-amber-100 text-amber-800 border-amber-300'
+                        }`}
+                      >
+                        <option value="ACCEPTED">ACCEPTED</option>
+                        <option value="IN_PRODUCTION">IN PRODUCTION</option>
+                        <option value="QUALITY_CHECK">QUALITY CHECK</option>
+                        <option value="READY">READY FOR DISPATCH</option>
+                        <option value="COMPLETED">COMPLETED</option>
+                        <option value="REJECTED">REJECTED / CANCELLED</option>
+                      </select>
+                    </div>
 
                     <span className="text-gray-400 text-[10px]">
                       Created: {new Date(ord.createdAt).toLocaleDateString('en-IN')}

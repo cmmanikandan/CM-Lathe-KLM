@@ -58,48 +58,49 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-gray-200">
+    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 font-sans">
+      <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100 relative animate-fade-in">
         
-        <div className="flex justify-between items-center border-b border-gray-200 pb-4">
+        <div className="flex justify-between items-center border-b border-slate-100 pb-4">
           <BrandLogo size="mobile" />
-          <button onClick={onClose} className="text-gray-400 hover:text-black">
-            <X size={20} />
+          <button onClick={onClose} className="p-2 rounded-full text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors">
+            <X size={18} />
           </button>
         </div>
 
         <div className="space-y-1 text-center">
-          <h3 className="font-heading font-black text-2xl text-[#111111]">SIGN IN TO YOUR ACCOUNT</h3>
-          <p className="text-gray-500 text-xs">Access order history, live status, and flexible payment receipts.</p>
+          <span className="text-[10px] font-mono font-bold uppercase text-[#F97316] tracking-wider block">Customer & Workshop Sign In</span>
+          <h3 className="font-heading font-black text-xl text-slate-900">Sign In to Your Account</h3>
+          <p className="text-slate-500 text-xs">Access order history, live status, and flexible payment receipts.</p>
         </div>
 
         {/* Mode Switcher */}
-        <div className="grid grid-cols-3 gap-2 bg-gray-100 p-1 rounded-xl text-xs font-bold">
+        <div className="grid grid-cols-3 gap-1.5 bg-slate-100 p-1.5 rounded-2xl text-xs font-bold">
           <button
             onClick={() => setAuthMode('google')}
-            className={`py-2 rounded-lg transition-all ${authMode === 'google' ? 'bg-[#111111] text-white' : 'text-gray-600'}`}
+            className={`py-2 rounded-xl transition-all cursor-pointer ${authMode === 'google' ? 'bg-white text-slate-900 shadow-sm font-black' : 'text-slate-500 hover:text-slate-800'}`}
           >
             Google
           </button>
           <button
             onClick={() => setAuthMode('phone')}
-            className={`py-2 rounded-lg transition-all ${authMode === 'phone' ? 'bg-[#111111] text-white' : 'text-gray-600'}`}
+            className={`py-2 rounded-xl transition-all cursor-pointer ${authMode === 'phone' ? 'bg-white text-slate-900 shadow-sm font-black' : 'text-slate-500 hover:text-slate-800'}`}
           >
             Phone OTP
           </button>
           <button
             onClick={() => setAuthMode('email')}
-            className={`py-2 rounded-lg transition-all ${authMode === 'email' ? 'bg-[#111111] text-white' : 'text-gray-600'}`}
+            className={`py-2 rounded-xl transition-all cursor-pointer ${authMode === 'email' ? 'bg-white text-slate-900 shadow-sm font-black' : 'text-slate-500 hover:text-slate-800'}`}
           >
             Email
           </button>
         </div>
 
         {authMode === 'google' && (
-          <div className="space-y-4 pt-2">
+          <div className="space-y-3.5 pt-2">
             <button
               onClick={handleGoogleLogin}
-              className="w-full bg-white border-2 border-gray-300 hover:border-[#F97316] text-[#111111] font-bold text-xs py-3.5 rounded-xl shadow flex items-center justify-center gap-3 transition-all"
+              className="w-full bg-white border-2 border-slate-200 hover:border-[#F97316] text-slate-900 font-bold text-xs py-4 rounded-2xl shadow-sm flex items-center justify-center gap-3 transition-all active:scale-98 cursor-pointer"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -115,7 +116,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 loginAsAdmin();
                 onClose();
               }}
-              className="w-full bg-[#111111] hover:bg-[#F97316] text-white font-heading font-extrabold text-xs py-3 rounded-xl shadow flex items-center justify-center gap-1.5 transition-colors"
+              className="w-full bg-[#111111] hover:bg-[#F97316] text-white font-heading font-extrabold text-xs py-3.5 rounded-2xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer"
             >
               <ShieldCheck size={16} /> Admin Portal Quick Login
             </button>
@@ -126,19 +127,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           <form onSubmit={otpSent ? handleVerifyOTP : handleSendPhoneOTP} className="space-y-4 text-xs font-sans">
             {!otpSent ? (
               <div>
-                <label className="font-bold text-gray-700 block mb-1">Enter Phone Number *</label>
+                <label className="font-bold text-slate-700 block mb-1">Enter Mobile Number *</label>
                 <input
                   type="tel"
                   required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+91 96592 86268"
-                  className="w-full bg-gray-100 p-3 rounded-xl border border-gray-300 font-mono font-bold text-sm outline-none"
+                  className="w-full bg-slate-50 p-3.5 rounded-2xl border border-slate-200 font-mono font-bold text-sm outline-none focus:bg-white focus:border-[#F97316]"
                 />
               </div>
             ) : (
               <div>
-                <label className="font-bold text-gray-700 block mb-1">Enter 6-Digit OTP Code *</label>
+                <label className="font-bold text-slate-700 block mb-1">Enter 6-Digit OTP Code *</label>
                 <input
                   type="text"
                   required
@@ -146,14 +147,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
                   placeholder="123456"
-                  className="w-full bg-gray-100 p-3 rounded-xl border border-gray-300 font-mono font-bold text-center text-lg outline-none"
+                  className="w-full bg-slate-50 p-3.5 rounded-2xl border border-slate-200 font-mono font-bold text-center text-lg outline-none focus:bg-white focus:border-[#F97316]"
                 />
               </div>
             )}
 
             <button
               type="submit"
-              className="w-full bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs py-3.5 rounded-xl shadow"
+              className="w-full bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs py-4 rounded-2xl shadow-lg transition-all active:scale-98 cursor-pointer"
             >
               {otpSent ? 'Verify OTP & Continue' : 'Send Phone OTP SMS'}
             </button>
@@ -161,33 +162,33 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         )}
 
         {authMode === 'email' && (
-          <form onSubmit={handleEmailLogin} className="space-y-3 text-xs font-sans">
+          <form onSubmit={handleEmailLogin} className="space-y-3.5 text-xs font-sans">
             <div>
-              <label className="font-bold text-gray-700 block mb-1">Email Address</label>
+              <label className="font-bold text-slate-700 block mb-1">Email Address</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="customer@example.com"
-                className="w-full bg-gray-100 p-2.5 rounded-xl border border-gray-300 outline-none"
+                className="w-full bg-slate-50 p-3 rounded-2xl border border-slate-200 outline-none focus:bg-white focus:border-[#F97316]"
               />
             </div>
 
             <div>
-              <label className="font-bold text-gray-700 block mb-1">Password</label>
+              <label className="font-bold text-slate-700 block mb-1">Password</label>
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-gray-100 p-2.5 rounded-xl border border-gray-300 outline-none"
+                className="w-full bg-slate-50 p-3 rounded-2xl border border-slate-200 outline-none focus:bg-white focus:border-[#F97316]"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full bg-[#111111] hover:bg-[#F97316] text-white font-heading font-black text-xs py-3.5 rounded-xl shadow"
+              className="w-full bg-[#111111] hover:bg-[#F97316] text-white font-heading font-black text-xs py-4 rounded-2xl shadow-lg transition-all active:scale-98 cursor-pointer"
             >
               Sign In
             </button>

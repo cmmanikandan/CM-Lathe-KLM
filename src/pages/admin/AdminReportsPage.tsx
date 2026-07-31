@@ -124,25 +124,32 @@ export const AdminReportsPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-8 font-sans max-w-[1600px] mx-auto text-[#111111] antialiased">
+    <div className="min-h-screen bg-[#FAFAFA] text-[#111111] font-sans pb-24">
       
-      {/* 1. PAGE TITLE & PERIOD FILTER BAR */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200 pb-5 gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="bg-[#F97316]/10 border border-[#F97316]/30 text-[#F97316] text-[10px] font-mono font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
-              <BarChart2 size={12} /> Workshop Analytics
+      {/* 1. TOP DARK HEADER BANNER */}
+      <div className="bg-[#111111] text-white py-8 px-4 sm:px-6 lg:px-8 border-b border-gray-800">
+        <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <span className="text-[#F97316] font-mono text-xs font-bold uppercase tracking-widest flex items-center gap-1.5">
+              <BarChart2 size={16} /> WORKSHOP ANALYTICS • AUDIT & REPORTS
             </span>
-            <span className="text-xs text-gray-400 font-mono">Live Sync</span>
+            <h1 className="font-heading font-black text-2xl sm:text-3xl text-white mt-1">
+              REVENUE & SALES REPORTS
+            </h1>
           </div>
-          <h1 className="font-heading font-black text-2xl sm:text-3xl text-[#111111] mt-1">
-            REPORTS & ANALYTICS DASHBOARD
-          </h1>
-          <p className="text-xs text-gray-500 font-mono">
-            Financial performance, order throughput, category breakdown & GST sales tax reports.
-          </p>
-        </div>
 
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleExportCSV}
+              className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs px-4 py-2.5 rounded-xl shadow-md flex items-center gap-2 transition-all cursor-pointer"
+            >
+              <Download size={15} /> Export Audit CSV
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
         {/* Time Period Filter Pills */}
         <div className="flex items-center gap-1.5 bg-white p-1 rounded-2xl border border-gray-200 shadow-xs overflow-x-auto no-scrollbar">
           {[

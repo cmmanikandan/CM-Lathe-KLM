@@ -18,45 +18,48 @@ export const LoginRequiredModal: React.FC<LoginRequiredModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-[22px] max-w-md w-full p-6 space-y-5 shadow-2xl border border-gray-200 animate-fade-in relative">
+    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100 relative animate-fade-in">
         
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-full text-gray-400 hover:text-black hover:bg-gray-100 transition-colors"
+          className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
         >
           <X size={18} />
         </button>
 
         {/* Lock Icon Header */}
-        <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-full bg-orange-100 text-[#F97316] flex items-center justify-center mx-auto shadow-inner">
+        <div className="text-center space-y-2.5 pt-2">
+          <div className="w-16 h-16 rounded-2xl bg-orange-50 border border-orange-200 text-[#F97316] flex items-center justify-center mx-auto shadow-xs">
             <Lock size={28} />
           </div>
           
-          <h3 className="font-heading font-black text-xl text-[#111111]">LOGIN REQUIRED</h3>
-          {productName && (
-            <p className="text-xs text-[#F97316] font-extrabold line-clamp-1">{productName}</p>
-          )}
+          <div>
+            <span className="text-[10px] font-mono font-bold uppercase text-[#F97316] tracking-wider block">Customer Account Security</span>
+            <h3 className="font-heading font-black text-xl text-slate-900 mt-0.5">Account Sign In Required</h3>
+            {productName && (
+              <p className="text-xs text-[#F97316] font-bold line-clamp-1 mt-1 bg-orange-50/80 px-3 py-1 rounded-full border border-orange-200/60 inline-block">{productName}</p>
+            )}
+          </div>
         </div>
 
         {/* Requirements Bullet List */}
-        <div className="bg-gray-50 p-4 rounded-xl space-y-2 border border-gray-200/80 text-xs text-gray-700 font-sans">
-          <p className="font-bold text-[#111111] mb-1">Please log in to your account to access:</p>
-          <div className="flex items-center gap-2">
+        <div className="bg-slate-50 p-4.5 rounded-2xl space-y-2.5 border border-slate-200/80 text-xs text-slate-700 font-sans">
+          <p className="font-bold text-slate-900">Please log in to your account to access:</p>
+          <div className="flex items-center gap-2.5">
             <ShieldCheck size={16} className="text-[#F97316] shrink-0" />
             <span>Place custom lathe & gate fabrication orders</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <ShieldCheck size={16} className="text-[#F97316] shrink-0" />
             <span>Track live workshop manufacturing progress</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <ShieldCheck size={16} className="text-[#F97316] shrink-0" />
             <span>Make partial payments & view payment ledger</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <ShieldCheck size={16} className="text-[#F97316] shrink-0" />
             <span>Download official GST tax invoices</span>
           </div>
@@ -69,7 +72,7 @@ export const LoginRequiredModal: React.FC<LoginRequiredModalProps> = ({
               onClose();
               navigate('/login');
             }}
-            className="w-full bg-[#111111] hover:bg-[#F97316] text-white font-heading font-black text-xs py-3.5 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-95"
+            className="w-full bg-[#111111] hover:bg-[#F97316] text-white font-heading font-black text-xs py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer"
           >
             <LogIn size={16} /> Sign In to Account
           </button>
@@ -79,14 +82,14 @@ export const LoginRequiredModal: React.FC<LoginRequiredModalProps> = ({
               onClose();
               navigate('/register');
             }}
-            className="w-full bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs py-3.5 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-95"
+            className="w-full bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer"
           >
             <UserPlus size={16} /> Register New Account
           </button>
 
           <button
             onClick={onClose}
-            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs py-2.5 rounded-xl transition-colors"
+            className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-3 rounded-2xl transition-colors cursor-pointer"
           >
             Continue Browsing Catalog
           </button>

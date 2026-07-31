@@ -162,8 +162,8 @@ export const AdminImportExportPage: React.FC = () => {
     <div className="min-h-screen bg-[#FAFAFA] text-[#111111] pb-24 font-sans">
       <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls,.json" onChange={handleFileSelect} className="hidden" />
 
-      <div className="bg-[#111111] text-white py-8 px-4 sm:px-6 border-b border-gray-800">
-        <div className="max-w-7xl mx-auto">
+      <div className="bg-[#111111] text-white py-8 px-4 sm:px-6 lg:px-8 border-b border-gray-800">
+        <div className="max-w-[1600px] mx-auto">
           <span className="text-[#F97316] font-mono font-bold text-xs uppercase tracking-widest flex items-center gap-1.5">
             <RefreshCw size={16} /> PRODUCT CATALOG • IMPORT / EXPORT
           </span>
@@ -171,7 +171,7 @@ export const AdminImportExportPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
         {/* Sub-tabs */}
         <div className="flex gap-2 text-xs font-heading flex-wrap">

@@ -47,8 +47,8 @@ export const AdminDashboardPage: React.FC = () => {
     <div className="min-h-screen bg-[#FAFAFA] text-[#111111] pb-24">
       
       {/* Header Banner */}
-      <div className="bg-[#111111] text-white py-10 px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="bg-[#111111] text-white py-8 px-4 sm:px-6 lg:px-8 border-b border-gray-800">
+        <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <span className="text-[#F97316] font-heading font-extrabold text-xs uppercase tracking-widest flex items-center gap-1.5">
               <ShieldCheck size={16} /> OFFICIAL MANAGEMENT PORTAL
@@ -61,14 +61,14 @@ export const AdminDashboardPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <Link
               to="/admin/offline-order"
-              className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-1.5 transition-transform active:scale-95"
+              className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
             >
               <PlusCircle size={16} /> New Walk-in Offline Order
             </Link>
 
             <Link
               to="/admin/customers"
-              className="bg-white/10 hover:bg-white/20 text-white font-heading font-bold text-xs px-3.5 py-2.5 rounded-xl border border-white/20 flex items-center gap-1.5"
+              className="bg-white/10 hover:bg-white/20 text-white font-heading font-bold text-xs px-3.5 py-2.5 rounded-xl border border-white/20 flex items-center gap-1.5 cursor-pointer"
             >
               <UserCheck size={16} className="text-[#F97316]" /> Customers
             </Link>
@@ -76,7 +76,7 @@ export const AdminDashboardPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
         {/* Metric Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

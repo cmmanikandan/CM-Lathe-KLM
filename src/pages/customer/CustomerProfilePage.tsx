@@ -2,6 +2,8 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCustomerOrders } from '../../context/OrderContext';
+import { useEnquiries } from '../../context/EnquiryContext';
+import { useRefunds } from '../../context/RefundContext';
 import {
   User,
   Phone,
@@ -29,7 +31,9 @@ import {
   Globe,
   Trash2,
   X,
-  Upload
+  Upload,
+  RotateCcw,
+  MessageSquare
 } from 'lucide-react';
 
 export const CustomerProfilePage: React.FC = () => {
@@ -119,6 +123,12 @@ export const CustomerProfilePage: React.FC = () => {
     { label: 'Invoices Issued', value: ordersLoading ? '—' : orders.length, icon: FileText, iconColor: 'text-[#D97706]', bgColor: 'bg-[#FEF3C7]' }
   ];
 
+  const { getCustomerEnquiries } = useEnquiries();
+  const { getCustomerRefunds } = useRefunds();
+
+  const myEnquiries = getCustomerEnquiries(user?.phone || '');
+  const myRefunds = getCustomerRefunds(user?.phone || '');
+
   // Tailored Menu Items (Clean & Essential — Main Title Only)
   const menuItems = [
     {
@@ -130,7 +140,23 @@ export const CustomerProfilePage: React.FC = () => {
       badge: `${pendingOrders > 0 ? `${pendingOrders} Active` : `${orders.length} Total`}`
     },
     {
-      label: 'Wishlist',
+      label: 'My Custom Enquiries & Quotations',
+      icon: MessageSquare,
+      iconColor: 'text-[#D97706]',
+      bgColor: 'bg-[#FEF3C7]',
+      path: '/customer/enquiries',
+      badge: myEnquiries.length > 0 ? `${myEnquiries.length} Enquiries` : undefined
+    },
+    {
+      label: 'My Refund Requests & Ledger',
+      icon: RotateCcw,
+      iconColor: 'text-[#DC2626]',
+      bgColor: 'bg-[#FEE2E2]',
+      path: '/customer/refunds',
+      badge: myRefunds.length > 0 ? `${myRefunds.length} Refunds` : undefined
+    },
+    {
+      label: 'Wishlist & Saved Items',
       icon: Heart,
       iconColor: 'text-[#EF4444]',
       bgColor: 'bg-[#FEE2E2]',
@@ -138,7 +164,7 @@ export const CustomerProfilePage: React.FC = () => {
       badge: wishlistCount > 0 ? `${wishlistCount} Saved` : undefined
     },
     {
-      label: 'Workshop Stories & Gallery',
+      label: 'Workshop Stories & Live Gallery',
       icon: Flame,
       iconColor: 'text-[#F97316]',
       bgColor: 'bg-[#FFEDD5]',

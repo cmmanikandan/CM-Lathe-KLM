@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Phone,
   MessageCircle,
+  ArrowLeft,
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -43,32 +44,31 @@ export const CustomerEnquiriesPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] text-[#111111] font-sans pb-28">
-      {/* Header */}
-      <div className="bg-[#111111] text-white py-8 px-4 sm:px-6 lg:px-8 border-b border-gray-800">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+    <div className="p-4 sm:p-6 space-y-6 font-sans max-w-7xl mx-auto pb-28 text-[#111111]">
+      {/* Clean White Header matching Wishlist style */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-200 pb-4 gap-3">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-[#111111] transition-colors cursor-pointer shadow-xs"
+            title="Go Back"
+          >
+            <ArrowLeft size={18} />
+          </button>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="bg-[#F97316] text-white text-[10px] font-mono font-black px-2.5 py-0.5 rounded uppercase">
-                MY ENQUIRIES
-              </span>
-              <span className="text-xs text-gray-400 font-mono">Fabrication Orders Tracking</span>
-            </div>
-            <h1 className="font-heading font-black text-2xl text-white mt-1">ONLINE ORDER ENQUIRIES</h1>
-          </div>
-
-          <div className="flex gap-2">
-            <Link
-              to="/customer/refunds"
-              className="bg-gray-800 hover:bg-gray-700 text-white font-heading font-black text-xs px-3.5 py-2 rounded-xl transition-all"
-            >
-              My Refunds →
-            </Link>
+            <h1 className="font-heading font-black text-xl sm:text-2xl text-[#111111] flex items-center gap-2">
+              <MessageSquare size={22} className="text-[#F97316]" /> ONLINE ORDER ENQUIRIES
+            </h1>
+            <p className="text-xs text-gray-500">Fabrication custom quotes & order tracking</p>
           </div>
         </div>
+
+        <span className="bg-orange-100 text-[#F97316] text-xs font-mono font-bold px-3.5 py-1 rounded-full border border-orange-200 self-start sm:self-auto">
+          {myEnquiries.length} Enquiries
+        </span>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+      <div className="space-y-6">
         
         {loading ? (
           <div className="p-12 text-center text-gray-500 font-mono">Fetching your enquiries...</div>

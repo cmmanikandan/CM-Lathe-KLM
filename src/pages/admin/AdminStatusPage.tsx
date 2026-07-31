@@ -83,8 +83,8 @@ export const AdminStatusPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-[#111111] pb-24 font-sans">
-      <div className="bg-[#111111] text-white py-10 px-4 sm:px-6">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+      <div className="bg-[#111111] text-white py-8 px-4 sm:px-6 lg:px-8 border-b border-gray-800">
+        <div className="max-w-[1600px] mx-auto flex items-center justify-between">
           <div>
             <span className="text-[#F97316] font-heading font-extrabold text-xs uppercase tracking-widest flex items-center gap-1.5">
               <Flame size={16} /> BANNERS & STATUS MANAGEMENT
@@ -96,7 +96,7 @@ export const AdminStatusPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         
         {/* ── TOP TWO PAGE LINK TABS ── */}
         <div className="bg-white p-2 rounded-2xl border border-gray-200 shadow-xs flex items-center justify-center gap-2 font-heading">

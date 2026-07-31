@@ -12,6 +12,7 @@ import {
   CreditCard,
   Building2,
   ArrowLeft,
+  RotateCcw,
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -42,30 +43,31 @@ export const CustomerRefundsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] text-[#111111] font-sans pb-28">
-      {/* Header */}
-      <div className="bg-[#111111] text-white py-8 px-4 sm:px-6 lg:px-8 border-b border-gray-800">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="bg-red-500 text-white text-[10px] font-mono font-black px-2.5 py-0.5 rounded uppercase">
-                PAYOUT TRACKER
-              </span>
-              <span className="text-xs text-gray-400 font-mono">Razorpay & Cash Refunds</span>
-            </div>
-            <h1 className="font-heading font-black text-2xl text-white mt-1">MY REFUNDS</h1>
-          </div>
-
-          <Link
-            to="/customer/enquiries"
-            className="bg-gray-800 hover:bg-gray-700 text-white font-heading font-black text-xs px-3.5 py-2 rounded-xl transition-all"
+    <div className="p-4 sm:p-6 space-y-6 font-sans max-w-7xl mx-auto pb-28 text-[#111111]">
+      {/* Clean White Header matching Wishlist style */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-200 pb-4 gap-3">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-[#111111] transition-colors cursor-pointer shadow-xs"
+            title="Go Back"
           >
-            ← My Enquiries
-          </Link>
+            <ArrowLeft size={18} />
+          </button>
+          <div>
+            <h1 className="font-heading font-black text-xl sm:text-2xl text-[#111111] flex items-center gap-2">
+              <RotateCcw size={22} className="text-red-500" /> MY REFUNDS & PAYOUTS
+            </h1>
+            <p className="text-xs text-gray-500">Razorpay online refunds & cash payout tracking</p>
+          </div>
         </div>
+
+        <span className="bg-red-100 text-red-700 text-xs font-mono font-bold px-3.5 py-1 rounded-full border border-red-200 self-start sm:self-auto">
+          {myRefunds.length} Refund Records
+        </span>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+      <div className="space-y-6">
         
         {loading ? (
           <div className="p-12 text-center text-gray-500 font-mono">Fetching your refund records...</div>

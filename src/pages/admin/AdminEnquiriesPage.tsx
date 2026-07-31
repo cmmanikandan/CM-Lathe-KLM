@@ -9,6 +9,7 @@ import {
   MessageSquare,
   DollarSign,
   Phone,
+  PhoneCall,
   MessageCircle,
   Eye,
   FileText,
@@ -19,13 +20,23 @@ import {
   MapPin,
   Calendar,
   AlertTriangle,
-  ChevronRight,
+  Trash2,
+  Edit,
   ExternalLink,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const AdminEnquiriesPage: React.FC = () => {
-  const { enquiries, loading, adminApproveEnquiry, adminRejectEnquiry, requestMoreInfo, adjustEnquiryPrice } = useEnquiries();
+  const {
+    enquiries,
+    loading,
+    adminApproveEnquiry,
+    adminRejectEnquiry,
+    requestMoreInfo,
+    adjustEnquiryPrice,
+    deleteEnquiry,
+    editEnquiry,
+  } = useEnquiries();
   const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -40,6 +51,12 @@ export const AdminEnquiriesPage: React.FC = () => {
   const [infoMessage, setInfoMessage] = useState('');
   const [priceModalEnquiry, setPriceModalEnquiry] = useState<CustomerEnquiry | null>(null);
   const [newPriceInput, setNewPriceInput] = useState<number>(0);
+  const [deleteModalEnquiry, setDeleteModalEnquiry] = useState<CustomerEnquiry | null>(null);
+  const [editModalEnquiry, setEditModalEnquiry] = useState<CustomerEnquiry | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editLocation, setEditLocation] = useState('');
+  const [editNotes, setEditNotes] = useState('');
 
   // Filter Logic
   const filteredEnquiries = enquiries.filter((e) => {
@@ -291,25 +308,92 @@ export const AdminEnquiriesPage: React.FC = () => {
                 </div>
 
                 {/* Actions Bar */}
-                <div className="pt-3 border-t border-gray-100 space-y-2">
-                  {enq.status !== 'ORDER_ACCEPTED' && enq.status !== 'REJECTED' && (
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        onClick={() => handleApprove(enq)}
-                        className="bg-green-600 hover:bg-green-700 text-white font-heading font-black text-xs py-2.5 rounded-xl shadow-xs flex items-center justify-center gap-1.5"
-                      >
-                        <CheckCircle2 size={14} /> Approve & Create Order
-                      </button>
+                <div className="pt-3 border-t border-gray-100 space-y-2.5">
 
-                      <button
-                        onClick={() => setRejectModalEnquiry(enq)}
-                        className="bg-red-600 hover:bg-red-700 text-white font-heading font-black text-xs py-2.5 rounded-xl shadow-xs flex items-center justify-center gap-1.5"
-                      >
-                        <XCircle size={14} /> Reject Enquiry
-                      </button>
+                  {/* STEP 1 & 2 OR ACCEPTED / REJECTED BANNER */}
+                  {enq.status === 'ORDER_ACCEPTED' ? (
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-heading font-black text-emerald-800 flex items-center gap-1.5">
+                          <CheckCircle2 size={16} className="text-emerald-600" /> ORDER ACCEPTED & CREATED
+                        </span>
+                        {enq.orderId && (
+                          <button
+                            onClick={() => navigate(`/admin/orders/${enq.orderId}`)}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-black text-xs px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1 cursor-pointer"
+                          >
+                            View Order →
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-emerald-700 font-mono">
+                        This enquiry has been converted to an active production order.
+                      </p>
                     </div>
+                  ) : enq.status === 'REJECTED' ? (
+                    <div className="bg-red-50 border border-red-200 rounded-2xl p-3 space-y-1 text-xs text-red-900">
+                      <span className="font-heading font-black flex items-center gap-1.5 text-red-700">
+                        <XCircle size={16} /> ENQUIRY REJECTED
+                      </span>
+                      {enq.rejectionReason && (
+                        <p className="text-[11px] text-red-700 font-mono">Reason: {enq.rejectionReason}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <>
+                      {/* STEP 1: Contact Customer First — Call & WhatsApp */}
+                      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-2.5 space-y-1.5">
+                        <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wide flex items-center gap-1">
+                          <PhoneCall size={11} /> Step 1 — Contact & Verify Enquiry
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <a
+                            href={`tel:${enq.customerPhone}`}
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-heading font-black text-xs py-2.5 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer"
+                            title={`Call ${enq.customerName}`}
+                          >
+                            <PhoneCall size={14} /> Call Customer
+                          </a>
+
+                          <a
+                            href={`https://wa.me/91${enq.customerPhone.replace(/\D/g, '').slice(-10)}?text=${encodeURIComponent(
+                              `Hi ${enq.customerName}, regarding your ${enq.productName} enquiry (#${enq.enquiryNumber}) at MANIKANDAN LATHE:`
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-[#25D366] hover:bg-[#20ba5a] text-white font-heading font-black text-xs py-2.5 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer"
+                            title="WhatsApp Customer"
+                          >
+                            <MessageCircle size={14} /> WhatsApp
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* STEP 2: After Verification — Approve or Reject */}
+                      <div className="space-y-1.5">
+                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide flex items-center gap-1">
+                          <CheckCircle2 size={11} /> Step 2 — After Call Verification
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            onClick={() => handleApprove(enq)}
+                            className="bg-green-600 hover:bg-green-700 text-white font-heading font-black text-xs py-2.5 rounded-xl shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <CheckCircle2 size={14} /> Approve & Create Order
+                          </button>
+
+                          <button
+                            onClick={() => setRejectModalEnquiry(enq)}
+                            className="bg-red-600 hover:bg-red-700 text-white font-heading font-black text-xs py-2.5 rounded-xl shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <XCircle size={14} /> Reject Enquiry
+                          </button>
+                        </div>
+                      </div>
+                    </>
                   )}
 
+                  {/* Secondary Actions */}
                   <div className="flex gap-1.5 text-xs font-bold">
                     <button
                       onClick={() => {
@@ -328,17 +412,27 @@ export const AdminEnquiriesPage: React.FC = () => {
                       <MessageSquare size={13} /> Request Info
                     </button>
 
-                    <a
-                      href={`https://wa.me/91${enq.customerPhone.replace(/\D/g, '').slice(-10)}?text=${encodeURIComponent(
-                        `Hi ${enq.customerName}, regarding your ${enq.productName} enquiry (#${enq.enquiryNumber}) at MANIKANDAN LATHE:`
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-xl flex items-center justify-center"
-                      title="WhatsApp Customer"
+                    <button
+                      onClick={() => {
+                        setEditModalEnquiry(enq);
+                        setEditName(enq.customerName);
+                        setEditPhone(enq.customerPhone);
+                        setEditLocation(enq.location || '');
+                        setEditNotes(enq.notes || '');
+                      }}
+                      className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl flex items-center justify-center cursor-pointer"
+                      title="Edit Enquiry Details"
                     >
-                      <MessageCircle size={15} />
-                    </a>
+                      <Edit size={14} />
+                    </button>
+
+                    <button
+                      onClick={() => setDeleteModalEnquiry(enq)}
+                      className="p-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl flex items-center justify-center cursor-pointer"
+                      title="Delete Enquiry"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 </div>
 
@@ -456,6 +550,119 @@ export const AdminEnquiriesPage: React.FC = () => {
               >
                 Update Price
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE ENQUIRY MODAL */}
+      {deleteModalEnquiry && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl border border-gray-200 text-center font-sans">
+            <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto">
+              <Trash2 size={24} />
+            </div>
+            <div>
+              <h3 className="font-heading font-black text-base text-[#111111]">Delete Enquiry #{deleteModalEnquiry.enquiryNumber}?</h3>
+              <p className="text-xs text-gray-500 mt-1">This will permanently remove this customer enquiry record.</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setDeleteModalEnquiry(null)}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs py-2.5 rounded-xl cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  await deleteEnquiry(deleteModalEnquiry.id);
+                  setDeleteModalEnquiry(null);
+                }}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-heading font-black text-xs py-2.5 rounded-xl cursor-pointer shadow-md"
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT ENQUIRY MODAL */}
+      {editModalEnquiry && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-gray-200 font-sans">
+            <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+              <h3 className="font-heading font-black text-sm text-[#111111] uppercase flex items-center gap-2">
+                <Edit size={16} className="text-[#F97316]" /> Edit Enquiry #{editModalEnquiry.enquiryNumber}
+              </h3>
+              <button onClick={() => setEditModalEnquiry(null)} className="text-gray-400 hover:text-black">✕</button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="font-bold text-gray-700 block mb-1">Customer Name *</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full bg-gray-50 p-2.5 rounded-xl border border-gray-300 font-bold outline-none focus:border-[#F97316]"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-gray-700 block mb-1">Phone Number *</label>
+                <input
+                  type="text"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  className="w-full bg-gray-50 p-2.5 rounded-xl border border-gray-300 font-mono outline-none focus:border-[#F97316]"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-gray-700 block mb-1">Location / District</label>
+                <input
+                  type="text"
+                  value={editLocation}
+                  onChange={(e) => setEditLocation(e.target.value)}
+                  className="w-full bg-gray-50 p-2.5 rounded-xl border border-gray-300 outline-none focus:border-[#F97316]"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-gray-700 block mb-1">Notes / Instructions</label>
+                <textarea
+                  rows={2}
+                  value={editNotes}
+                  onChange={(e) => setEditNotes(e.target.value)}
+                  className="w-full bg-gray-50 p-2.5 rounded-xl border border-gray-300 outline-none focus:border-[#F97316]"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setEditModalEnquiry(null)}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs py-2.5 rounded-xl cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await editEnquiry(editModalEnquiry.id, {
+                      customerName: editName,
+                      customerPhone: editPhone,
+                      location: editLocation,
+                      notes: editNotes,
+                    });
+                    setEditModalEnquiry(null);
+                  }}
+                  className="flex-1 bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs py-2.5 rounded-xl shadow-md cursor-pointer"
+                >
+                  Save Changes ✓
+                </button>
+              </div>
             </div>
           </div>
         </div>

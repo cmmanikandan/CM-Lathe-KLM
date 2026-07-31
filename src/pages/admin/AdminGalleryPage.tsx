@@ -420,35 +420,38 @@ export const AdminGalleryPage: React.FC = () => {
   });
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 font-sans max-w-7xl mx-auto">
+    <div className="min-h-screen bg-[#FAFAFA] text-[#111111] font-sans pb-24">
       
-      {/* Top Tab Bar: Gallery vs Hero Banners */}
-      <div className="flex items-center gap-2 border-b border-gray-200 pb-3">
-        <button
-          onClick={() => setActiveTab('gallery')}
-          className={`px-4 py-2 rounded-xl font-heading font-black text-xs transition-all flex items-center gap-2 cursor-pointer ${
-            activeTab === 'gallery'
-              ? 'bg-[#111111] text-white shadow-md'
-              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-          }`}
-        >
-          <ImageIcon size={16} /> Gallery & Folder Albums
-        </button>
-        <button
-          onClick={() => setActiveTab('banners')}
-          className={`px-4 py-2 rounded-xl font-heading font-black text-xs transition-all flex items-center gap-2 cursor-pointer ${
-            activeTab === 'banners'
-              ? 'bg-[#F97316] text-white shadow-md'
-              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-          }`}
-        >
-          <Sparkles size={16} /> Hero Slide Banners ({heroBannersList.length})
-        </button>
+      {/* Top Banner Header */}
+      <div className="bg-[#111111] text-white py-8 px-4 sm:px-6 lg:px-8 border-b border-gray-800">
+        <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <span className="text-[#F97316] font-mono text-xs font-bold uppercase tracking-widest flex items-center gap-1.5">
+              <ImageIcon size={16} /> WORKSHOP PORTFOLIO • GALLERY & ALBUMS
+            </span>
+            <h1 className="font-heading font-black text-2xl sm:text-3xl text-white mt-1">
+              GALLERY & ALBUM MANAGEMENT
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                setUploadedPhotos([]);
+                setMainCoverIndex(0);
+                setUploadProgress(0);
+                setShowUploadModal(true);
+              }}
+              className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs px-4 py-2.5 rounded-xl shadow-md flex items-center gap-2 transition-all cursor-pointer"
+            >
+              <Plus size={16} /> Upload New Gallery Work
+            </button>
+          </div>
+        </div>
       </div>
 
-      {activeTab === 'gallery' && (
-        <>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-4">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-4">
             <div>
               <h1 className="font-heading font-black text-2xl text-[#111111] flex items-center gap-2">
                 <ImageIcon size={24} className="text-[#F97316]" /> GALLERY & ALBUM MANAGEMENT
@@ -633,176 +636,6 @@ export const AdminGalleryPage: React.FC = () => {
               </div>
             );
           })}
-        </div>
-      )}
-        </>
-      )}
-
-      {/* Hero Banners Management Tab */}
-      {activeTab === 'banners' && (
-        <div className="space-y-6 animate-in fade-in font-sans">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-xs">
-            <div>
-              <h2 className="font-heading font-black text-xl text-[#111111] flex items-center gap-2">
-                <Sparkles size={20} className="text-[#F97316]" /> HERO SLIDE BANNERS ({heroBannersList.length})
-              </h2>
-            </div>
-            <button
-              onClick={() => setShowAddBannerModal(true)}
-              className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs px-5 py-3 rounded-xl shadow-md flex items-center gap-2 transition-all cursor-pointer"
-            >
-              <Plus size={16} /> Add Hero Banner
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {heroBannersList.map((banner) => (
-              <div
-                key={banner.id}
-                className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs space-y-3 flex flex-col justify-between"
-              >
-                <div className="relative aspect-video bg-gray-900">
-                  <img
-                    src={banner.image}
-                    alt={banner.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <span className="absolute top-3 left-3 bg-[#111111]/80 backdrop-blur-md text-white text-[10px] font-mono font-bold px-2.5 py-1 rounded-md">
-                    {banner.tag}
-                  </span>
-                  <button
-                    onClick={() => handleDeleteBanner(banner.id)}
-                    className="absolute top-3 right-3 p-2 bg-red-600/90 text-white rounded-lg hover:bg-red-700 transition-colors cursor-pointer"
-                    title="Delete Banner"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-
-                <div className="p-4 space-y-2 flex-1">
-                  <h3 className="font-heading font-black text-sm text-[#111111] line-clamp-1">
-                    {banner.title}
-                  </h3>
-                  <p className="text-xs text-gray-500 line-clamp-2">{banner.subtitle}</p>
-                </div>
-
-                <div className="px-4 pb-4 flex items-center justify-between border-t border-gray-100 pt-3 text-xs font-mono">
-                  <button
-                    onClick={() => handleToggleBanner(banner)}
-                    className={`px-3 py-1 rounded-full font-bold text-[11px] cursor-pointer ${
-                      banner.isActive
-                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                        : 'bg-gray-100 text-gray-600 border border-gray-300'
-                    }`}
-                  >
-                    {banner.isActive ? 'Active Live' : 'Hidden'}
-                  </button>
-                  <span className="text-gray-400">Order: #{banner.displayOrder}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Add Hero Banner Modal */}
-          {showAddBannerModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-              <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 space-y-4 font-sans">
-                <div className="flex justify-between items-center border-b border-gray-100 pb-3">
-                  <h3 className="font-heading font-black text-lg text-[#111111] flex items-center gap-2">
-                    <Sparkles size={18} className="text-[#F97316]" /> Add New Hero Banner
-                  </h3>
-                  <button onClick={() => setShowAddBannerModal(false)} className="p-1 rounded-full hover:bg-gray-100 text-gray-400">
-                    <X size={18} />
-                  </button>
-                </div>
-
-                <form onSubmit={handleSaveBanner} className="space-y-3.5 text-xs">
-                  <div>
-                    <label className="font-bold text-gray-700 block mb-1">Banner Headline Title *</label>
-                    <input
-                      type="text"
-                      required
-                      value={bannerTitle}
-                      onChange={(e) => setBannerTitle(e.target.value)}
-                      placeholder="e.g. TRACTOR KALAPPAI & HEAVY CULTIVATORS"
-                      className="w-full bg-gray-50 hover:bg-white focus:bg-white p-3 rounded-xl border border-gray-300 font-bold outline-none focus:border-[#F97316]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-gray-700 block mb-1">Subheadline Description</label>
-                    <textarea
-                      rows={2}
-                      value={bannerSubtitle}
-                      onChange={(e) => setBannerSubtitle(e.target.value)}
-                      placeholder="Precision forged lathe-machined tines engineered for tough soil..."
-                      className="w-full bg-gray-50 hover:bg-white focus:bg-white p-3 rounded-xl border border-gray-300 outline-none focus:border-[#F97316]"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="font-bold text-gray-700 block mb-1">Tag Category</label>
-                      <input
-                        type="text"
-                        value={bannerTag}
-                        onChange={(e) => setBannerTag(e.target.value)}
-                        placeholder="AGRICULTURAL MACHINERY"
-                        className="w-full bg-gray-50 hover:bg-white focus:bg-white p-2.5 rounded-xl border border-gray-300 font-mono text-[11px] outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="font-bold text-gray-700 block mb-1">CTA Button Text</label>
-                      <input
-                        type="text"
-                        value={bannerCtaText}
-                        onChange={(e) => setBannerCtaText(e.target.value)}
-                        placeholder="Explore Products"
-                        className="w-full bg-gray-50 hover:bg-white focus:bg-white p-2.5 rounded-xl border border-gray-300 outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-gray-700 block mb-1">Upload Banner Image *</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleBannerImageUpload}
-                      className="w-full bg-gray-50 p-2 rounded-xl border border-gray-300 text-xs"
-                    />
-                    {bannerUploading && (
-                      <p className="text-[11px] text-[#F97316] font-bold mt-1 flex items-center gap-1">
-                        <Loader2 size={12} className="animate-spin" /> Uploading to Cloudinary...
-                      </p>
-                    )}
-                    {bannerImage && (
-                      <div className="mt-2 aspect-video rounded-xl overflow-hidden border border-gray-200">
-                        <img src={bannerImage} alt="Preview" className="w-full h-full object-cover" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
-                    <button
-                      type="button"
-                      onClick={() => setShowAddBannerModal(false)}
-                      className="px-4 py-2 bg-gray-100 text-gray-700 font-bold rounded-xl"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={bannerUploading || !bannerImage}
-                      className="px-5 py-2 bg-[#F97316] hover:bg-[#EA580C] disabled:opacity-50 text-white font-heading font-black rounded-xl shadow-md cursor-pointer"
-                    >
-                      Save Hero Banner ✓
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
@@ -1171,6 +1004,7 @@ export const AdminGalleryPage: React.FC = () => {
         title={viewerTitle}
       />
 
+      </div>
     </div>
   );
 };

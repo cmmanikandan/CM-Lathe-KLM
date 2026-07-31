@@ -61,15 +61,22 @@ export const ProductDetailPage: React.FC = () => {
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'features' | 'applications' | 'process' | 'maintenance'>('overview');
 
-  // Variant choices with dynamic prices
-  const sizeOptions = [
-    { label: '5 Feet (Standard)', priceMultiplier: 1.0, weight: '240 kg', deliveryTime: '2 - 3 Days' },
-    { label: '6 Feet (Heavy Duty)', priceMultiplier: 1.2, weight: '290 kg', deliveryTime: '3 - 4 Days' },
-    { label: '7 Feet (Extra Heavy)', priceMultiplier: 1.4, weight: '350 kg', deliveryTime: '3 - 5 Days', isRecommended: true },
-    { label: '8 Feet (Jumbo Heavy)', priceMultiplier: 1.6, weight: '420 kg', deliveryTime: '4 - 6 Days' }
-  ];
+  // Product variants logic
+  const hasVariants = Boolean(product?.variants && product.variants.length > 0);
+  const productVariants = product?.variants || [];
+  const [selectedVariantId, setSelectedVariantId] = useState<string>(() => {
+    return productVariants.length > 0 ? productVariants[0].id : '';
+  });
 
-  const [selectedSizeOpt, setSelectedSizeOpt] = useState(sizeOptions[0]);
+  useEffect(() => {
+    if (product?.variants && product.variants.length > 0) {
+      setSelectedVariantId(product.variants[0].id);
+    } else {
+      setSelectedVariantId('');
+    }
+  }, [product?.id]);
+
+  const selectedVariant = productVariants.find((v) => v.id === selectedVariantId);
 
   // Wishlist state synced with localStorage
   const wishlistStorageKey = `ml_wishlist_${user?.id || 'guest'}_products`;
@@ -89,36 +96,50 @@ export const ProductDetailPage: React.FC = () => {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  // Review state & reviews
-  const [reviews, setReviews] = useState([
-    {
-      id: 'rev-1',
-      name: 'Karthik Raja',
-      location: 'Palani, Dindigul',
-      rating: 5,
-      date: '12 Jan 2026',
-      comment: 'Top quality Tractor Kalappai. Lathe forged tines handled tough red soil easily without bending. Chellamuthu K delivered on time.',
-      verified: true
-    },
-    {
-      id: 'rev-2',
-      name: 'Murugan S',
-      location: 'Ottanchatram',
-      rating: 5,
-      date: '28 Dec 2025',
-      comment: 'Custom SS 304 safety gate installed at my house. Precision laser cutting and heavy hinges. Highly recommended workshop!',
-      verified: true
-    },
-    {
-      id: 'rev-3',
-      name: 'Senthil Kumar P',
-      location: 'Kallimandhayam',
-      rating: 5,
-      date: '15 Dec 2025',
-      comment: 'Extremely durable steel door. Powder coating quality is outstanding. Factory team installed it in 2 hours.',
-      verified: true
+  // Reviews state synced with localStorage per product (no demo reviews)
+  const reviewsStorageKey = `ml_reviews_${product?.id || 'default'}`;
+  const [reviews, setReviews] = useState<Array<{
+    id: string;
+    name: string;
+    location: string;
+    rating: number;
+    date: string;
+    comment: string;
+    verified: boolean;
+    userId?: string;
+    phone?: string;
+  }>>(() => {
+    if (!product?.id) return [];
+    try {
+      const saved = localStorage.getItem(`ml_reviews_${product.id}`);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch {}
+    return [];
+  });
+
+  useEffect(() => {
+    if (!product?.id) return;
+    try {
+      const saved = localStorage.getItem(reviewsStorageKey);
+      setReviews(saved ? JSON.parse(saved) : []);
+    } catch {
+      setReviews([]);
     }
-  ]);
+  }, [product?.id, reviewsStorageKey]);
+
+  const saveReviews = (updated: typeof reviews) => {
+    setReviews(updated);
+    if (product?.id) {
+      try {
+        localStorage.setItem(reviewsStorageKey, JSON.stringify(updated));
+      } catch (e) {
+        console.error('Failed to save reviews to localStorage:', e);
+      }
+    }
+  };
+
   const [newReviewComment, setNewReviewComment] = useState('');
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [reviewSuccessMsg, setReviewSuccessMsg] = useState('');
@@ -186,7 +207,7 @@ export const ProductDetailPage: React.FC = () => {
 
   // Dynamic price calculation
   const basePrice = product.price || 0;
-  const currentPrice = Math.round(basePrice * selectedSizeOpt.priceMultiplier);
+  const currentPrice = selectedVariant ? selectedVariant.price : basePrice;
 
   // Wishlist toggle handler
   const handleToggleWishlist = () => {
@@ -222,7 +243,7 @@ export const ProductDetailPage: React.FC = () => {
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  // Submit Review Handler
+  // Submit Review Handler (saves to localStorage per product)
   const handleAddReview = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newReviewComment.trim()) return;
@@ -232,12 +253,14 @@ export const ProductDetailPage: React.FC = () => {
       name: user?.name || 'Verified Customer',
       location: user?.district ? `${user.district}, Tamil Nadu` : 'Kallimandhayam',
       rating: newReviewRating,
-      date: 'Just Now',
+      date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
       comment: newReviewComment,
-      verified: true
+      verified: true,
+      userId: user?.id,
+      phone: user?.phone
     };
 
-    setReviews([newEntry, ...reviews]);
+    saveReviews([newEntry, ...reviews]);
     setNewReviewComment('');
     setReviewSuccessMsg('Thank you! Your verified review has been published.');
     setTimeout(() => setReviewSuccessMsg(''), 3000);
@@ -266,6 +289,7 @@ export const ProductDetailPage: React.FC = () => {
     }
 
     const totalEstPrice = currentPrice * orderQuantity;
+    const variantName = selectedVariant?.name || 'Standard Unit';
     setIsSubmitting(true);
 
     if (paymentChoice === 'Pay Advance Online') {
@@ -286,7 +310,7 @@ export const ProductDetailPage: React.FC = () => {
             productId: product.id,
             productName: product.name,
             productImage: product.images[selectedImageIndex] || product.images[0],
-            variantName: selectedSizeOpt.label,
+            variantName,
             measurements: customMeasurements,
             referenceImages,
             notes: orderNotes,
@@ -330,7 +354,7 @@ export const ProductDetailPage: React.FC = () => {
         productId: product.id,
         productName: product.name,
         productImage: product.images[selectedImageIndex] || product.images[0],
-        variantName: selectedSizeOpt.label,
+        variantName,
         measurements: customMeasurements,
         referenceImages,
         notes: orderNotes,
@@ -558,7 +582,7 @@ export const ProductDetailPage: React.FC = () => {
                     </span>
                     {product.discountPrice && (
                       <span className="text-base text-gray-400 line-through font-mono">
-                        ₹{Math.round(product.discountPrice * selectedSizeOpt.priceMultiplier).toLocaleString('en-IN')}
+                        ₹{product.discountPrice.toLocaleString('en-IN')}
                       </span>
                     )}
                   </div>
@@ -575,8 +599,12 @@ export const ProductDetailPage: React.FC = () => {
                     ))}
                   </div>
                   <div className="text-xs">
-                    <span className="font-heading font-black text-[#111111] block">4.9 / 5.0</span>
-                    <span className="text-[10px] text-gray-500 font-mono">(24 Customer Reviews)</span>
+                    <span className="font-heading font-black text-[#111111] block">
+                      {reviews.length > 0 ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : (product.rating || 5.0).toFixed(1)} / 5.0
+                    </span>
+                    <span className="text-[10px] text-gray-500 font-mono">
+                      ({reviews.length} {reviews.length === 1 ? 'Review' : 'Customer Reviews'})
+                    </span>
                   </div>
                 </div>
               </div>
@@ -590,44 +618,43 @@ export const ProductDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* 5. SELECTABLE PRODUCT VARIANTS */}
-            <div className="space-y-3">
-              <label className="font-heading font-black text-xs text-[#111111] uppercase tracking-wider flex items-center justify-between">
-                <span>Select Dimensions & Size Variant</span>
-                <span className="text-gray-400 font-mono font-normal">Weight: {selectedSizeOpt.weight}</span>
-              </label>
+            {/* 5. SELECTABLE PRODUCT VARIANTS (ONLY SHOWN IF PRODUCT HAS VARIANTS) */}
+            {hasVariants && (
+              <div className="space-y-3">
+                <label className="font-heading font-black text-xs text-[#111111] uppercase tracking-wider flex items-center justify-between">
+                  <span>Select Dimensions & Size Variant</span>
+                  {selectedVariant?.weight && (
+                    <span className="text-gray-400 font-mono font-normal">Weight: {selectedVariant.weight}</span>
+                  )}
+                </label>
 
-              <div className="grid grid-cols-2 gap-3">
-                {sizeOptions.map((opt) => {
-                  const optPrice = Math.round(basePrice * opt.priceMultiplier);
-                  const isSelected = selectedSizeOpt.label === opt.label;
-                  return (
-                    <div
-                      key={opt.label}
-                      onClick={() => setSelectedSizeOpt(opt)}
-                      className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between space-y-1 relative ${
-                        isSelected
-                          ? 'bg-orange-50/80 border-[#F97316] shadow-sm'
-                          : 'bg-white border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      {opt.isRecommended && (
-                        <span className="absolute -top-2.5 right-3 bg-[#111111] text-white text-[9px] font-heading font-black px-2 py-0.5 rounded-full uppercase shadow-xs">
-                          ⭐ Recommended
+                <div className="grid grid-cols-2 gap-3">
+                  {productVariants.map((opt) => {
+                    const isSelected = selectedVariantId === opt.id;
+                    return (
+                      <div
+                        key={opt.id}
+                        onClick={() => setSelectedVariantId(opt.id)}
+                        className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between space-y-1 relative ${
+                          isSelected
+                            ? 'bg-orange-50/80 border-[#F97316] shadow-sm'
+                            : 'bg-white border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <div>
+                          <span className="font-heading font-black text-xs text-[#111111] block">{opt.name}</span>
+                          {opt.dimensions && <span className="text-[10px] text-gray-500 font-mono block">{opt.dimensions}</span>}
+                          {opt.weight && <span className="text-[10px] text-gray-500 font-mono block">Weight ~ {opt.weight}</span>}
+                        </div>
+                        <span className="font-heading font-black text-sm text-[#F97316] pt-1 border-t border-gray-100">
+                          ₹{opt.price.toLocaleString('en-IN')}
                         </span>
-                      )}
-                      <div>
-                        <span className="font-heading font-black text-xs text-[#111111] block">{opt.label}</span>
-                        <span className="text-[10px] text-gray-500 font-mono block">Weight ~ {opt.weight}</span>
                       </div>
-                      <span className="font-heading font-black text-sm text-[#F97316] pt-1 border-t border-gray-100">
-                        ₹{optPrice.toLocaleString('en-IN')}
-                      </span>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Action Buttons: Order Now & WhatsApp */}
             <div className="flex items-center gap-3 pt-2">
@@ -682,7 +709,9 @@ export const ProductDetailPage: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="font-heading font-black text-3xl text-[#111111]">4.9</span>
+              <span className="font-heading font-black text-3xl text-[#111111]">
+                {reviews.length > 0 ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : (product.rating || 5.0).toFixed(1)}
+              </span>
               <div className="text-xs">
                 <div className="flex text-amber-400">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -695,31 +724,38 @@ export const ProductDetailPage: React.FC = () => {
           </div>
 
           {/* Rating Bars Breakdown */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center bg-gray-50 p-4 rounded-2xl border border-gray-200">
-            <div className="md:col-span-4 text-center md:border-r md:border-gray-200 pr-4">
-              <span className="font-heading font-black text-4xl text-[#F97316]">98%</span>
-              <span className="text-xs font-bold text-gray-700 block mt-1">Recommended by Buyers</span>
-              <span className="text-[10px] text-gray-500 font-mono">Based on 24 completed orders</span>
-            </div>
+          {reviews.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center bg-gray-50 p-4 rounded-2xl border border-gray-200">
+              <div className="md:col-span-4 text-center md:border-r md:border-gray-200 pr-4">
+                <span className="font-heading font-black text-4xl text-[#F97316]">
+                  {Math.round((reviews.filter((r) => r.rating >= 4).length / reviews.length) * 100)}%
+                </span>
+                <span className="text-xs font-bold text-gray-700 block mt-1">Recommended by Buyers</span>
+                <span className="text-[10px] text-gray-500 font-mono">Based on {reviews.length} customer reviews</span>
+              </div>
 
-            <div className="md:col-span-8 space-y-1.5 text-xs font-mono">
-              {[
-                { stars: '5 Star', pct: '88%' },
-                { stars: '4 Star', pct: '10%' },
-                { stars: '3 Star', pct: '2%' },
-                { stars: '2 Star', pct: '0%' },
-                { stars: '1 Star', pct: '0%' }
-              ].map((row) => (
-                <div key={row.stars} className="flex items-center gap-3">
-                  <span className="w-12 text-gray-600 font-bold">{row.stars}</span>
-                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#F97316] rounded-full" style={{ width: row.pct }} />
-                  </div>
-                  <span className="w-10 text-right text-gray-500">{row.pct}</span>
-                </div>
-              ))}
+              <div className="md:col-span-8 space-y-1.5 text-xs font-mono">
+                {[5, 4, 3, 2, 1].map((starNum) => {
+                  const count = reviews.filter((r) => r.rating === starNum).length;
+                  const pct = Math.round((count / reviews.length) * 100);
+                  return (
+                    <div key={starNum} className="flex items-center gap-3">
+                      <span className="w-12 text-gray-600 font-bold">{starNum} Star</span>
+                      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-[#F97316] rounded-full" style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="w-10 text-right text-gray-500">{pct}%</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 text-center text-xs text-gray-500 space-y-1">
+              <p className="font-bold text-gray-800 text-sm">No Customer Reviews Yet</p>
+              <p>Be the first customer to leave verified feedback for this product!</p>
+            </div>
+          )}
 
           {/* Reviews List */}
           <div className="space-y-4">
@@ -745,7 +781,7 @@ export const ProductDetailPage: React.FC = () => {
                       ))}
                     </div>
 
-                    {/* Customer Action Buttons: Edit & Delete (Admin has full control, customer can only edit/delete THEIR OWN review) */}
+                    {/* Customer Action Buttons: Edit & Delete */}
                     {(() => {
                       const isAdmin = user?.googleUID === 'qiiShV5WlAY2Zwok3vNxhedl3N12' || user?.id === 'qiiShV5WlAY2Zwok3vNxhedl3N12' || user?.role === 'admin';
                       const uName = (user?.name || '').trim().toLowerCase();
@@ -775,7 +811,8 @@ export const ProductDetailPage: React.FC = () => {
                           <button
                             onClick={() => {
                               if (window.confirm('Are you sure you want to delete this review?')) {
-                                setReviews((prev) => prev.filter((r) => r.id !== rev.id));
+                                const updated = reviews.filter((r) => r.id !== rev.id);
+                                saveReviews(updated);
                               }
                             }}
                             className="p-1 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
@@ -813,9 +850,8 @@ export const ProductDetailPage: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => {
-                          setReviews((prev) =>
-                            prev.map((r) => (r.id === rev.id ? { ...r, comment: editComment, rating: editRating } : r))
-                          );
+                          const updated = reviews.map((r) => (r.id === rev.id ? { ...r, comment: editComment, rating: editRating } : r));
+                          saveReviews(updated);
                           setEditingReviewId(null);
                         }}
                         className="bg-[#F97316] text-white text-[11px] font-heading font-black px-3 py-1.5 rounded-lg"
@@ -1069,26 +1105,28 @@ export const ProductDetailPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <div>
-                      <label className="font-bold text-xs text-gray-700 block mb-1.5">1. Select Standard Variant</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {sizeOptions.map((opt) => (
-                          <button
-                            type="button"
-                            key={opt.label}
-                            onClick={() => setSelectedSizeOpt(opt)}
-                            className={`p-2.5 rounded-xl text-left border transition-all ${
-                              selectedSizeOpt.label === opt.label
-                                ? 'bg-[#111111] text-white border-[#111111]'
-                                : 'bg-gray-50 hover:bg-gray-100 text-gray-800 border-gray-200'
-                            }`}
-                          >
-                            <div className="font-heading font-bold text-[11px] truncate">{opt.label}</div>
-                            <div className="text-[10px] opacity-75 font-mono">₹{Math.round(basePrice * opt.priceMultiplier).toLocaleString('en-IN')}</div>
-                          </button>
-                        ))}
+                    {hasVariants && (
+                      <div>
+                        <label className="font-bold text-xs text-gray-700 block mb-1.5">1. Select Standard Variant</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {productVariants.map((opt) => (
+                            <button
+                              type="button"
+                              key={opt.id}
+                              onClick={() => setSelectedVariantId(opt.id)}
+                              className={`p-2.5 rounded-xl text-left border transition-all ${
+                                selectedVariantId === opt.id
+                                  ? 'bg-[#111111] text-white border-[#111111]'
+                                  : 'bg-gray-50 hover:bg-gray-100 text-gray-800 border-gray-200'
+                              }`}
+                            >
+                              <div className="font-heading font-bold text-[11px] truncate">{opt.name}</div>
+                              <div className="text-[10px] opacity-75 font-mono">₹{opt.price.toLocaleString('en-IN')}</div>
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     <div>
                       <label className="font-bold text-xs text-gray-700 block mb-1">2. Custom Measurements / Dimensions (If Required)</label>

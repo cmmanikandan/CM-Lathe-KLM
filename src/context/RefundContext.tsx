@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Refund, RefundStatus, RefundTimelineEvent, RefundLedgerEntry } from '../types';
+import { supabase } from '../services/supabase';
 import {
   fetchAllRefundsFromDb,
   fetchCustomerRefundsFromDb,
@@ -29,6 +30,7 @@ interface RefundContextType {
     }
   ) => Promise<void>;
   retryRefund: (refundId: string) => Promise<void>;
+  deleteRefund: (refundId: string) => Promise<void>;
   getCustomerRefunds: (phone: string) => Refund[];
   getRefundById: (id: string) => Refund | undefined;
 }
@@ -59,7 +61,7 @@ export const RefundProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     data: Omit<Refund, 'id' | 'refundNumber' | 'status' | 'createdAt' | 'timeline' | 'ledgerEntries'>
   ): Promise<Refund> => {
     const id = `rfd-${Date.now()}`;
-    const refundNumber = generateRefundNumber();
+    const refundNumber = await generateRefundNumber();
     const now = new Date().toISOString();
     const expectedDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
@@ -275,6 +277,15 @@ export const RefundProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return refunds.filter((r) => r.customerPhone.replace(/\D/g, '').slice(-10) === last10);
   };
 
+  const deleteRefund = async (refundId: string) => {
+    setRefunds((prev) => prev.filter((r) => r.id !== refundId));
+    try {
+      await supabase.from('refunds').delete().eq('id', refundId);
+    } catch (err) {
+      console.error('Delete refund error:', err);
+    }
+  };
+
   const getRefundById = (id: string) => refunds.find((r) => r.id === id);
 
   return (
@@ -288,6 +299,7 @@ export const RefundProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         rejectRefund,
         processRefund,
         retryRefund,
+        deleteRefund,
         getCustomerRefunds,
         getRefundById,
       }}

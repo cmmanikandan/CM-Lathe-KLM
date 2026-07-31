@@ -21,6 +21,7 @@ DROP TABLE IF EXISTS status_stories CASCADE;
 DROP TABLE IF EXISTS admin_gallery CASCADE;
 DROP TABLE IF EXISTS hero_banners CASCADE;
 DROP TABLE IF EXISTS admin_banners CASCADE;
+DROP TABLE IF EXISTS product_reviews CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
 DROP TABLE IF EXISTS customer_profiles CASCADE;
 
@@ -41,8 +42,9 @@ CREATE TABLE products (
   images TEXT[] NOT NULL DEFAULT '{}',
   description TEXT NOT NULL,
   specifications JSONB NOT NULL DEFAULT '{}'::jsonb,
-  rating NUMERIC(3,2) NOT NULL DEFAULT 4.90,
-  review_count INT NOT NULL DEFAULT 1,
+  variants JSONB NOT NULL DEFAULT '[]'::jsonb,
+  rating NUMERIC(3,2) NOT NULL DEFAULT 5.00,
+  review_count INT NOT NULL DEFAULT 0,
   is_recommended BOOLEAN DEFAULT false,
   is_best_selling BOOLEAN DEFAULT false,
   is_trending BOOLEAN DEFAULT false,
@@ -268,7 +270,7 @@ CREATE TABLE enquiries (
   advance_paid NUMERIC(12,2) DEFAULT 0.00,
   advance_payment_details JSONB,
   delivery_type TEXT DEFAULT 'Pickup' CHECK (delivery_type IN ('Pickup', 'Home Delivery', 'Installation Included')),
-  status TEXT NOT NULL DEFAULT 'ENQUIRY_RECEIVED' CHECK (status IN ('ENQUIRY_RECEIVED', 'UNDER_REVIEW', 'QUOTATION_SENT', 'INFO_REQUESTED', 'ACCEPTED_CONVERTED', 'REJECTED_BY_ADMIN', 'CANCELLED_BY_CUSTOMER')),
+  status TEXT NOT NULL DEFAULT 'ENQUIRY_RECEIVED' CHECK (status IN ('ENQUIRY_RECEIVED', 'UNDER_REVIEW', 'QUOTATION_SENT', 'INFO_REQUESTED', 'ORDER_ACCEPTED', 'REJECTED', 'CANCELLED', 'ACCEPTED_CONVERTED', 'REJECTED_BY_ADMIN', 'CANCELLED_BY_CUSTOMER')),
   rejection_reason TEXT,
   info_requested_message TEXT,
   suggested_variant TEXT,
@@ -315,6 +317,21 @@ CREATE TABLE refunds (
 );
 
 -- --------------------------------------------------------------------
+-- TABLE 14: PRODUCT REVIEWS & CUSTOMER FEEDBACK
+-- --------------------------------------------------------------------
+CREATE TABLE product_reviews (
+  id VARCHAR(64) PRIMARY KEY DEFAULT ('rev-' || extract(epoch from now())::bigint || trunc(random()*1000)::text),
+  product_id VARCHAR(64) REFERENCES products(id) ON DELETE CASCADE,
+  customer_name TEXT NOT NULL,
+  customer_phone TEXT,
+  rating INT NOT NULL DEFAULT 5 CHECK (rating >= 1 AND rating <= 5),
+  comment TEXT NOT NULL,
+  location TEXT DEFAULT 'Kallimandhayam',
+  verified BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- --------------------------------------------------------------------
 -- PERFORMANCE INDEXES
 -- --------------------------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_orders_customer_phone ON orders(customer_phone);
@@ -333,6 +350,7 @@ CREATE INDEX IF NOT EXISTS idx_enquiries_phone ON enquiries(customer_phone);
 CREATE INDEX IF NOT EXISTS idx_enquiries_status ON enquiries(status);
 CREATE INDEX IF NOT EXISTS idx_refunds_phone ON refunds(customer_phone);
 CREATE INDEX IF NOT EXISTS idx_refunds_order ON refunds(order_id);
+CREATE INDEX IF NOT EXISTS idx_product_reviews_product ON product_reviews(product_id);
 
 -- --------------------------------------------------------------------
 -- ROW LEVEL SECURITY (RLS) POLICIES (FULL UNRESTRICTED ANONYMOUS/CLIENT ACCESS)
@@ -350,6 +368,7 @@ ALTER TABLE admin_banners ENABLE ROW LEVEL SECURITY;
 ALTER TABLE hero_banners ENABLE ROW LEVEL SECURITY;
 ALTER TABLE enquiries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE refunds ENABLE ROW LEVEL SECURITY;
+ALTER TABLE product_reviews ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Public Products Access" ON products;
 DROP POLICY IF EXISTS "Public Profiles Access" ON customer_profiles;
@@ -364,6 +383,7 @@ DROP POLICY IF EXISTS "Public Banners Access" ON admin_banners;
 DROP POLICY IF EXISTS "Public Hero Banners Access" ON hero_banners;
 DROP POLICY IF EXISTS "Public Enquiries Access" ON enquiries;
 DROP POLICY IF EXISTS "Public Refunds Access" ON refunds;
+DROP POLICY IF EXISTS "Public Reviews Access" ON product_reviews;
 
 CREATE POLICY "Public Products Access" ON products FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Profiles Access" ON customer_profiles FOR ALL USING (true) WITH CHECK (true);
@@ -378,6 +398,7 @@ CREATE POLICY "Public Banners Access" ON admin_banners FOR ALL USING (true) WITH
 CREATE POLICY "Public Hero Banners Access" ON hero_banners FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Enquiries Access" ON enquiries FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Refunds Access" ON refunds FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public Reviews Access" ON product_reviews FOR ALL USING (true) WITH CHECK (true);
 
 -- --------------------------------------------------------------------
 -- REAL SEED INITIAL DATA (MANIKANDAN LATHE STORE & POS COUNTER)
@@ -484,3 +505,52 @@ VALUES
 
 -- 9. Query Active Refunds Ledger
 -- SELECT * FROM refunds WHERE status IN ('Requested', 'Approved', 'Processing') ORDER BY created_at DESC;
+
+-- --------------------------------------------------------------------
+-- TABLE 14: SEQUENTIAL ID COUNTERS SYSTEM & ATOMIC RPC FUNCTION
+-- --------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.counters (
+  key TEXT PRIMARY KEY,
+  current_value BIGINT NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+INSERT INTO public.counters (key, current_value) VALUES
+  ('ORD', 0),
+  ('ENQ', 0),
+  ('FAB', 0),
+  ('POS', 0),
+  ('INV', 0),
+  ('RCP', 0),
+  ('PAY', 0),
+  ('REF', 0),
+  ('REQ', 0),
+  ('CUS', 0)
+ON CONFLICT (key) DO NOTHING;
+
+CREATE OR REPLACE FUNCTION public.get_next_id(counter_key TEXT)
+RETURNS BIGINT
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  next_val BIGINT;
+BEGIN
+  UPDATE public.counters
+  SET current_value = current_value + 1,
+      updated_at = NOW()
+  WHERE key = counter_key
+  RETURNING current_value INTO next_val;
+
+  IF next_val IS NULL THEN
+    INSERT INTO public.counters (key, current_value)
+    VALUES (counter_key, 1)
+    ON CONFLICT (key) DO UPDATE
+      SET current_value = counters.current_value + 1,
+          updated_at = NOW()
+    RETURNING current_value INTO next_val;
+  END IF;
+
+  RETURN next_val;
+END;
+$$;

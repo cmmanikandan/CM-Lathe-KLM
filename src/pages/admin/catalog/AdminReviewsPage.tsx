@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Star, Search, Check, X, Trash2, AlertTriangle, MessageSquare, Eye, EyeOff, Download, Filter } from 'lucide-react';
+import { Star, Search, Check, X, Trash2, AlertTriangle, MessageSquare, Eye, EyeOff, Download, Filter, Plus } from 'lucide-react';
 
 interface Review {
   id: string;
@@ -32,11 +32,44 @@ const StarRating: React.FC<{ rating: number }> = ({ rating }) => (
 
 export const AdminReviewsPage: React.FC = () => {
   const [reviews, setReviews] = useState<Review[]>(MOCK_REVIEWS);
-  const [activeTab, setActiveTab] = useState<'Pending' | 'Approved' | 'Rejected' | 'Spam'>('Pending');
+  const [activeTab, setActiveTab] = useState<'Pending' | 'Approved' | 'Rejected' | 'Spam'>('Approved');
   const [search, setSearch] = useState('');
   const [replyingId, setReplyingId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
+  // Load customer submitted feedback from localStorage
+  React.useEffect(() => {
+    try {
+      const allLocalReviews: Review[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('ml_reviews_')) {
+          const productId = key.replace('ml_reviews_', '');
+          const saved = localStorage.getItem(key);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            parsed.forEach((r: any) => {
+              allLocalReviews.push({
+                id: r.id,
+                customerName: r.name || 'Customer',
+                customerPhone: r.phone || 'N/A',
+                productName: `Product ID: ${productId}`,
+                rating: r.rating || 5,
+                comment: r.comment || '',
+                date: r.date || 'Recent',
+                status: 'Approved',
+                reported: false
+              });
+            });
+          }
+        }
+      }
+      if (allLocalReviews.length > 0) {
+        setReviews([...allLocalReviews, ...MOCK_REVIEWS]);
+      }
+    } catch (e) {}
+  }, []);
 
   const filtered = useMemo(() =>
     reviews.filter(r => {
@@ -69,20 +102,58 @@ export const AdminReviewsPage: React.FC = () => {
   const avgRating = reviews.filter(r => r.status === 'Approved').reduce((s, r) => s + r.rating, 0) /
     Math.max(1, reviews.filter(r => r.status === 'Approved').length);
 
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newCustName, setNewCustName] = useState('');
+  const [newCustPhone, setNewCustPhone] = useState('');
+  const [newProdName, setNewProdName] = useState('Lathe Machine Works');
+  const [newRating, setNewRating] = useState(5);
+  const [newComment, setNewComment] = useState('');
+  const [newLocation, setNewLocation] = useState('Kallimandhayam');
+
+  const handleAddReviewSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCustName || !newComment) return;
+
+    const newRev: Review = {
+      id: `rev-${Date.now()}`,
+      customerName: newCustName,
+      customerPhone: newCustPhone || 'Walk-in Customer',
+      productName: newProdName,
+      rating: newRating,
+      comment: newComment,
+      date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+      status: 'Approved',
+      reported: false,
+    };
+
+    setReviews((prev) => [newRev, ...prev]);
+    setShowAddModal(false);
+    setNewCustName('');
+    setNewCustPhone('');
+    setNewComment('');
+  };
+
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-[#111111] pb-24 font-sans">
-      <div className="bg-[#111111] text-white py-8 px-4 sm:px-6 border-b border-gray-800">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="bg-[#111111] text-white py-8 px-4 sm:px-6 lg:px-8 border-b border-gray-800">
+        <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <span className="text-[#F97316] font-mono font-bold text-xs uppercase tracking-widest flex items-center gap-1.5">
               <Star size={16} /> PRODUCT CATALOG • REVIEWS
             </span>
             <h1 className="font-heading font-black text-2xl text-white mt-1">Customer Reviews Moderation</h1>
           </div>
+
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs px-4 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer"
+          >
+            <Plus size={15} /> + Add Customer Review
+          </button>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -204,6 +275,99 @@ export const AdminReviewsPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-gray-200 font-sans">
+            <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+              <h3 className="font-heading font-black text-sm text-[#111111] uppercase flex items-center gap-2">
+                <Star size={16} className="text-[#F97316]" /> Add Customer Review
+              </h3>
+              <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-black">✕</button>
+            </div>
+
+            <form onSubmit={handleAddReviewSubmit} className="space-y-3.5 text-xs">
+              <div>
+                <label className="font-bold text-gray-700 block mb-1">Customer Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={newCustName}
+                  onChange={(e) => setNewCustName(e.target.value)}
+                  placeholder="e.g. S. Manikandan"
+                  className="w-full bg-gray-50 p-2.5 rounded-xl border border-gray-300 font-bold outline-none focus:border-[#F97316]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-gray-700 block mb-1">Phone Number</label>
+                  <input
+                    type="text"
+                    value={newCustPhone}
+                    onChange={(e) => setNewCustPhone(e.target.value)}
+                    placeholder="9876543210"
+                    className="w-full bg-gray-50 p-2.5 rounded-xl border border-gray-300 font-mono outline-none focus:border-[#F97316]"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-gray-700 block mb-1">Rating (1-5 Stars) *</label>
+                  <select
+                    value={newRating}
+                    onChange={(e) => setNewRating(Number(e.target.value))}
+                    className="w-full bg-gray-50 p-2.5 rounded-xl border border-gray-300 font-bold text-[#F97316] outline-none"
+                  >
+                    <option value={5}>⭐⭐⭐⭐⭐ (5/5 Excellent)</option>
+                    <option value={4}>⭐⭐⭐⭐ (4/5 Very Good)</option>
+                    <option value={3}>⭐⭐⭐ (3/5 Good)</option>
+                    <option value={2}>⭐⭐ (2/5 Average)</option>
+                    <option value={1}>⭐ (1/5 Poor)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold text-gray-700 block mb-1">Product / Work Name</label>
+                <input
+                  type="text"
+                  value={newProdName}
+                  onChange={(e) => setNewProdName(e.target.value)}
+                  placeholder="e.g. 9-Tine Heavy Cultivator"
+                  className="w-full bg-gray-50 p-2.5 rounded-xl border border-gray-300 outline-none focus:border-[#F97316]"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-gray-700 block mb-1">Customer Feedback Comment *</label>
+                <textarea
+                  rows={3}
+                  required
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Excellent lathe turning accuracy and heavy steel quality..."
+                  className="w-full bg-gray-50 p-2.5 rounded-xl border border-gray-300 outline-none focus:border-[#F97316]"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs py-2.5 rounded-xl cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs py-2.5 rounded-xl shadow-md cursor-pointer"
+                >
+                  Publish Review ✓
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {confirmDelete && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">

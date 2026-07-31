@@ -52,25 +52,25 @@ export const ReduceDiscountModal: React.FC<ReduceDiscountModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-      <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-100 space-y-5 font-sans">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-fade-in">
+      <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-100 space-y-5 font-sans relative">
         
         {/* Header */}
-        <div className="flex justify-between items-start border-b border-gray-100 pb-3">
+        <div className="flex justify-between items-start border-b border-slate-100 pb-3.5">
           <div>
             <span className="text-[10px] font-mono text-[#F97316] font-bold uppercase tracking-wider block">
               POS BILL DISCOUNT
             </span>
-            <h3 className="font-heading font-black text-lg text-[#111111] flex items-center gap-2 mt-0.5">
+            <h3 className="font-heading font-black text-lg text-slate-900 flex items-center gap-2 mt-0.5">
               <Tag size={20} className="text-[#F97316]" /> Reduce Billed Amount
             </h3>
-            <p className="text-xs text-gray-500 font-mono mt-0.5">
+            <p className="text-xs text-slate-500 font-mono mt-0.5">
               Order #{order.orderNumber} • {order.customerName}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors cursor-pointer"
+            className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
           >
             <X size={18} />
           </button>
@@ -80,24 +80,24 @@ export const ReduceDiscountModal: React.FC<ReduceDiscountModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           
           {/* Current Financial Summary Card */}
-          <div className="grid grid-cols-2 gap-3 p-3.5 bg-gray-50 rounded-2xl border border-gray-200 text-xs font-mono">
+          <div className="grid grid-cols-2 gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-200/80 text-xs font-mono">
             <div>
-              <span className="text-gray-500 block text-[10px]">Current Total Billed:</span>
-              <strong className="text-gray-900 font-bold text-sm">₹{order.finalPrice.toLocaleString('en-IN')}</strong>
+              <span className="text-slate-500 block text-[10px]">Current Total Billed:</span>
+              <strong className="text-slate-900 font-bold text-sm">₹{order.finalPrice.toLocaleString('en-IN')}</strong>
             </div>
             <div>
-              <span className="text-gray-500 block text-[10px]">Current Balance Due:</span>
+              <span className="text-slate-500 block text-[10px]">Current Balance Due:</span>
               <strong className="text-red-600 font-bold text-sm">₹{order.remainingBalance.toLocaleString('en-IN')}</strong>
             </div>
           </div>
 
           {/* Discount Input */}
-          <div className="space-y-1">
-            <label className="font-bold text-xs text-gray-700 block">
+          <div className="space-y-1.5">
+            <label className="font-bold text-xs text-slate-700 block">
               Enter Extra Discount Amount to Reduce (₹) *
             </label>
             <div className="relative">
-              <span className="absolute left-3.5 top-3.5 text-gray-500 font-mono font-bold text-sm">₹</span>
+              <span className="absolute left-4 top-3.5 text-slate-500 font-mono font-bold text-sm">₹</span>
               <input
                 type="number"
                 min="1"
@@ -105,7 +105,7 @@ export const ReduceDiscountModal: React.FC<ReduceDiscountModalProps> = ({
                 value={discountVal}
                 onChange={(e) => setDiscountVal(e.target.value)}
                 placeholder="100"
-                className="w-full bg-gray-50 hover:bg-white focus:bg-white pl-8 pr-4 py-3 rounded-xl border border-gray-300 font-mono text-base font-bold text-gray-900 outline-none focus:border-[#F97316] transition-colors"
+                className="w-full bg-slate-50 hover:bg-white focus:bg-white pl-9 pr-4 py-3.5 rounded-2xl border border-slate-200 font-mono text-base font-bold text-slate-900 outline-none focus:border-[#F97316] transition-colors"
               />
             </div>
           </div>
@@ -118,12 +118,12 @@ export const ReduceDiscountModal: React.FC<ReduceDiscountModalProps> = ({
 
           {/* Live Preview Box */}
           {numDisc > 0 && (
-            <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 space-y-1.5 text-xs font-mono">
+            <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200/80 space-y-2 text-xs font-mono">
               <div className="flex justify-between text-amber-900">
                 <span>New Total Billed:</span>
                 <strong className="font-bold">₹{newFinalPrice.toLocaleString('en-IN')}</strong>
               </div>
-              <div className="flex justify-between text-amber-900 border-t border-amber-200/60 pt-1">
+              <div className="flex justify-between text-amber-900 border-t border-amber-200/60 pt-1.5">
                 <span>New Balance Due:</span>
                 <strong className={newBalance > 0 ? 'text-red-600 font-bold' : 'text-emerald-700 font-bold'}>
                   ₹{newBalance.toLocaleString('en-IN')}
@@ -133,18 +133,18 @@ export const ReduceDiscountModal: React.FC<ReduceDiscountModalProps> = ({
           )}
 
           {/* Buttons */}
-          <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+          <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+              className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-2xl transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2.5 bg-[#F97316] hover:bg-[#EA580C] disabled:opacity-50 text-white font-heading font-black text-xs rounded-xl shadow-md flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="px-6 py-3 bg-[#F97316] hover:bg-[#EA580C] disabled:opacity-50 text-white font-heading font-black text-xs rounded-2xl shadow-lg flex items-center gap-2 transition-all active:scale-98 cursor-pointer"
             >
               {loading ? (
                 <>
@@ -158,8 +158,8 @@ export const ReduceDiscountModal: React.FC<ReduceDiscountModalProps> = ({
               )}
             </button>
           </div>
-
         </form>
+
       </div>
     </div>
   );

@@ -48,15 +48,22 @@ export const PublicProductDetailPage: React.FC = () => {
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'features' | 'applications' | 'process' | 'maintenance'>('overview');
 
-  // Variant choices
-  const sizeOptions = [
-    { label: '5 Feet (Standard)', priceMultiplier: 1.0, weight: '240 kg', deliveryTime: '2 - 3 Days' },
-    { label: '6 Feet (Heavy Duty)', priceMultiplier: 1.2, weight: '290 kg', deliveryTime: '3 - 4 Days' },
-    { label: '7 Feet (Extra Heavy)', priceMultiplier: 1.4, weight: '350 kg', deliveryTime: '3 - 5 Days', isRecommended: true },
-    { label: '8 Feet (Jumbo Heavy)', priceMultiplier: 1.6, weight: '420 kg', deliveryTime: '4 - 6 Days' }
-  ];
+  // Variants logic
+  const hasVariants = Boolean(product?.variants && product.variants.length > 0);
+  const productVariants = product?.variants || [];
+  const [selectedVariantId, setSelectedVariantId] = useState<string>(() => {
+    return productVariants.length > 0 ? productVariants[0].id : '';
+  });
 
-  const [selectedSizeOpt, setSelectedSizeOpt] = useState(sizeOptions[0]);
+  useEffect(() => {
+    if (product?.variants && product.variants.length > 0) {
+      setSelectedVariantId(product.variants[0].id);
+    } else {
+      setSelectedVariantId('');
+    }
+  }, [product?.id]);
+
+  const selectedVariant = productVariants.find((v) => v.id === selectedVariantId);
 
   // Wishlist state
   const wishlistStorageKey = `ml_wishlist_${user?.id || 'guest'}_products`;
@@ -72,27 +79,34 @@ export const PublicProductDetailPage: React.FC = () => {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  // Reviews
-  const reviews = [
-    {
-      id: 'rev-1',
-      name: 'Karthik Raja',
-      location: 'Palani, Dindigul',
-      rating: 5,
-      date: '12 Jan 2026',
-      comment: 'Top quality Tractor Kalappai. Lathe forged tines handled tough red soil easily without bending. Chellamuthu K delivered on time.',
-      verified: true
-    },
-    {
-      id: 'rev-2',
-      name: 'Murugan S',
-      location: 'Ottanchatram',
-      rating: 5,
-      date: '28 Dec 2025',
-      comment: 'Custom SS 304 safety gate installed at my house. Precision laser cutting and heavy hinges. Highly recommended workshop!',
-      verified: true
+  // Reviews read from localStorage per product (no demo reviews)
+  const reviewsStorageKey = `ml_reviews_${product?.id || 'default'}`;
+  const [reviews, setReviews] = useState<Array<{
+    id: string;
+    name: string;
+    location: string;
+    rating: number;
+    date: string;
+    comment: string;
+    verified: boolean;
+  }>>(() => {
+    if (!product?.id) return [];
+    try {
+      const saved = localStorage.getItem(`ml_reviews_${product.id}`);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
+
+  useEffect(() => {
+    if (!product?.id) return;
+    try {
+      const saved = localStorage.getItem(reviewsStorageKey);
+      setReviews(saved ? JSON.parse(saved) : []);
+    } catch {
+      setReviews([]);
     }
-  ];
+  }, [product?.id, reviewsStorageKey]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -121,7 +135,7 @@ export const PublicProductDetailPage: React.FC = () => {
   }
 
   const basePrice = product.price || 0;
-  const currentPrice = Math.round(basePrice * selectedSizeOpt.priceMultiplier);
+  const currentPrice = selectedVariant ? selectedVariant.price : basePrice;
 
   const handleToggleWishlist = () => {
     try {
@@ -292,36 +306,38 @@ export const PublicProductDetailPage: React.FC = () => {
                   </span>
                 </div>
                 <div className="bg-orange-50 border border-orange-200 p-2.5 rounded-2xl text-xs text-amber-500 flex items-center gap-1 font-bold">
-                  ★ 4.9 (24 Reviews)
+                  ★ {reviews.length > 0 ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : (product.rating || 5.0).toFixed(1)} ({reviews.length} {reviews.length === 1 ? 'Review' : 'Reviews'})
                 </div>
               </div>
             </div>
 
-            {/* Selectable Variants */}
-            <div className="space-y-3">
-              <label className="font-heading font-black text-xs text-[#111111] uppercase tracking-wider block">
-                Select Dimensions & Size Variant
-              </label>
+            {/* Selectable Variants (Only shown if product has variants) */}
+            {hasVariants && (
+              <div className="space-y-3">
+                <label className="font-heading font-black text-xs text-[#111111] uppercase tracking-wider block">
+                  Select Dimensions & Size Variant
+                </label>
 
-              <div className="grid grid-cols-2 gap-3">
-                {sizeOptions.map((opt) => {
-                  const optPrice = Math.round(basePrice * opt.priceMultiplier);
-                  const isSelected = selectedSizeOpt.label === opt.label;
-                  return (
-                    <div
-                      key={opt.label}
-                      onClick={() => setSelectedSizeOpt(opt)}
-                      className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all ${
-                        isSelected ? 'bg-orange-50/80 border-[#F97316]' : 'bg-white border-gray-200'
-                      }`}
-                    >
-                      <span className="font-heading font-black text-xs text-[#111111] block">{opt.label}</span>
-                      <span className="font-heading font-black text-sm text-[#F97316] block mt-1">₹{optPrice.toLocaleString('en-IN')}</span>
-                    </div>
-                  );
-                })}
+                <div className="grid grid-cols-2 gap-3">
+                  {productVariants.map((opt) => {
+                    const isSelected = selectedVariantId === opt.id;
+                    return (
+                      <div
+                        key={opt.id}
+                        onClick={() => setSelectedVariantId(opt.id)}
+                        className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all ${
+                          isSelected ? 'bg-orange-50/80 border-[#F97316]' : 'bg-white border-gray-200'
+                        }`}
+                      >
+                        <span className="font-heading font-black text-xs text-[#111111] block">{opt.name}</span>
+                        {opt.dimensions && <span className="text-[10px] text-gray-500 font-mono block">{opt.dimensions}</span>}
+                        <span className="font-heading font-black text-sm text-[#F97316] block mt-1">₹{opt.price.toLocaleString('en-IN')}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Action Buttons */}
             <div className="flex items-center gap-3 pt-2">

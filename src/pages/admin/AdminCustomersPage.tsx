@@ -205,8 +205,8 @@ export const AdminCustomersPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-[#111111] pb-24">
       {/* Admin Top Header */}
-      <div className="bg-[#111111] text-white py-10 px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="bg-[#111111] text-white py-8 px-4 sm:px-6 lg:px-8 border-b border-gray-800">
+        <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <span className="text-[#F97316] font-heading font-extrabold text-xs uppercase tracking-widest flex items-center gap-1.5">
               <Shield size={16} /> ADMIN MANAGEMENT PORTAL
@@ -225,7 +225,7 @@ export const AdminCustomersPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
         {/* Key Metrics Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-4">

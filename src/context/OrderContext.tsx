@@ -157,7 +157,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const basePrice = items.reduce((s, i) => s + i.totalPrice, 0);
     const newOrder: Order = {
       id: 'ord-' + Date.now(),
-      orderNumber: generateOnlineOrderNumber(),
+      orderNumber: await generateOnlineOrderNumber(),
       customerName, customerPhone, customerAddress, items, notes,
       basePrice, reducedAmount: 0, finalPrice: basePrice,
       advanceRequired: Math.min(5000, basePrice * 0.2),
@@ -200,7 +200,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const finalPrice = extraCharges?.finalPrice ?? Math.max(0, basePrice + (extraCharges?.labourCharge || 0) + (extraCharges?.fabricationCharge || 0) + (extraCharges?.installationCharge || 0) + (extraCharges?.transportCharge || 0) + (extraCharges?.gstAmount || 0) - reducedAmount);
     
     const isPos = extraCharges?.notes?.toLowerCase().includes('pos') || extraCharges?.notes?.toLowerCase().includes('quick');
-    const generatedOrderNum = isPos ? generatePosBillNumber() : generateFabricationOrderNumber();
+    const generatedOrderNum = isPos ? await generatePosBillNumber() : await generateFabricationOrderNumber();
 
     const firstPayment: PaymentTransaction = {
       id: 'pay-' + Date.now(),
@@ -210,7 +210,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       mode: paymentMode,
       collectedBy,
       remainingBalanceAfter: Math.max(0, finalPrice - advanceAmount),
-      receiptNumber: generatePaymentReceiptNumber(),
+      receiptNumber: await generatePaymentReceiptNumber(),
     };
 
     const newOrder: Order = {
@@ -437,6 +437,24 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     await refreshOrders();
   };
 
+  const deleteOrder = async (orderId: string) => {
+    setOrders((prev) => prev.filter((o) => o.id !== orderId));
+    try {
+      await deleteOrderFromDb(orderId);
+    } catch (err) {
+      console.error('Delete order error:', err);
+    }
+  };
+
+  const bulkDeleteOrders = async (orderIds: string[]) => {
+    setOrders((prev) => prev.filter((o) => !orderIds.includes(o.id)));
+    try {
+      await deleteOrdersFromDb(orderIds);
+    } catch (err) {
+      console.error('Bulk delete orders error:', err);
+    }
+  };
+
   // ─── DRAFT ORDERS MANAGEMENT (LOCALSTORAGE) ─────────────────────────────────
   const saveDraftOrder = (draft: any) => {
     try {
@@ -531,16 +549,6 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch (err) {
       console.error('cancelPaymentRequest error:', err);
     }
-  };
-
-  const deleteOrder = async (orderId: string) => {
-    await deleteOrderFromDb(orderId);
-    setOrders((prev) => prev.filter((o) => o.id !== orderId));
-  };
-
-  const bulkDeleteOrders = async (orderIds: string[]) => {
-    await deleteOrdersFromDb(orderIds);
-    setOrders((prev) => prev.filter((o) => !orderIds.includes(o.id)));
   };
 
   return (

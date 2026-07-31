@@ -27,8 +27,8 @@ export const AdminDraftOrdersPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-[#111111] pb-24 font-sans">
-      <div className="bg-[#111111] text-white py-8 px-4 sm:px-6 border-b border-gray-800">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
+      <div className="bg-[#111111] text-white py-8 px-4 sm:px-6 lg:px-8 border-b border-gray-800">
+        <div className="max-w-[1600px] mx-auto flex justify-between items-center">
           <div>
             <span className="text-[#F97316] font-mono font-bold text-xs uppercase tracking-widest block">
               INTERRUPTED WORKFLOW AUTO-SAVER
@@ -55,7 +55,7 @@ export const AdminDraftOrdersPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4">
         {drafts.length === 0 ? (
           <div className="bg-white p-12 rounded-2xl border border-gray-200 text-center max-w-md mx-auto space-y-3 shadow-xs">
             <Clock size={40} className="mx-auto text-gray-300" />
