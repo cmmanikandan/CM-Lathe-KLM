@@ -6,6 +6,7 @@ import { PDFInvoiceModal } from '../../components/common/PDFInvoiceModal';
 import { AdminPaymentCollectionModal } from '../../components/common/AdminPaymentCollectionModal';
 import { AdminPaymentRequestModal } from '../../components/common/AdminPaymentRequestModal';
 import { RazorpayQRModal } from '../../components/common/RazorpayQRModal';
+import { AdminDeliveredMessageModal } from '../../components/common/AdminDeliveredMessageModal';
 
 import {
   ArrowLeft,
@@ -73,6 +74,7 @@ export const AdminOrderDetailPage: React.FC = () => {
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [requestModalOpen, setRequestModalOpen] = useState(false);
+  const [deliveredModalOpen, setDeliveredModalOpen] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
 
   // Measurement Modal States
@@ -234,6 +236,13 @@ export const AdminOrderDetailPage: React.FC = () => {
               <Printer size={14} /> Tax Invoice
             </button>
 
+            <button
+              onClick={() => setDeliveredModalOpen(true)}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-black text-xs px-3.5 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer shrink-0"
+            >
+              <MessageCircle size={14} /> Send Delivery Thanks Message
+            </button>
+
             <a
               href={waUrl}
               target="_blank"
@@ -369,7 +378,12 @@ export const AdminOrderDetailPage: React.FC = () => {
                     return (
                       <button
                         key={step.status}
-                        onClick={() => updateOrderStatus(order.id, step.status)}
+                        onClick={() => {
+                          updateOrderStatus(order.id, step.status);
+                          if (['COMPLETED', 'INSTALLED', 'OUT_FOR_DELIVERY'].includes(step.status)) {
+                            setDeliveredModalOpen(true);
+                          }
+                        }}
                         className={`p-3.5 rounded-2xl border text-left flex flex-col justify-between space-y-1.5 transition-all cursor-pointer ${
                           isCurrent
                             ? 'bg-[#F97316] text-white border-[#F97316] shadow-md scale-102'
@@ -908,6 +922,11 @@ export const AdminOrderDetailPage: React.FC = () => {
           </form>
         </div>
       )}
+      <AdminDeliveredMessageModal
+        isOpen={deliveredModalOpen}
+        onClose={() => setDeliveredModalOpen(false)}
+        order={order}
+      />
     </div>
   );
 };

@@ -112,6 +112,45 @@ Phone: +91 96592 86268`;
   return `https://wa.me/${targetPhone}?text=${encodeURIComponent(text)}`;
 };
 
+export const createDeliveredThankYouWhatsAppMessage = (
+  order: Order,
+  customNote?: string
+): string => {
+  const customerPhoneClean = order.customerPhone.replace(/\D/g, '');
+  const targetPhone = customerPhoneClean.startsWith('91') ? customerPhoneClean : `91${customerPhoneClean}`;
+
+  const itemsList = (order.items || [])
+    .map((item) => `• ${item.productName} (Qty: ${item.quantity})`)
+    .join('\n');
+
+  const formattedNote = customNote && customNote.trim()
+    ? customNote.trim()
+    : 'Thanks for choosing MANIKANDAN LATHE, KALLIMANDHAYAM!';
+
+  const text = `*MANIKANDAN LATHE WORKS - KALLIMANDHAYAM*
+━━━━━━━━━━━━━━━━━━━━
+Dear *${order.customerName}*,
+
+🎉 *Order Delivered & Finished Successfully!*
+
+*Order No:* ${order.orderNumber}
+*Items Delivered:*
+${itemsList || '• Custom Fabrication Work'}
+
+*Total Amount:* ₹${order.finalPrice.toLocaleString('en-IN')}
+*Payment Status:* ${order.remainingBalance <= 0 ? 'Fully Paid ✓' : `Balance Remaining: ₹${order.remainingBalance.toLocaleString('en-IN')}`}
+
+*Message from Workshop:*
+"${formattedNote}"
+
+Thanks for choosing MANIKANDAN LATHE, KALLIMANDHAYAM! We appreciate your business and trust in our lathe machining and fabrication quality.
+
+📍 *Factory Address:* K. Keeranur Road, Kallimandhayam - 624616
+📞 *Phone / WhatsApp:* +91 96592 86268 (Owner Chellamuthu K)`;
+
+  return `https://wa.me/${targetPhone}?text=${encodeURIComponent(text)}`;
+};
+
 export const createProductInquiryWhatsApp = (productName: string, category: string): string => {
   const text = `Hello MANIKANDAN LATHE (Chellamuthu K), I am interested in *${productName}* (${category}). Please share price quote and custom options.`;
   return `https://wa.me/${SHOP_PHONE}?text=${encodeURIComponent(text)}`;

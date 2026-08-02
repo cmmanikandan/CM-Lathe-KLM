@@ -8,6 +8,7 @@ import { RazorpayQRModal } from '../../components/common/RazorpayQRModal';
 import { AdminPOSReceiptModal } from '../../components/common/AdminPOSReceiptModal';
 import { ReduceDiscountModal } from '../../components/common/ReduceDiscountModal';
 import { DeleteOrderConfirmationModal } from '../../components/common/DeleteOrderConfirmationModal';
+import { AdminDeliveredMessageModal } from '../../components/common/AdminDeliveredMessageModal';
 import {
   ArrowLeft,
   User,
@@ -63,6 +64,8 @@ export const AdminOfflineOrderDetailPage: React.FC = () => {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+  const [reduceDiscountModalOpen, setReduceDiscountModalOpen] = useState(false);
+  const [deliveredModalOpen, setDeliveredModalOpen] = useState(false);
   const [reduceModalOpen, setReduceModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
@@ -585,6 +588,13 @@ export const AdminOfflineOrderDetailPage: React.FC = () => {
                 className="bg-white/10 hover:bg-white/20 text-white font-heading font-black text-xs px-3.5 py-2.5 rounded-xl border border-white/15 flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
               >
                 <FileText size={15} /> Tax Invoice (A4)
+              </button>
+
+              <button
+                onClick={() => setDeliveredModalOpen(true)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-black text-xs px-3.5 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+              >
+                <MessageCircle size={15} /> Send Delivery Thanks Message
               </button>
 
               <a
@@ -1161,6 +1171,11 @@ export const AdminOfflineOrderDetailPage: React.FC = () => {
         onSuccess={() => navigate('/admin/offline-orders/today')}
       />
 
+      <AdminDeliveredMessageModal
+        isOpen={deliveredModalOpen}
+        onClose={() => setDeliveredModalOpen(false)}
+        order={order}
+      />
     </div>
   );
 };

@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useOrders } from '../../context/OrderContext';
 import { Order } from '../../types';
 import { AdminPaymentCollectionModal } from '../../components/common/AdminPaymentCollectionModal';
+import { AdminPaymentRequestModal } from '../../components/common/AdminPaymentRequestModal';
+import { AdminDeliveredMessageModal } from '../../components/common/AdminDeliveredMessageModal';
 import { PDFInvoiceModal } from '../../components/common/PDFInvoiceModal';
+import { createDeliveredThankYouWhatsAppMessage } from '../../services/whatsappService';
 import {
   Search,
   Filter,
@@ -44,6 +47,8 @@ export const AdminOrdersPage: React.FC = () => {
   const [filterOrderType, setFilterOrderType] = useState<string>('ALL');
 
   // Modals State
+  const [requestOrder, setRequestOrder] = useState<Order | null>(null);
+  const [deliveredModalOrder, setDeliveredModalOrder] = useState<Order | null>(null);
   const [deletingOrder, setDeletingOrder] = useState<Order | null>(null);
   const [payingOrder, setPayingOrder] = useState<Order | null>(null);
   const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
@@ -365,7 +370,13 @@ export const AdminOrdersPage: React.FC = () => {
                     <div onClick={(e) => e.stopPropagation()}>
                       <select
                         value={ord.status}
-                        onChange={(e) => updateOrderStatus(ord.id, e.target.value as any)}
+                        onChange={(e) => {
+                          const newStatus = e.target.value as any;
+                          updateOrderStatus(ord.id, newStatus);
+                          if (['COMPLETED', 'INSTALLED', 'OUT_FOR_DELIVERY'].includes(newStatus)) {
+                            setDeliveredModalOrder(ord);
+                          }
+                        }}
                         className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border outline-none cursor-pointer ${
                           ord.status === 'COMPLETED'
                             ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
@@ -439,6 +450,14 @@ export const AdminOrdersPage: React.FC = () => {
                     >
                       <MessageCircle size={13} />
                     </a>
+
+                    <button
+                      onClick={() => setDeliveredModalOrder(ord)}
+                      className="py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center cursor-pointer"
+                      title="Send Delivery Thank You Message (MANIKANDAN LATHE)"
+                    >
+                      <CheckCircle2 size={13} />
+                    </button>
 
                     <button
                       onClick={() => setInvoiceOrder(ord)}
@@ -550,6 +569,11 @@ export const AdminOrdersPage: React.FC = () => {
         order={invoiceOrder}
         isOpen={!!invoiceOrder}
         onClose={() => setInvoiceOrder(null)}
+      />
+      <AdminDeliveredMessageModal
+        isOpen={Boolean(deliveredModalOrder)}
+        onClose={() => setDeliveredModalOrder(null)}
+        order={deliveredModalOrder}
       />
     </div>
   );

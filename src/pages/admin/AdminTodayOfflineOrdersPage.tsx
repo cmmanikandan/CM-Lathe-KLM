@@ -8,6 +8,7 @@ import { PDFInvoiceModal } from '../../components/common/PDFInvoiceModal';
 import { AdminPaymentCollectionModal } from '../../components/common/AdminPaymentCollectionModal';
 import { ReduceDiscountModal } from '../../components/common/ReduceDiscountModal';
 import { DeleteOrderConfirmationModal } from '../../components/common/DeleteOrderConfirmationModal';
+import { AdminDeliveredMessageModal } from '../../components/common/AdminDeliveredMessageModal';
 import {
   Zap,
   Search,
@@ -48,6 +49,7 @@ export const AdminTodayOfflineOrdersPage: React.FC<AdminTodayOfflineOrdersPagePr
   const [deletingOrder, setDeletingOrder] = useState<Order | null>(null);
   const [paymentOrder, setPaymentOrder] = useState<Order | null>(null);
   const [reduceOrder, setReduceOrder] = useState<Order | null>(null);
+  const [deliveredModalOrder, setDeliveredModalOrder] = useState<Order | null>(null);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
 
@@ -340,13 +342,22 @@ export const AdminTodayOfflineOrdersPage: React.FC<AdminTodayOfflineOrdersPagePr
                             </span>
                           </td>
                           <td className="p-3.5 text-center">
-                            <button
-                              onClick={() => navigate(`/admin/offline-orders/${ord.id}`)}
-                              className="w-8 h-8 rounded-xl bg-[#F97316] hover:bg-[#EA580C] text-white flex items-center justify-center font-black mx-auto transition-transform active:scale-95 shadow-md cursor-pointer"
-                              title="Open Full Order Page & Actions (>)"
-                            >
-                              <ChevronRight size={18} />
-                            </button>
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                onClick={() => setDeliveredModalOrder(ord)}
+                                className="w-8 h-8 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center font-black transition-transform active:scale-95 shadow-md cursor-pointer"
+                                title="Send Custom Delivery Thank You Message (MANIKANDAN LATHE)"
+                              >
+                                <MessageCircle size={16} />
+                              </button>
+                              <button
+                                onClick={() => navigate(`/admin/offline-orders/${ord.id}`)}
+                                className="w-8 h-8 rounded-xl bg-[#F97316] hover:bg-[#EA580C] text-white flex items-center justify-center font-black transition-transform active:scale-95 shadow-md cursor-pointer"
+                                title="Open Full Order Page & Actions (>)"
+                              >
+                                <ChevronRight size={18} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -624,6 +635,11 @@ export const AdminTodayOfflineOrdersPage: React.FC<AdminTodayOfflineOrdersPagePr
         order={deletingOrder}
         isOpen={!!deletingOrder}
         onClose={() => setDeletingOrder(null)}
+      />
+      <AdminDeliveredMessageModal
+        isOpen={Boolean(deliveredModalOrder)}
+        onClose={() => setDeliveredModalOrder(null)}
+        order={deliveredModalOrder}
       />
     </div>
   );
