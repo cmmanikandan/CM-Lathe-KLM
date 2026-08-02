@@ -5,7 +5,7 @@ import { useOrders } from '../../context/OrderContext';
 import { useEnquiries } from '../../context/EnquiryContext';
 import { useAuth } from '../../context/AuthContext';
 import { ImageViewerModal } from '../../components/common/ImageViewerModal';
-import { createProductInquiryWhatsApp } from '../../services/whatsappService';
+import { createProductInquiryWhatsApp, createCustomerEnquiryWhatsAppMessage } from '../../services/whatsappService';
 import { openRazorpayCheckout } from '../../services/razorpayService';
 import { uploadToCloudinary } from '../../services/cloudinaryService';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -159,11 +159,12 @@ export const ProductDetailPage: React.FC = () => {
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [orderNotes, setOrderNotes] = useState('');
-  const [deliveryType, setDeliveryType] = useState<'Pickup' | 'Home Delivery' | 'Installation'>('Home Delivery');
+  const [deliveryType, setDeliveryType] = useState<'Pickup' | 'Home Delivery' | 'Installation'>('Pickup');
   const [paymentChoice, setPaymentChoice] = useState<'Pay Later' | 'Pay Advance Online'>('Pay Later');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [enquirySuccess, setEnquirySuccess] = useState(false);
   const [createdEnquiryNumber, setCreatedEnquiryNumber] = useState('');
+  const [createdEnquiryWhatsAppUrl, setCreatedEnquiryWhatsAppUrl] = useState('');
 
   // Scroll listener for glassmorphism sticky header
   useEffect(() => {
@@ -335,9 +336,12 @@ export const ProductDetailPage: React.FC = () => {
             },
             deliveryType,
           });
+          const waUrl = createCustomerEnquiryWhatsAppMessage(newEnq);
+          setCreatedEnquiryWhatsAppUrl(waUrl);
           setIsSubmitting(false);
           setCreatedEnquiryNumber(newEnq.enquiryNumber);
           setEnquirySuccess(true);
+          window.open(waUrl, '_blank');
         },
         onFailure: (error) => {
           setIsSubmitting(false);
@@ -364,9 +368,12 @@ export const ProductDetailPage: React.FC = () => {
         advancePaid: 0,
         deliveryType,
       });
+      const waUrl = createCustomerEnquiryWhatsAppMessage(newEnq);
+      setCreatedEnquiryWhatsAppUrl(waUrl);
       setIsSubmitting(false);
       setCreatedEnquiryNumber(newEnq.enquiryNumber);
       setEnquirySuccess(true);
+      window.open(waUrl, '_blank');
     }
   };
 
@@ -1064,14 +1071,26 @@ export const ProductDetailPage: React.FC = () => {
                   <p className="text-xs text-gray-500 font-mono">Enquiry No: <strong className="text-[#F97316]">{createdEnquiryNumber}</strong></p>
                 </div>
 
-                <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200 text-left text-xs space-y-2">
-                  <p className="text-gray-700 font-medium">
-                    Thank you, <strong>{customerName}</strong>! Our master technician (Chellamuthu K) will review your measurements and estimated price.
+                <div className="bg-[#25D366]/10 rounded-2xl p-4 border border-[#25D366]/30 text-left text-xs space-y-2">
+                  <p className="text-gray-800 font-bold flex items-center gap-2">
+                    <MessageCircle className="text-[#25D366] shrink-0" size={18} />
+                    <span>WhatsApp Enquiry Message Created for Chellamuthu K</span>
                   </p>
-                  <p className="text-gray-500 text-[11px]">
-                    Once approved, an official order will be generated and you will receive instant updates via WhatsApp.
+                  <p className="text-gray-600 text-[11px] leading-relaxed">
+                    Our master technician <strong>Chellamuthu K</strong> has been formatted as recipient. If WhatsApp didn't open automatically, click below to send your enquiry details directly to Chellamuthu Sir.
                   </p>
                 </div>
+
+                {createdEnquiryWhatsAppUrl && (
+                  <a
+                    href={createdEnquiryWhatsAppUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-heading font-black text-xs py-3.5 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95"
+                  >
+                    <MessageCircle size={18} /> Send WhatsApp Message to Chellamuthu K →
+                  </a>
+                )}
 
                 <div className="pt-2 flex flex-col gap-2">
                   <button
@@ -1203,27 +1222,15 @@ export const ProductDetailPage: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="font-bold text-xs text-gray-700 block mb-1.5">Choose Delivery Preference</label>
-                      <div className="grid grid-cols-3 gap-2 text-xs">
-                        {[
-                          { type: 'Pickup', label: 'Factory Pickup', desc: 'Pick up at Kallimandhayam' },
-                          { type: 'Home Delivery', label: 'Home Delivery', desc: 'Transport to site' },
-                          { type: 'Installation', label: 'Complete Assembly', desc: 'Delivery + Mechanic Fitting' },
-                        ].map((d) => (
-                          <button
-                            type="button"
-                            key={d.type}
-                            onClick={() => setDeliveryType(d.type as any)}
-                            className={`p-2.5 rounded-xl text-left border transition-all ${
-                              deliveryType === d.type
-                                ? 'bg-[#F97316] text-white border-[#F97316]'
-                                : 'bg-gray-50 hover:bg-gray-100 text-gray-800 border-gray-200'
-                            }`}
-                          >
-                            <div className="font-heading font-black text-[11px]">{d.label}</div>
-                            <div className="text-[9px] opacity-80 mt-0.5">{d.desc}</div>
-                          </button>
-                        ))}
+                      <label className="font-bold text-xs text-gray-700 block mb-1.5">Delivery Preference</label>
+                      <div className="p-3 bg-orange-50 rounded-2xl border border-orange-200 flex items-center justify-between">
+                        <div>
+                          <div className="font-heading font-black text-xs text-[#111111] flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-[#F97316]"></span> Shop / Factory Pickup Only
+                          </div>
+                          <div className="text-[11px] text-gray-600 mt-0.5">Collect directly at MANIKANDAN LATHE workshop (K. Keeranur Road, Kallimandhayam).</div>
+                        </div>
+                        <span className="bg-[#F97316] text-white text-[10px] font-mono font-bold px-2.5 py-1 rounded-full uppercase shrink-0">Shop Pickup</span>
                       </div>
                     </div>
 

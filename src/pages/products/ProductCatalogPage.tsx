@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../../context/ProductContext';
 import { Search, Mic, Filter, Eye, MessageCircle, Heart, Star, CheckCircle2 } from 'lucide-react';
+import { createProductInquiryWhatsApp } from '../../services/whatsappService';
 
 export const ProductCatalogPage: React.FC = () => {
   const {
@@ -211,12 +212,12 @@ export const ProductCatalogPage: React.FC = () => {
                     </div>
 
                     <a
-                      href={`https://wa.me/919942012345?text=Hi%20Manikandan%20Lathe,%20I%20want%20to%20order%20${encodeURIComponent(product.name)}`}
+                      href={createProductInquiryWhatsApp(product.name, product.category)}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
                       className="p-1.5 bg-[#25D366] text-white rounded-xl hover:bg-[#20ba5a] active:scale-95 transition-all shadow-xs"
-                      title="Quick WhatsApp Order"
+                      title="Quick WhatsApp Enquiry to Owner Chellamuthu K"
                     >
                       <MessageCircle size={14} />
                     </a>

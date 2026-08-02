@@ -123,7 +123,7 @@ export const LandingPage: React.FC = () => {
             <Phone size={14} /> Call Workshop
           </a>
           <a
-            href="https://wa.me/919942012345"
+            href="https://wa.me/919659286268"
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 bg-[#25D366] hover:bg-[#20ba5a] text-white font-heading font-black text-xs py-2.5 rounded-xl flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
@@ -303,7 +303,7 @@ export const LandingPage: React.FC = () => {
           </a>
 
           <a
-            href="https://wa.me/919942012345"
+            href="https://wa.me/919659286268"
             target="_blank"
             rel="noopener noreferrer"
             className="bg-white p-3 rounded-[22px] border border-gray-200/80 shadow-xs flex flex-col items-center justify-center gap-1.5 hover:border-[#F97316] transition-all active:scale-95"

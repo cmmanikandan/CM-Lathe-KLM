@@ -83,7 +83,7 @@ export const Navbar: React.FC = () => {
 
           {/* WhatsApp */}
           <a
-            href="https://wa.me/919942012345"
+            href="https://wa.me/919659286268"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-bold px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl transition-all shadow-sm shrink-0"

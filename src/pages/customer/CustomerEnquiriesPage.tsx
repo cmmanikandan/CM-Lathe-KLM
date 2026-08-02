@@ -17,6 +17,7 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
+import { createCustomerEnquiryWhatsAppMessage } from '../../services/whatsappService';
 
 export const CustomerEnquiriesPage: React.FC = () => {
   const { user } = useAuth();
@@ -184,6 +185,20 @@ export const CustomerEnquiriesPage: React.FC = () => {
                       </div>
                     ))}
                   </div>
+                </div>
+
+                <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-t border-gray-100">
+                  <span className="text-[11px] text-gray-500 font-medium">
+                    Shop Owner: <strong>Chellamuthu K (+91 96592 86268)</strong>
+                  </span>
+                  <a
+                    href={createCustomerEnquiryWhatsAppMessage(enq)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-[#25D366] hover:bg-[#20ba5a] text-white font-heading font-black text-xs px-4 py-2.5 rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                  >
+                    <MessageCircle size={15} /> Send WhatsApp Message to Chellamuthu K
+                  </a>
                 </div>
 
               </div>

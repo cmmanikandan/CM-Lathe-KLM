@@ -4,7 +4,7 @@ import { useProducts } from '../../context/ProductContext';
 import { PublicNavbar } from '../../components/layout/PublicNavbar';
 import { PublicFooter } from '../../components/layout/PublicFooter';
 import { LoginRequiredModal } from '../../components/common/LoginRequiredModal';
-import { createProductInquiryWhatsApp } from '../../services/whatsappService';
+import { createProductInquiryWhatsApp, createQuickEnquiryWhatsAppMessage } from '../../services/whatsappService';
 import {
   Search,
   Mic,
@@ -54,14 +54,14 @@ export const PublicProductCatalogPage: React.FC = () => {
 
   const handleSendEnquiry = (e: React.FormEvent) => {
     e.preventDefault();
+    const waUrl = createQuickEnquiryWhatsAppMessage({
+      productName: enquiryProduct,
+      customerName: enquiryName,
+      customerPhone: enquiryPhone,
+      message: enquiryMessage,
+    });
     setEnquirySent(true);
-    setTimeout(() => {
-      setEnquirySent(false);
-      setEnquiryModalOpen(false);
-      setEnquiryName('');
-      setEnquiryPhone('');
-      setEnquiryMessage('');
-    }, 1800);
+    window.open(waUrl, '_blank');
   };
 
   return (
@@ -235,10 +235,35 @@ export const PublicProductCatalogPage: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-[22px] max-w-md w-full p-5 space-y-4 shadow-2xl border border-gray-200">
             {enquirySent ? (
-              <div className="text-center py-6 space-y-2">
+              <div className="text-center py-6 space-y-4">
                 <CheckCircle2 size={40} className="mx-auto text-green-600" />
                 <h3 className="font-heading font-black text-lg text-[#111111]">Enquiry Dispatched!</h3>
-                <p className="text-xs text-gray-500">Our engineering workshop team will contact you shortly.</p>
+                <p className="text-xs text-gray-500">A professional WhatsApp message has been formatted for shop owner Chellamuthu K.</p>
+                <a
+                  href={createQuickEnquiryWhatsAppMessage({
+                    productName: enquiryProduct,
+                    customerName: enquiryName,
+                    customerPhone: enquiryPhone,
+                    message: enquiryMessage,
+                  })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba5a] text-white font-heading font-black text-xs px-4 py-3 rounded-xl shadow-md transition-all"
+                >
+                  <MessageCircle size={16} /> Open WhatsApp Chat with Chellamuthu K →
+                </a>
+                <button
+                  onClick={() => {
+                    setEnquirySent(false);
+                    setEnquiryModalOpen(false);
+                    setEnquiryName('');
+                    setEnquiryPhone('');
+                    setEnquiryMessage('');
+                  }}
+                  className="block w-full text-center text-xs text-gray-400 hover:text-gray-600 pt-2"
+                >
+                  Close Window
+                </button>
               </div>
             ) : (
               <>
