@@ -34,7 +34,15 @@ CREATE TABLE products (
   category TEXT NOT NULL,
   sub_category TEXT,
   price NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+  original_price NUMERIC(12,2) DEFAULT 0.00,
+  discount_type TEXT DEFAULT 'none',
+  discount_value NUMERIC(12,2) DEFAULT 0.00,
+  discount_amount NUMERIC(12,2) DEFAULT 0.00,
+  final_selling_price NUMERIC(12,2) DEFAULT 0.00,
+  cost_price NUMERIC(12,2) DEFAULT 0.00,
+  profit_margin NUMERIC(6,2) DEFAULT 0.00,
   discount_price NUMERIC(12,2),
+  tags TEXT[] NOT NULL DEFAULT '{}',
   unit TEXT NOT NULL DEFAULT 'Set',
   stock INT NOT NULL DEFAULT 10,
   is_ready_stock BOOLEAN NOT NULL DEFAULT true,
@@ -125,6 +133,11 @@ CREATE TABLE order_items (
   quantity INT NOT NULL DEFAULT 1,
   unit_price NUMERIC(12,2) NOT NULL DEFAULT 0.00,
   total_price NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+  original_price_at_order NUMERIC(12,2),
+  product_discount_at_order NUMERIC(12,2) DEFAULT 0.00,
+  unit_selling_price_at_order NUMERIC(12,2),
+  cost_price_at_order NUMERIC(12,2),
+  line_total NUMERIC(12,2),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -554,3 +567,26 @@ BEGIN
   RETURN next_val;
 END;
 $$;
+
+-- ====================================================================
+-- SAFE MIGRATION QUERIES FOR EXISTING LIVE SUPABASE DATABASES
+-- (Run these queries in Supabase SQL Editor if retrofitting an existing DB)
+-- ====================================================================
+
+-- 1. Add Pricing, Profit Margin & Selectable Feature Tags to Products
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS original_price NUMERIC(12,2) DEFAULT 0.00;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS discount_type TEXT DEFAULT 'none';
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS discount_value NUMERIC(12,2) DEFAULT 0.00;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS discount_amount NUMERIC(12,2) DEFAULT 0.00;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS final_selling_price NUMERIC(12,2) DEFAULT 0.00;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS cost_price NUMERIC(12,2) DEFAULT 0.00;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS profit_margin NUMERIC(6,2) DEFAULT 0.00;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';
+
+-- 2. Add Sale-Time Profit Audit Snapshot Columns to Order Items
+ALTER TABLE public.order_items ADD COLUMN IF NOT EXISTS original_price_at_order NUMERIC(12,2);
+ALTER TABLE public.order_items ADD COLUMN IF NOT EXISTS product_discount_at_order NUMERIC(12,2) DEFAULT 0.00;
+ALTER TABLE public.order_items ADD COLUMN IF NOT EXISTS unit_selling_price_at_order NUMERIC(12,2);
+ALTER TABLE public.order_items ADD COLUMN IF NOT EXISTS cost_price_at_order NUMERIC(12,2);
+ALTER TABLE public.order_items ADD COLUMN IF NOT EXISTS line_total NUMERIC(12,2);
+
