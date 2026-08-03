@@ -29,8 +29,7 @@ import {
   UserPlus,
   Wrench,
   AlertTriangle,
-  Send,
-  Check,
+  Send
 } from 'lucide-react';
 
 export const AdminQuickOrderPage: React.FC = () => {
