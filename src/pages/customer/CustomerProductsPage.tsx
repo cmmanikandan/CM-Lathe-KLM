@@ -244,11 +244,6 @@ export const CustomerProductsPage: React.FC = () => {
                   <span className="absolute bottom-2 left-2 bg-black/70 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
                     ★ {product.rating}
                   </span>
-                  {product.stock > 0 && product.stock <= 5 && (
-                    <span className="absolute top-2 left-2 bg-red-600 text-white text-[9px] font-mono font-black px-2 py-0.5 rounded-full shadow-xs uppercase tracking-wider animate-pulse">
-                      Low Stock: Only {product.stock} Left
-                    </span>
-                  )}
                 </div>
 
                 {/* Details */}

@@ -56,9 +56,13 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
     '/customer/orders',
     '/customer/status',
     '/customer/profile',
+    '/customer/notifications',
+    '/customer/wishlist',
     '/login'
   ];
-  const shouldShowBottomNav = !isDetailPage && bottomNavPaths.some(p => location.pathname === p || location.pathname.startsWith(p));
+  const shouldShowBottomNav = !isDetailPage && (
+    location.pathname.startsWith('/customer') || location.pathname === '/login'
+  );
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -183,9 +187,7 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
         {/* 3. PROFESSIONAL FULL-WIDTH BOTTOM NAVIGATION BAR */}
         {shouldShowBottomNav && (
           <nav
-            className={`fixed bottom-0 left-0 right-0 max-w-[1440px] mx-auto z-40 bg-white/95 backdrop-blur-md border-t border-gray-200/90 shadow-[0_-4px_25px_rgba(0,0,0,0.06)] py-2 px-3 flex items-center justify-around transition-all duration-300 ${
-              isModalOpen ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
-            }`}
+            className="fixed bottom-0 left-0 right-0 max-w-[1440px] mx-auto z-40 bg-white/95 backdrop-blur-md border-t border-gray-200/90 shadow-[0_-4px_25px_rgba(0,0,0,0.06)] py-2 px-3 flex items-center justify-around transition-all duration-300 translate-y-0 opacity-100"
           >
             
             {/* Home */}
