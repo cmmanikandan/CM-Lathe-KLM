@@ -183,17 +183,9 @@ export const CustomerProductsPage: React.FC = () => {
 
       {/* PRODUCT COUNT & HEADER */}
       <div className="flex justify-between items-center text-xs font-mono pt-1">
-        <div className="flex items-center gap-2">
-          <span className="text-gray-500">
-            Showing <strong className="text-[#111111] font-bold">{processedProducts.length}</strong> products
-          </span>
-          <button
-            onClick={() => navigate('/customer/compare')}
-            className="bg-orange-50 hover:bg-[#F97316] text-orange-950 hover:text-white text-[11px] font-bold px-2.5 py-1 rounded-xl border border-orange-200 transition-colors flex items-center gap-1 cursor-pointer"
-          >
-            <span>⚖ Compare Page</span>
-          </button>
-        </div>
+        <span className="text-gray-500">
+          Showing <strong className="text-[#111111] font-bold">{processedProducts.length}</strong> products
+        </span>
 
         <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-gray-200">
           <button
