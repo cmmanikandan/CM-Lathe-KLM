@@ -266,14 +266,20 @@ export const CustomerProductsPage: React.FC = () => {
 
       {/* 1. FILTER BOTTOM SHEET */}
       {filterSheetOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex justify-end">
-          <div className="bg-white w-full max-w-sm h-full p-6 space-y-6 overflow-y-auto shadow-2xl animate-fade-in flex flex-col justify-between rounded-t-[32px] sm:rounded-none">
+        <div 
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={() => setFilterSheetOpen(false)}
+        >
+          <div 
+            className="bg-white w-full max-w-lg max-h-[85vh] p-6 space-y-6 overflow-y-auto shadow-2xl animate-in slide-in-from-bottom duration-300 rounded-t-[32px] sm:rounded-[32px] flex flex-col justify-between"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="space-y-6">
               <div className="flex items-center justify-between border-b border-gray-200 pb-3">
                 <h3 className="font-heading font-black text-base text-[#111111] flex items-center gap-2">
                   <SlidersHorizontal size={18} className="text-[#F97316]" /> FILTER PRODUCTS
                 </h3>
-                <button onClick={() => setFilterSheetOpen(false)} className="text-gray-400 hover:text-black">
+                <button onClick={() => setFilterSheetOpen(false)} className="p-1 rounded-full text-gray-400 hover:text-black hover:bg-gray-100">
                   <X size={20} />
                 </button>
               </div>
@@ -283,19 +289,19 @@ export const CustomerProductsPage: React.FC = () => {
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   <button
                     onClick={() => setFilterStock('all')}
-                    className={`p-2 rounded-xl font-bold border ${filterStock === 'all' ? 'bg-[#F97316] text-white border-[#F97316]' : 'bg-gray-50 text-gray-700 border-gray-200'}`}
+                    className={`p-3 rounded-2xl font-bold border transition-all ${filterStock === 'all' ? 'bg-[#F97316] text-white border-[#F97316] shadow-xs' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
                   >
                     All
                   </button>
                   <button
                     onClick={() => setFilterStock('ready')}
-                    className={`p-2 rounded-xl font-bold border ${filterStock === 'ready' ? 'bg-[#F97316] text-white border-[#F97316]' : 'bg-gray-50 text-gray-700 border-gray-200'}`}
+                    className={`p-3 rounded-2xl font-bold border transition-all ${filterStock === 'ready' ? 'bg-[#F97316] text-white border-[#F97316] shadow-xs' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
                   >
                     Ready Stock
                   </button>
                   <button
                     onClick={() => setFilterStock('made-to-order')}
-                    className={`p-2 rounded-xl font-bold border ${filterStock === 'made-to-order' ? 'bg-[#F97316] text-white border-[#F97316]' : 'bg-gray-50 text-gray-700 border-gray-200'}`}
+                    className={`p-3 rounded-2xl font-bold border transition-all ${filterStock === 'made-to-order' ? 'bg-[#F97316] text-white border-[#F97316] shadow-xs' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
                   >
                     Made to Order
                   </button>
@@ -304,8 +310,8 @@ export const CustomerProductsPage: React.FC = () => {
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs font-bold">
-                  <span>Max Price Limit:</span>
-                  <span className="text-[#F97316] font-mono font-black">₹{maxPrice.toLocaleString('en-IN')}</span>
+                  <span className="text-gray-700">Max Price Limit:</span>
+                  <span className="text-[#F97316] font-mono font-black text-sm">₹{maxPrice.toLocaleString('en-IN')}</span>
                 </div>
                 <input
                   type="range"
@@ -314,7 +320,7 @@ export const CustomerProductsPage: React.FC = () => {
                   step="5000"
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(Number(e.target.value))}
-                  className="w-full accent-[#F97316]"
+                  className="w-full accent-[#F97316] cursor-pointer"
                 />
               </div>
             </div>
@@ -322,7 +328,7 @@ export const CustomerProductsPage: React.FC = () => {
             <div className="pt-4 border-t border-gray-200 space-y-2">
               <button
                 onClick={() => setFilterSheetOpen(false)}
-                className="w-full bg-[#111111] hover:bg-[#F97316] text-white font-heading font-black text-xs py-3.5 rounded-xl shadow-md"
+                className="w-full bg-[#111111] hover:bg-[#F97316] text-white font-heading font-black text-xs py-4 rounded-2xl shadow-lg cursor-pointer transition-colors"
               >
                 Apply Filters ({processedProducts.length} Results)
               </button>
@@ -334,7 +340,7 @@ export const CustomerProductsPage: React.FC = () => {
                   setMaxPrice(200000);
                   setFilterSheetOpen(false);
                 }}
-                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs py-2.5 rounded-xl"
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs py-3 rounded-2xl cursor-pointer transition-colors"
               >
                 Clear All Filters
               </button>
@@ -345,19 +351,25 @@ export const CustomerProductsPage: React.FC = () => {
 
       {/* 2. SORT BOTTOM SHEET */}
       {sortSheetOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex justify-end">
-          <div className="bg-white w-full max-w-sm h-full p-6 space-y-6 overflow-y-auto shadow-2xl animate-fade-in flex flex-col justify-between rounded-t-[32px] sm:rounded-none">
+        <div 
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={() => setSortSheetOpen(false)}
+        >
+          <div 
+            className="bg-white w-full max-w-lg max-h-[85vh] p-6 space-y-6 overflow-y-auto shadow-2xl animate-in slide-in-from-bottom duration-300 rounded-t-[32px] sm:rounded-[32px] flex flex-col justify-between"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-gray-200 pb-3">
                 <h3 className="font-heading font-black text-base text-[#111111] flex items-center gap-2">
                   <ArrowUpDown size={18} className="text-[#F97316]" /> SORT PRODUCTS BY
                 </h3>
-                <button onClick={() => setSortSheetOpen(false)} className="text-gray-400 hover:text-black">
+                <button onClick={() => setSortSheetOpen(false)} className="p-1 rounded-full text-gray-400 hover:text-black hover:bg-gray-100">
                   <X size={20} />
                 </button>
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 {sortOptions.map((opt) => {
                   const isSelected = sortOption === opt.id;
                   return (
@@ -367,7 +379,7 @@ export const CustomerProductsPage: React.FC = () => {
                         setSortOption(opt.id as any);
                         setSortSheetOpen(false);
                       }}
-                      className={`w-full text-left p-3 rounded-xl text-xs font-heading font-extrabold flex items-center justify-between transition-colors ${
+                      className={`w-full text-left p-3.5 rounded-2xl text-xs font-heading font-extrabold flex items-center justify-between transition-colors cursor-pointer ${
                         isSelected ? 'bg-orange-50 text-[#F97316] border border-orange-200' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                       }`}
                     >
@@ -384,19 +396,25 @@ export const CustomerProductsPage: React.FC = () => {
 
       {/* 3. CATEGORY BOTTOM SHEET WITH ICONS */}
       {categorySheetOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex justify-end">
-          <div className="bg-white w-full max-w-sm h-full p-6 space-y-6 overflow-y-auto shadow-2xl animate-fade-in flex flex-col justify-between rounded-t-[32px] sm:rounded-none">
+        <div 
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={() => setCategorySheetOpen(false)}
+        >
+          <div 
+            className="bg-white w-full max-w-lg max-h-[85vh] p-6 space-y-6 overflow-y-auto shadow-2xl animate-in slide-in-from-bottom duration-300 rounded-t-[32px] sm:rounded-[32px] flex flex-col justify-between"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-gray-200 pb-3">
                 <h3 className="font-heading font-black text-base text-[#111111] flex items-center gap-2">
                   <Layers size={18} className="text-[#F97316]" /> SELECT CATEGORY
                 </h3>
-                <button onClick={() => setCategorySheetOpen(false)} className="text-gray-400 hover:text-black">
+                <button onClick={() => setCategorySheetOpen(false)} className="p-1 rounded-full text-gray-400 hover:text-black hover:bg-gray-100">
                   <X size={20} />
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2.5">
                 {categories.map((cat) => {
                   const isSelected = selectedCategory === cat;
                   const icon = categoryIcons[cat] || '🛠';
@@ -407,8 +425,8 @@ export const CustomerProductsPage: React.FC = () => {
                         setSelectedCategory(cat);
                         setCategorySheetOpen(false);
                       }}
-                      className={`p-3 rounded-xl text-left text-xs font-heading font-extrabold flex items-center gap-2 border transition-all ${
-                        isSelected ? 'bg-[#111111] text-white border-[#111111]' : 'bg-gray-50 text-gray-800 border-gray-200 hover:bg-gray-100'
+                      className={`p-3.5 rounded-2xl text-left text-xs font-heading font-extrabold flex items-center gap-2.5 border transition-all cursor-pointer ${
+                        isSelected ? 'bg-[#111111] text-white border-[#111111] shadow-xs' : 'bg-gray-50 text-gray-800 border-gray-200 hover:bg-gray-100'
                       }`}
                     >
                       <span className="text-lg">{icon}</span>

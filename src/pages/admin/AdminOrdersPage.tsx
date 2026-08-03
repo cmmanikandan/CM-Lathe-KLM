@@ -455,14 +455,6 @@ export const AdminOrdersPage: React.FC = () => {
                     </a>
 
                     <button
-                      onClick={() => setProgressModalOrder(ord)}
-                      className="py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl flex items-center justify-center cursor-pointer"
-                      title="Upload Live Workshop Progress Photo"
-                    >
-                      <Camera size={13} />
-                    </button>
-
-                    <button
                       onClick={() => setDeliveredModalOrder(ord)}
                       className="py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center cursor-pointer"
                       title="Send Delivery Thank You Message (MANIKANDAN LATHE)"
@@ -585,12 +577,6 @@ export const AdminOrdersPage: React.FC = () => {
         isOpen={Boolean(deliveredModalOrder)}
         onClose={() => setDeliveredModalOrder(null)}
         order={deliveredModalOrder}
-      />
-      <AdminWorkshopProgressModal
-        order={progressModalOrder}
-        isOpen={Boolean(progressModalOrder)}
-        onClose={() => setProgressModalOrder(null)}
-        onUpdateOrderProgress={updateOrderWorkshopProgress}
       />
     </div>
   );

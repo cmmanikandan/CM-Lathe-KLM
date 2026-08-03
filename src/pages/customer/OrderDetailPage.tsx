@@ -77,60 +77,73 @@ export const OrderDetailPage: React.FC = () => {
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 font-sans max-w-5xl mx-auto">
       
       {/* 1. TOP BAR WITH BACK, ORDER NUMBER & ACTIONS */}
-      <div className="bg-white p-4 sm:p-5 rounded-[22px] border border-gray-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => {
-              if (window.history.length > 1) {
-                navigate(-1);
-              } else {
-                navigate('/customer/orders');
-              }
-            }}
-            className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-[#111111] transition-colors cursor-pointer"
-          >
-            <ArrowLeft size={18} />
-          </button>
-          <div>
-            <span className="text-[10px] font-mono font-bold text-gray-400 uppercase block">Customer Order Details</span>
-            <h1 className="font-heading font-black text-xl text-[#111111] flex items-center gap-2">
-              #{order.orderNumber}
-              <span className="bg-orange-100 text-[#F97316] text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase border border-orange-300">
-                {order.status.replace('_', ' ')}
+      <div className="bg-white p-5 rounded-[24px] border border-gray-200 shadow-xs space-y-4 font-sans">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                if (window.history.length > 1) {
+                  navigate(-1);
+                } else {
+                  navigate('/customer/orders');
+                }
+              }}
+              className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 text-[#111111] flex items-center justify-center transition-colors cursor-pointer shrink-0"
+              title="Back to Orders"
+            >
+              <ArrowLeft size={18} />
+            </button>
+
+            <div>
+              <span className="text-[10px] font-mono font-bold text-gray-400 uppercase tracking-wider block">
+                CUSTOMER ORDER DETAILS
               </span>
-            </h1>
+              <h1 className="font-heading font-black text-xl sm:text-2xl text-[#111111] flex items-center gap-2">
+                #{order.orderNumber}
+              </h1>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className={`text-[11px] font-mono font-black px-3 py-1 rounded-full uppercase border ${
+              order.status === 'COMPLETED'
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : order.status === 'ACCEPTED'
+                ? 'bg-orange-50 text-[#F97316] border-orange-200'
+                : order.status === 'REJECTED'
+                ? 'bg-red-50 text-red-600 border-red-200'
+                : 'bg-amber-50 text-amber-800 border-amber-200'
+            }`}>
+              {order.status.replace('_', ' ')}
+            </span>
+
+            <button
+              onClick={handleShare}
+              className="p-2.5 rounded-xl border border-gray-200 text-gray-700 hover:text-black hover:bg-gray-100 transition-colors cursor-pointer"
+              title="Share Order"
+            >
+              <Share2 size={16} />
+            </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {order.status !== 'COMPLETED' && order.status !== 'REJECTED' && (
-            <button
-              onClick={() => setCancelModalOpen(true)}
-              className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-heading font-black text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 transition-colors"
-            >
-              <XCircle size={14} /> Cancel Order
-            </button>
-          )}
-
+        {/* Action Row: Invoice Button (ONLY WHEN COMPLETED) & Cancel Order */}
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100">
           {order.status === 'COMPLETED' ? (
             <button
               onClick={() => setPdfModalOpen(true)}
-              className="bg-[#111111] hover:bg-[#F97316] text-white font-heading font-black text-xs px-4 py-2.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-colors"
+              className="bg-[#111111] hover:bg-[#F97316] text-white font-heading font-black text-xs px-4 py-2.5 rounded-xl shadow-xs flex items-center gap-2 transition-all cursor-pointer"
             >
-              <FileText size={14} className="text-[#F97316]" /> Tax Invoice
+              <FileText size={15} className="text-[#F97316]" /> Download / View Tax Invoice →
             </button>
-          ) : (
-            <span className="text-[10px] font-mono font-bold bg-gray-100 text-gray-500 border border-gray-200 px-3 py-2 rounded-xl">
-              Invoice generated after completion
-            </span>
-          )}
-
-          <button
-            onClick={handleShare}
-            className="p-2.5 rounded-xl border border-gray-200 text-gray-700 hover:text-black hover:bg-gray-100 transition-colors"
-          >
-            <Share2 size={16} />
-          </button>
+          ) : order.status !== 'REJECTED' ? (
+            <button
+              onClick={() => setCancelModalOpen(true)}
+              className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-heading font-black text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <XCircle size={14} /> Cancel Order
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -171,115 +184,6 @@ export const OrderDetailPage: React.FC = () => {
               </div>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* 3. LIVE WORKSHOP CRAFTING STAGE & PHOTOS (Real-time Updates) */}
-      <div className="bg-white p-6 rounded-[24px] border border-gray-200 shadow-xs space-y-4 font-sans">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
-          <div>
-            <h2 className="font-heading font-black text-sm text-[#111111] uppercase tracking-wider flex items-center gap-2">
-              <Sparkles size={16} className="text-[#F97316]" /> LIVE WORKSHOP CRAFTING STAGE & PHOTOS
-            </h2>
-            <p className="text-xs text-gray-500 font-mono">
-              Real-time forging, lathe machining & anti-rust coating photos from Kallimandhayam factory
-            </p>
-          </div>
-
-          <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full shrink-0">
-            ✓ Live Factory Sync
-          </span>
-        </div>
-
-        {/* 4 Workshop Stage Progress Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {[
-            {
-              stage: 'RAW_METAL_FORGING',
-              title: '1. Metal Forging & Cutting',
-              desc: 'Steel channels & pipe cutting',
-              icon: '🔨',
-            },
-            {
-              stage: 'LATHE_PRECISION_ALIGNMENT',
-              title: '2. Lathe Machine Alignment',
-              desc: 'Precision shaft & bush turning',
-              icon: '⚙',
-            },
-            {
-              stage: 'ANTI_RUST_PRIMER',
-              title: '3. Red Oxide Anti-Rust Primer',
-              desc: 'Corrosion-proof spray coating',
-              icon: '🎨',
-            },
-            {
-              stage: 'READY_FOR_LOADING',
-              title: '4. Ready for Loading & Dispatch',
-              desc: 'Final inspection & vehicle loading',
-              icon: '🚚',
-            },
-          ].map((s, sIdx) => {
-            const stageData = order.workshopProgress?.find((p) => p.stage === s.stage);
-            const hasPhotos = stageData?.photos && stageData.photos.length > 0;
-            const isCompleted = Boolean(stageData?.completedAt);
-
-            return (
-              <div
-                key={s.stage}
-                className={`p-3.5 rounded-2xl border transition-all flex flex-col justify-between space-y-3 ${
-                  isCompleted
-                    ? 'bg-orange-50/70 border-orange-200'
-                    : 'bg-gray-50/70 border-gray-200 opacity-80'
-                }`}
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-base">{s.icon}</span>
-                    {isCompleted ? (
-                      <span className="text-[9px] font-mono font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                        ✓ Completed
-                      </span>
-                    ) : (
-                      <span className="text-[9px] font-mono text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full">
-                        Pending
-                      </span>
-                    )}
-                  </div>
-
-                  <h4 className="font-heading font-black text-xs text-[#111111] leading-tight pt-1">
-                    {s.title}
-                  </h4>
-                  <p className="text-[10px] text-gray-500 line-clamp-1">{stageData?.description || s.desc}</p>
-                </div>
-
-                {/* Stage Photo Gallery */}
-                {hasPhotos ? (
-                  <div className="space-y-1.5 pt-1 border-t border-orange-200/60">
-                    <span className="text-[9px] font-mono text-gray-500 font-bold uppercase block">
-                      📸 Live Photos ({stageData.photos!.length})
-                    </span>
-                    <div className="flex gap-1.5 overflow-x-auto">
-                      {stageData.photos!.map((photo, pIdx) => (
-                        <a
-                          key={pIdx}
-                          href={photo}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-12 h-12 rounded-xl overflow-hidden border border-gray-300 shrink-0 bg-white hover:scale-105 transition-transform"
-                        >
-                          <img src={photo} alt={`Stage ${sIdx + 1} Photo ${pIdx + 1}`} className="w-full h-full object-cover" />
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-[10px] text-gray-400 font-mono pt-1">
-                    No photo uploaded yet
-                  </div>
-                )}
-              </div>
-            );
-          })}
         </div>
       </div>
 
