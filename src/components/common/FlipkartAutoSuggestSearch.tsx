@@ -29,6 +29,27 @@ export const FlipkartAutoSuggestSearch: React.FC<FlipkartAutoSuggestSearchProps>
   const [isListening, setIsListening] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Mobile Hardware Back Button support & smooth keyboard focus
+  useEffect(() => {
+    if (isFullScreenModal) {
+      window.history.pushState({ isSearchOpen: true }, '');
+      const handlePopState = () => {
+        setIsFullScreenModal(false);
+      };
+      window.addEventListener('popstate', handlePopState);
+      
+      // Trigger focus for mobile software keyboard
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 150);
+
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+        clearTimeout(timer);
+      };
+    }
+  }, [isFullScreenModal]);
+
   const query = (searchQuery || '').trim().toLowerCase();
 
   // Categories matching search query
@@ -46,7 +67,7 @@ export const FlipkartAutoSuggestSearch: React.FC<FlipkartAutoSuggestSearchProps>
           (p.description && p.description.toLowerCase().includes(query)) ||
           (p.specifications?.material && p.specifications.material.toLowerCase().includes(query))
       )
-    : products.slice(0, 8); // Show all products list when query is empty
+    : products.slice(0, 8); // Show products list when query is empty
 
   const voiceSearchHandler = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -58,15 +79,19 @@ export const FlipkartAutoSuggestSearch: React.FC<FlipkartAutoSuggestSearchProps>
     }, 1200);
   };
 
+  const handleDismiss = () => {
+    setIsFullScreenModal(false);
+  };
+
   const handleSelectCategory = (cat: string) => {
     setSelectedCategory(cat);
     setSearchQuery('');
-    setIsFullScreenModal(false);
+    handleDismiss();
     navigate('/customer/products');
   };
 
   const handleSelectProductItem = (productId: string) => {
-    setIsFullScreenModal(false);
+    handleDismiss();
     if (onSelectProduct) {
       onSelectProduct(productId);
     } else {
@@ -76,10 +101,10 @@ export const FlipkartAutoSuggestSearch: React.FC<FlipkartAutoSuggestSearchProps>
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      setIsFullScreenModal(false);
+      handleDismiss();
       navigate('/customer/products');
     } else if (e.key === 'Escape') {
-      setIsFullScreenModal(false);
+      handleDismiss();
     }
   };
 
@@ -127,14 +152,14 @@ export const FlipkartAutoSuggestSearch: React.FC<FlipkartAutoSuggestSearchProps>
         </div>
       </div>
 
-      {/* 2. CLEAN FLIPKART-STYLE SEARCH TAKEOVER MODAL PAGE */}
+      {/* 2. MOBILE KEYBOARD OPTIMIZED FULL-SCREEN FLIPKART SEARCH TAKEOVER */}
       {isFullScreenModal && (
-        <div className="fixed inset-0 z-50 bg-[#F8F9FA] flex flex-col font-sans animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 bg-[#F8F9FA] flex flex-col h-[100dvh] w-full overflow-hidden font-sans animate-in fade-in duration-150">
           
-          {/* Top Sticky Search Header */}
-          <div className="bg-white border-b border-gray-200 px-4 py-3 shadow-xs flex items-center gap-3 shrink-0">
+          {/* Sticky Header Always Pinned to Top Above Soft Keyboard */}
+          <div className="bg-white border-b border-gray-200 px-3.5 py-3 shadow-xs flex items-center gap-2.5 shrink-0 sticky top-0 z-20">
             <button
-              onClick={() => setIsFullScreenModal(false)}
+              onClick={handleDismiss}
               className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-[#111111] transition-colors cursor-pointer shrink-0"
               title="Back"
             >
@@ -147,12 +172,11 @@ export const FlipkartAutoSuggestSearch: React.FC<FlipkartAutoSuggestSearchProps>
               <input
                 ref={inputRef}
                 type="text"
-                autoFocus
                 placeholder="Search Gates, Kalappai, Windows Grill, Lathe..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="w-full bg-gray-50 text-sm text-[#111111] pl-10 pr-16 py-2.5 rounded-2xl border border-gray-300 focus:border-[#F97316] focus:bg-white outline-none font-medium"
+                className="w-full bg-gray-100 text-xs sm:text-sm text-[#111111] pl-10 pr-16 py-2.5 rounded-2xl border border-gray-300 focus:border-[#F97316] focus:bg-white outline-none font-medium transition-colors"
               />
 
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
@@ -167,7 +191,7 @@ export const FlipkartAutoSuggestSearch: React.FC<FlipkartAutoSuggestSearchProps>
 
                 <button
                   onClick={voiceSearchHandler}
-                  className={`p-1 rounded-lg ${isListening ? 'text-red-500 animate-pulse' : 'text-gray-400'}`}
+                  className={`p-1.5 rounded-lg ${isListening ? 'text-red-500 animate-pulse' : 'text-gray-400'}`}
                 >
                   <Mic size={18} />
                 </button>
@@ -175,12 +199,12 @@ export const FlipkartAutoSuggestSearch: React.FC<FlipkartAutoSuggestSearchProps>
             </div>
           </div>
 
-          {/* Scrollable Search Results directly under Search Bar */}
-          <div className="flex-1 overflow-y-auto max-w-4xl w-full mx-auto p-4 space-y-3">
+          {/* Scrollable Results Body directly under Search Bar (Optimized for Keyboard Space) */}
+          <div className="flex-1 overflow-y-auto overscroll-contain min-h-0 p-3.5 space-y-3 max-w-4xl w-full mx-auto pb-36">
             
             {/* Matching Category Badges (Shown when typing) */}
             {matchingCategories.length > 0 && query && (
-              <div className="flex flex-wrap gap-2 pb-1">
+              <div className="flex flex-wrap gap-2 pb-1 shrink-0">
                 {matchingCategories.map((cat) => {
                   const count = products.filter((p) => p.category === cat).length;
                   return (
@@ -197,7 +221,7 @@ export const FlipkartAutoSuggestSearch: React.FC<FlipkartAutoSuggestSearchProps>
               </div>
             )}
 
-            {/* Direct Product Result Cards (No Title Header) */}
+            {/* Direct Product Result Cards */}
             <div className="bg-white rounded-[22px] border border-gray-200 shadow-xs overflow-hidden divide-y divide-gray-100">
               {matchingProducts.length > 0 ? (
                 matchingProducts.map((item) => (
@@ -206,7 +230,7 @@ export const FlipkartAutoSuggestSearch: React.FC<FlipkartAutoSuggestSearchProps>
                     onClick={() => handleSelectProductItem(item.id)}
                     className="p-3.5 hover:bg-orange-50/60 transition-colors flex items-center justify-between gap-3 cursor-pointer group"
                   >
-                    <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0">
                       <img
                         src={item.images?.[0] || 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=200&q=80'}
                         alt={item.name}
