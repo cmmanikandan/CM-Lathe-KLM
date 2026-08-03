@@ -639,11 +639,7 @@ export const ProductDetailPage: React.FC = () => {
             {/* Action Buttons: Order Now & WhatsApp */}
             <div className="flex items-center gap-3 pt-2">
               <button
-                onClick={() => {
-                  setEnquiryStep(1);
-                  setEnquirySuccess(false);
-                  setIsEnquiryModalOpen(true);
-                }}
+                onClick={() => navigate(`/customer/enquiry/new?productId=${product.id}`)}
                 className="flex-1 bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-sm py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer"
               >
                 <ShoppingBag size={18} /> Submit Order Enquiry (₹{currentPrice.toLocaleString('en-IN')})

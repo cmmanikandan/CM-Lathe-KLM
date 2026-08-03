@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../../context/ProductContext';
+import { FlipkartAutoSuggestSearch } from '../../components/common/FlipkartAutoSuggestSearch';
 import {
   Search,
   Mic,
@@ -130,26 +131,8 @@ export const CustomerProductsPage: React.FC = () => {
       {/* STICKY SEARCH & ACTION CONTAINER */}
       <div className="sticky top-[68px] z-30 space-y-3 bg-[#F8F9FA]/90 backdrop-blur-xl py-2">
         
-        {/* ROW 1: FULL-WIDTH SEARCH BAR (Height 56px, Radius 18px) */}
-        <div className="relative w-full">
-          <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#F97316]" />
-          <input
-            type="text"
-            placeholder="Search Gates, Windows Grill, Kalappai, Steel Doors..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-[56px] bg-white text-xs sm:text-sm text-[#111111] pl-11 pr-12 rounded-[18px] border border-gray-200 focus:border-[#F97316] outline-none shadow-sm font-medium transition-all"
-          />
-          <button
-            onClick={handleVoiceSearch}
-            title="Voice Search"
-            className={`absolute right-4 top-1/2 -translate-y-1/2 p-1.5 rounded-full ${
-              isListening ? 'text-[#F97316] animate-ping' : 'text-gray-400 hover:text-[#111111]'
-            }`}
-          >
-            <Mic size={18} />
-          </button>
-        </div>
+        {/* ROW 1: FULL-WIDTH FLIPKART AUTO-SUGGEST SEARCH BAR */}
+        <FlipkartAutoSuggestSearch placeholder="Search Gates, Windows Grill, Kalappai, Steel Doors..." />
 
         {/* ROW 2: THREE EQUAL GLASS BUTTONS (Height 48px) [ Filter ] [ Sort ] [ Category ] */}
         <div className="grid grid-cols-3 gap-2">

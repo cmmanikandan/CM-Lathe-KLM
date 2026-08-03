@@ -38,6 +38,7 @@ import { CustomerNotificationsPage } from './pages/customer/CustomerNotification
 import { CustomerGalleryPage } from './pages/gallery/CustomerGalleryPage';
 import { CustomerWishlistPage } from './pages/customer/CustomerWishlistPage';
 import { OrderDetailPage } from './pages/customer/OrderDetailPage';
+import { CustomerEnquiryFormPage } from './pages/customer/CustomerEnquiryFormPage';
 
 // Clean Authentication Pages
 import { LoginPage } from './pages/auth/LoginPage';
@@ -153,6 +154,7 @@ const AppContent: React.FC = () => {
         <Route path="/customer/orders" element={<ProtectedCustomerRoute><CustomerOrdersPage /></ProtectedCustomerRoute>} />
         <Route path="/customer/orders/:id" element={<ProtectedCustomerRoute><OrderDetailPage /></ProtectedCustomerRoute>} />
         <Route path="/customer/enquiries" element={<ProtectedCustomerRoute><CustomerEnquiriesPage /></ProtectedCustomerRoute>} />
+        <Route path="/customer/enquiry/new" element={<ProtectedCustomerRoute><CustomerEnquiryFormPage /></ProtectedCustomerRoute>} />
         <Route path="/customer/refunds" element={<ProtectedCustomerRoute><CustomerRefundsPage /></ProtectedCustomerRoute>} />
         <Route path="/customer/status" element={<ProtectedCustomerRoute><CustomerStatusPage /></ProtectedCustomerRoute>} />
         <Route path="/customer/gallery" element={<Navigate to="/customer/status" replace />} />

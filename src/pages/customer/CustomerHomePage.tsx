@@ -6,6 +6,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useCustomerOrders } from '../../context/OrderContext';
 import { useStatus } from '../../context/StatusContext';
 import { SkeletonList } from '../../components/common/SkeletonLoader';
+import { FlipkartAutoSuggestSearch } from '../../components/common/FlipkartAutoSuggestSearch';
+import { CustomerOrderStatusNotification } from '../../components/customer/CustomerOrderStatusNotification';
 import {
   Search,
   Mic,
@@ -83,6 +85,9 @@ export const CustomerHomePage: React.FC = () => {
   return (
     <div className="p-4 sm:p-6 space-y-6 font-sans max-w-7xl mx-auto">
       
+      {/* ANIMATED ORDER STATUS NOTIFICATION ALERT */}
+      <CustomerOrderStatusNotification orders={customerOrders} />
+
       {/* 0. TOP PRIORITY STICKY PAYMENT REQUEST CARD */}
       {activePaymentRequest && (
         <div className="bg-[#111111] text-white p-5 rounded-[22px] shadow-2xl border-2 border-[#F97316] space-y-3 animate-in slide-in-from-top duration-300 font-sans relative overflow-hidden">
@@ -217,26 +222,7 @@ export const CustomerHomePage: React.FC = () => {
 
       {/* 3. STICKY APP SEARCH & QUICK CATEGORY CHIPS */}
       <div className="space-y-3">
-        <div className="relative">
-          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#F97316]" />
-          <input
-            type="text"
-            placeholder="Search Gates, Kalappai, Windows Grill, Lathe..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') navigate('/customer/products');
-            }}
-            className="w-full bg-white text-xs text-[#111111] pl-10 pr-10 py-3 rounded-2xl border border-gray-200 focus:border-[#F97316] outline-none shadow-sm font-medium"
-          />
-          <button
-            onClick={voiceSearchHandler}
-            className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg ${isListening ? 'text-red-500 animate-pulse' : 'text-gray-400 hover:text-[#F97316]'}`}
-            title="Voice Search"
-          >
-            <Mic size={16} />
-          </button>
-        </div>
+        <FlipkartAutoSuggestSearch placeholder="Search Gates, Kalappai, Windows Grill, Lathe..." />
 
         {/* Horizontal Scroll Category Chips */}
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">

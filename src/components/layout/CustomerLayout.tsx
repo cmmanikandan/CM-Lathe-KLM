@@ -45,7 +45,8 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
   // Hide bottom nav on detail pages (e.g. /customer/products/:id or /customer/orders/:id)
   const isDetailPage = 
     location.pathname.startsWith('/customer/products/') || 
-    location.pathname.startsWith('/customer/orders/');
+    location.pathname.startsWith('/customer/orders/') ||
+    location.pathname.startsWith('/customer/enquiry/');
 
   const bottomNavPaths = [
     '/customer/home',
