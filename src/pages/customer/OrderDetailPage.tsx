@@ -80,7 +80,15 @@ export const OrderDetailPage: React.FC = () => {
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 font-sans max-w-5xl mx-auto">
       
       {/* 1. TOP BAR WITH BACK, ORDER NUMBER & ACTIONS */}
-      <div className="bg-white p-5 rounded-[24px] border border-gray-200 shadow-xs space-y-4 font-sans">
+      <div className={`p-5 sm:p-6 rounded-[24px] border shadow-sm space-y-4 font-sans transition-all ${
+        isCompleted
+          ? 'bg-gradient-to-br from-emerald-50 via-teal-50/40 to-white border-emerald-200'
+          : order.status === 'ACCEPTED'
+          ? 'bg-gradient-to-br from-orange-50 via-amber-50/40 to-white border-orange-200'
+          : order.status === 'REJECTED'
+          ? 'bg-gradient-to-br from-red-50 via-rose-50/40 to-white border-red-200'
+          : 'bg-gradient-to-br from-amber-50 via-yellow-50/40 to-white border-amber-200'
+      }`}>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <button
@@ -91,14 +99,14 @@ export const OrderDetailPage: React.FC = () => {
                   navigate('/customer/orders');
                 }
               }}
-              className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 text-[#111111] flex items-center justify-center transition-colors cursor-pointer shrink-0"
+              className="w-10 h-10 rounded-xl bg-white shadow-xs border border-gray-200 hover:bg-gray-100 text-[#111111] flex items-center justify-center transition-colors cursor-pointer shrink-0"
               title="Back to Orders"
             >
               <ArrowLeft size={18} />
             </button>
 
             <div>
-              <span className="text-[10px] font-mono font-bold text-gray-400 uppercase tracking-wider block">
+              <span className="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-wider block">
                 CUSTOMER ORDER DETAILS
               </span>
               <h1 className="font-heading font-black text-xl sm:text-2xl text-[#111111] flex items-center gap-2">
@@ -108,21 +116,21 @@ export const OrderDetailPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className={`text-[11px] font-mono font-black px-3 py-1 rounded-full uppercase border ${
+            <span className={`text-[11px] font-mono font-black px-3 py-1 rounded-full uppercase border shadow-2xs ${
               isCompleted
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
                 : order.status === 'ACCEPTED'
-                ? 'bg-orange-50 text-[#F97316] border-orange-200'
+                ? 'bg-orange-100 text-[#EA580C] border-orange-300'
                 : order.status === 'REJECTED'
-                ? 'bg-red-50 text-red-600 border-red-200'
-                : 'bg-amber-50 text-amber-800 border-amber-200'
+                ? 'bg-red-100 text-red-700 border-red-300'
+                : 'bg-amber-100 text-amber-900 border-amber-300'
             }`}>
               {order.status.replace('_', ' ')}
             </span>
 
             <button
               onClick={handleShare}
-              className="p-2.5 rounded-xl border border-gray-200 text-gray-700 hover:text-black hover:bg-gray-100 transition-colors cursor-pointer"
+              className="p-2.5 rounded-xl border border-gray-300 bg-white text-gray-700 hover:text-black hover:bg-gray-50 shadow-2xs transition-colors cursor-pointer"
               title="Share Order"
             >
               <Share2 size={16} />
@@ -132,7 +140,7 @@ export const OrderDetailPage: React.FC = () => {
 
         {/* Action Row: Small Compact Actions (View Tax Invoice Page or Cancel Order) */}
         {(isCompleted || canCancel) && (
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100">
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200/80">
             {isCompleted && (
               <button
                 onClick={() => navigate(`/invoice/${order.id}`)}
@@ -145,7 +153,7 @@ export const OrderDetailPage: React.FC = () => {
             {canCancel && (
               <button
                 onClick={() => setCancelModalOpen(true)}
-                className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold text-xs px-2.5 py-1.5 rounded-xl flex items-center gap-1 transition-colors cursor-pointer"
+                className="bg-red-100/80 hover:bg-red-200 text-red-800 border border-red-300 font-bold text-xs px-2.5 py-1.5 rounded-xl flex items-center gap-1 transition-colors cursor-pointer"
               >
                 <XCircle size={13} /> Cancel Order
               </button>
@@ -155,36 +163,36 @@ export const OrderDetailPage: React.FC = () => {
       </div>
 
       {/* 2. ORDERED PRODUCTS LIST */}
-      <div className="bg-white p-6 rounded-[22px] border border-gray-200 shadow-xs space-y-4">
-        <h2 className="font-heading font-black text-sm text-[#111111] uppercase tracking-wider">
-          ORDERED MACHINERY & PRODUCTS
+      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-[#111111] p-6 rounded-[24px] border border-slate-700 shadow-md space-y-4 text-white">
+        <h2 className="font-heading font-black text-sm text-[#F97316] uppercase tracking-wider flex items-center gap-2">
+          <span>🛠</span> ORDERED MACHINERY & PRODUCTS
         </h2>
 
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-slate-800">
           {order.items.map((item, idx) => (
             <div
               key={idx}
               onClick={() => navigate(`/customer/products/${item.productId}`)}
-              className="py-3 flex items-center justify-between gap-4 cursor-pointer hover:bg-gray-50 p-2 rounded-xl transition-colors group"
+              className="py-3.5 flex items-center justify-between gap-4 cursor-pointer hover:bg-slate-800/80 p-2 rounded-xl transition-colors group"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3.5">
                 <img
                   src={item.image || 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=300&q=80'}
                   alt={item.productName}
-                  className="w-16 h-16 rounded-xl object-cover border border-gray-200 group-hover:scale-105 transition-transform"
+                  className="w-16 h-16 rounded-xl object-cover border border-slate-700 group-hover:scale-105 transition-transform"
                 />
                 <div>
-                  <h3 className="font-heading font-extrabold text-sm text-[#111111] group-hover:text-[#F97316] transition-colors">
+                  <h3 className="font-heading font-extrabold text-sm text-white group-hover:text-[#F97316] transition-colors">
                     {item.productName}
                   </h3>
-                  <p className="text-xs text-gray-500 font-mono">
+                  <p className="text-xs text-gray-400 font-mono">
                     Size: {item.variant?.size || 'Standard'} | Qty: {item.quantity}
                   </p>
                 </div>
               </div>
 
               <div className="text-right">
-                <span className="font-heading font-black text-base text-[#111111]">
+                <span className="font-heading font-black text-base text-white block">
                   ₹{item.totalPrice.toLocaleString('en-IN')}
                 </span>
                 <span className="text-[10px] text-gray-400 font-mono block">₹{item.unitPrice} each</span>
@@ -194,8 +202,8 @@ export const OrderDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. ORDER STATUS PRODUCTION TIMELINE */}
-      <div className="bg-white p-6 rounded-[22px] border border-gray-200 shadow-xs space-y-4">
+      {/* 3. ORDER STATUS PRODUCTION TIMELINE */}
+      <div className="bg-gradient-to-br from-orange-500/5 via-amber-500/5 to-white p-6 rounded-[24px] border border-orange-200/80 shadow-xs space-y-4">
         <h2 className="font-heading font-black text-sm text-[#111111] uppercase tracking-wider flex items-center gap-2">
           <Clock size={16} className="text-[#F97316]" /> WORKSHOP PRODUCTION TIMELINE
         </h2>
@@ -223,8 +231,8 @@ export const OrderDetailPage: React.FC = () => {
       </div>
 
       {/* 4. FINANCIAL PAYMENT SUMMARY & LEDGER */}
-      <div className="bg-white p-6 rounded-[22px] border border-gray-200 shadow-xs space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+      <div className="bg-gradient-to-br from-emerald-500/5 via-teal-500/5 to-white p-6 rounded-[24px] border border-emerald-200/80 shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-emerald-100 pb-3">
           <div>
             <h2 className="font-heading font-black text-base text-[#111111] uppercase tracking-wider flex items-center gap-2">
               <CreditCard size={18} className="text-[#F97316]" /> FINANCIAL PAYMENT LEDGER
@@ -244,20 +252,20 @@ export const OrderDetailPage: React.FC = () => {
 
         {/* Cost Breakdown */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-          <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
-            <span className="text-[10px] text-gray-400 block uppercase">Agreed Total</span>
+          <div className="p-3 bg-white/80 rounded-xl border border-gray-200 shadow-2xs">
+            <span className="text-[10px] text-gray-500 block uppercase font-bold">Agreed Total</span>
             <strong className="text-gray-900 text-sm">₹{order.finalPrice.toLocaleString('en-IN')}</strong>
           </div>
-          <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
-            <span className="text-[10px] text-emerald-700 block uppercase">Total Paid</span>
+          <div className="p-3 bg-emerald-50/80 rounded-xl border border-emerald-200 shadow-2xs">
+            <span className="text-[10px] text-emerald-700 block uppercase font-bold">Total Paid</span>
             <strong className="text-emerald-700 text-sm">₹{order.advancePaid.toLocaleString('en-IN')}</strong>
           </div>
-          <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
-            <span className="text-[10px] text-amber-800 block uppercase">Remaining Due</span>
+          <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200 shadow-2xs">
+            <span className="text-[10px] text-amber-800 block uppercase font-bold">Remaining Due</span>
             <strong className="text-red-600 text-sm">₹{order.remainingBalance.toLocaleString('en-IN')}</strong>
           </div>
-          <div className="p-3 bg-blue-50 rounded-xl border border-blue-200">
-            <span className="text-[10px] text-blue-700 block uppercase">Gateway</span>
+          <div className="p-3 bg-blue-50/80 rounded-xl border border-blue-200 shadow-2xs">
+            <span className="text-[10px] text-blue-700 block uppercase font-bold">Gateway</span>
             <strong className="text-blue-800 text-xs">Razorpay Only</strong>
           </div>
         </div>
@@ -268,7 +276,7 @@ export const OrderDetailPage: React.FC = () => {
             <h4 className="font-heading font-extrabold text-xs text-[#111111] uppercase tracking-wider">
               PAYMENT TRANSACTIONS & RECEIPTS
             </h4>
-            <div className="overflow-x-auto border rounded-xl">
+            <div className="overflow-x-auto border border-gray-200 rounded-xl bg-white">
               <table className="w-full text-left text-xs font-sans">
                 <thead>
                   <tr className="bg-[#111111] text-white font-heading font-extrabold text-[10px] uppercase">
@@ -294,10 +302,10 @@ export const OrderDetailPage: React.FC = () => {
                       </td>
                       <td className="p-2.5 text-center">
                         <button
-                          onClick={() => setPdfModalOpen(true)}
+                          onClick={() => navigate(`/invoice/${order.id}`)}
                           className="text-[11px] font-bold text-[#F97316] hover:underline"
                         >
-                          View Receipt
+                          View Invoice
                         </button>
                       </td>
                     </tr>
@@ -311,7 +319,6 @@ export const OrderDetailPage: React.FC = () => {
         {/* Sticky Large Razorpay Payment Card */}
         {order.remainingBalance > 0 && (() => {
           const pendingReq = (order.paymentRequests || []).find((r) => r.status === 'PENDING');
-          const reqAmount = pendingReq ? pendingReq.amount : order.remainingBalance;
 
           return (
             <div className="p-5 bg-[#111111] text-white rounded-2xl shadow-xl space-y-4 border-2 border-[#F97316] font-sans">
@@ -366,11 +373,8 @@ export const OrderDetailPage: React.FC = () => {
         })()}
       </div>
 
-
-
-
       {/* 5. WORKSHOP DELIVERY & PICKUP */}
-      <div className="bg-white p-6 rounded-[22px] border border-gray-200 shadow-xs space-y-3">
+      <div className="bg-gradient-to-br from-blue-500/5 via-indigo-500/5 to-white p-6 rounded-[24px] border border-blue-200/80 shadow-xs space-y-3">
         <h2 className="font-heading font-black text-sm text-[#111111] uppercase tracking-wider flex items-center gap-2">
           <Truck size={16} className="text-[#F97316]" /> FACTORY DISPATCH & PICKUP
         </h2>
