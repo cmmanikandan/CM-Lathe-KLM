@@ -74,12 +74,39 @@ export const PublicAboutPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="rounded-[22px] overflow-hidden shadow-lg border border-gray-200 aspect-video">
-            <img
-              src="/assets/about_workshop_owner.png"
-              alt="Chellamuthu K Lathe Workshop"
-              className="w-full h-full object-cover"
-            />
+          {/* Official Brand Logo Showcase Card */}
+          <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-[#111111] p-8 sm:p-10 rounded-[32px] border border-slate-700 shadow-2xl flex flex-col items-center justify-center text-center space-y-5 text-white">
+            <div className="p-4 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-lg">
+              <img
+                src="/logo.png"
+                alt="MANIKANDAN LATHE Official Logo"
+                className="w-32 h-32 sm:w-40 sm:h-40 object-contain drop-shadow-2xl"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/assets/dark_logo.png';
+                }}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <h3 className="font-heading font-black text-2xl sm:text-3xl text-white tracking-tight">
+                MANIKANDAN <span className="text-[#F97316]">LATHE</span>
+              </h3>
+              <p className="text-xs font-mono text-[#F97316] font-bold uppercase tracking-widest">
+                Kallimandhayam • Dindigul District
+              </p>
+              <p className="text-xs text-gray-300 font-medium pt-1 max-w-xs mx-auto">
+                Agricultural Machinery & Custom Fabrication Excellence Since 2000
+              </p>
+            </div>
+
+            <div className="pt-2 flex flex-wrap items-center justify-center gap-2 text-[10px] font-mono font-bold">
+              <span className="bg-white/10 text-white px-3 py-1 rounded-full border border-white/20">
+                ⚙ Heavy Lathe Turning
+              </span>
+              <span className="bg-[#F97316]/20 text-[#F97316] px-3 py-1 rounded-full border border-[#F97316]/40">
+                🚜 Kalappai Forging
+              </span>
+            </div>
           </div>
         </div>
       </section>
