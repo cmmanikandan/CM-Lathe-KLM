@@ -42,7 +42,11 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  // Determine if bottom navigation should be visible
+  // Hide bottom nav on detail pages (e.g. /customer/products/:id or /customer/orders/:id)
+  const isDetailPage = 
+    location.pathname.startsWith('/customer/products/') || 
+    location.pathname.startsWith('/customer/orders/');
+
   const bottomNavPaths = [
     '/customer/home',
     '/customer/products',
@@ -52,7 +56,7 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
     '/customer/profile',
     '/login'
   ];
-  const shouldShowBottomNav = bottomNavPaths.some(p => location.pathname.startsWith(p));
+  const shouldShowBottomNav = !isDetailPage && bottomNavPaths.some(p => location.pathname === p || location.pathname.startsWith(p));
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
