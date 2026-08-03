@@ -186,30 +186,30 @@ export const CustomerHomePage: React.FC = () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           onClick={() => navigate(`/customer/orders/${activeOrder.id}`)}
-          className="bg-white border-2 border-[#F97316]/40 rounded-[22px] p-4 shadow-md space-y-3 cursor-pointer hover:border-[#F97316] transition-all"
+          className="bg-gradient-to-r from-orange-50/90 via-amber-50/80 to-orange-100/70 border-2 border-[#F97316]/50 rounded-[22px] p-4.5 shadow-md space-y-3 cursor-pointer hover:border-[#F97316] hover:shadow-lg transition-all"
         >
-          <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+          <div className="flex items-center justify-between border-b border-orange-200/60 pb-2.5">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-[#F97316] animate-ping" />
-              <span className="font-heading font-black text-xs text-[#111111]">
+              <span className="font-heading font-black text-sm text-[#111111]">
                 Active Order #{activeOrder.orderNumber}
               </span>
             </div>
-            <span className="bg-amber-100 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono">
+            <span className="bg-[#F97316] text-white text-[10px] font-bold font-mono px-2.5 py-0.5 rounded-full shadow-xs uppercase tracking-wider">
               {activeOrder.status.replace('_', ' ')}
             </span>
           </div>
 
           <div className="flex items-center justify-between text-xs">
             <div>
-              <span className="text-gray-500 block">Total Payable: ₹{activeOrder.finalPrice.toLocaleString('en-IN')}</span>
-              <span className={activeOrder.remainingBalance > 0 ? "font-black text-red-600" : "font-black text-green-600"}>
+              <span className="text-gray-600 font-mono block">Total Payable: ₹{activeOrder.finalPrice.toLocaleString('en-IN')}</span>
+              <span className={activeOrder.remainingBalance > 0 ? "font-black text-red-600 font-mono text-sm" : "font-black text-green-700 font-mono text-sm"}>
                 {activeOrder.remainingBalance > 0 ? `Balance Due: ₹${activeOrder.remainingBalance.toLocaleString('en-IN')}` : '✓ Fully Paid'}
               </span>
             </div>
 
-            <div className="bg-[#111111] text-white text-[11px] font-bold px-3 py-1.5 rounded-xl flex items-center gap-1">
-              Track Status <ChevronRight size={14} className="text-[#F97316]" />
+            <div className="bg-[#111111] hover:bg-[#F97316] text-white text-[11px] font-heading font-black px-3.5 py-2 rounded-xl flex items-center gap-1 shadow-sm transition-colors">
+              Track Status <ChevronRight size={14} className="text-[#F97316] group-hover:text-white" />
             </div>
           </div>
         </motion.div>

@@ -45,6 +45,7 @@ interface AuthContextType {
   completeProfile: (profileData: ProfileCompletionData) => void;
   registerUser: (name: string, email: string, phone?: string, address?: string, avatarUrl?: string) => void;
   updateProfileDetails: (phone: string, address: string, avatarUrl?: string) => void;
+  updateUserProfile: (data: Partial<CustomerUser>) => void;
   updateAvatar: (avatarUrl: string) => void;
   toggleRole: () => void;
   logout: () => void;
@@ -221,6 +222,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     saveUser({ ...user, phone, address, avatarUrl: avatarUrl || user.avatarUrl });
   };
 
+  const updateUserProfile = (data: Partial<CustomerUser>) => {
+    if (!user) return;
+    saveUser({ ...user, ...data });
+  };
+
   const updateAvatar = (avatarUrl: string) => {
     if (!user) return;
     saveUser({ ...user, avatarUrl });
@@ -269,6 +275,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         completeProfile,
         registerUser,
         updateProfileDetails,
+        updateUserProfile,
         updateAvatar,
         toggleRole,
         logout,

@@ -222,14 +222,54 @@ export const fetchAllProducts = async (): Promise<Product[]> => {
 
 // ─── STATUS STORIES ──────────────────────────────────────────────────────────
 
+const STATUS_STORIES_STORAGE_KEY = 'cmlathe_status_stories_v1';
+const GALLERY_STORAGE_KEY = 'cmlathe_gallery_v1';
+
+export const getLocalStories = (): StatusStory[] => {
+  try {
+    const saved = localStorage.getItem(STATUS_STORIES_STORAGE_KEY);
+    if (saved) {
+      const parsed: StatusStory[] = JSON.parse(saved);
+      return parsed.filter((s) => new Date(s.expiresAt).getTime() > Date.now());
+    }
+  } catch (e) {}
+  return [];
+};
+
+export const saveStoryToLocal = (story: StatusStory): void => {
+  try {
+    const existing = getLocalStories();
+    const updated = [story, ...existing.filter((s) => s.id !== story.id)];
+    localStorage.setItem(STATUS_STORIES_STORAGE_KEY, JSON.stringify(updated));
+  } catch (e) {}
+};
+
+export const deleteStoryFromLocal = (id: string): void => {
+  try {
+    const existing = getLocalStories();
+    const updated = existing.filter((s) => s.id !== id);
+    localStorage.setItem(STATUS_STORIES_STORAGE_KEY, JSON.stringify(updated));
+  } catch (e) {}
+};
+
 export const fetchActiveStories = async (): Promise<StatusStory[]> => {
-  const { data, error } = await supabase
-    .from('status_stories')
-    .select('*')
-    .gt('expires_at', new Date().toISOString())
-    .order('created_at', { ascending: false });
-  if (error || !data) return [];
-  return data.map((r) => mapStory(r as Record<string, unknown>));
+  const localStories = getLocalStories();
+  try {
+    const { data, error } = await supabase
+      .from('status_stories')
+      .select('*')
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false });
+    if (!error && data && data.length > 0) {
+      const remote = data.map((r) => mapStory(r as Record<string, unknown>));
+      // Merge remote and local (avoiding duplicates)
+      const remoteIds = new Set(remote.map((r) => r.id));
+      const combined = [...remote, ...localStories.filter((s) => !remoteIds.has(s.id))];
+      localStorage.setItem(STATUS_STORIES_STORAGE_KEY, JSON.stringify(combined));
+      return combined;
+    }
+  } catch (e) {}
+  return localStories;
 };
 
 // ─── GALLERY ─────────────────────────────────────────────────────────────────
@@ -245,62 +285,108 @@ export interface GalleryItem {
   createdAt: string;
 }
 
+export const getLocalGallery = (): GalleryItem[] => {
+  try {
+    const saved = localStorage.getItem(GALLERY_STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch (e) {}
+  return [];
+};
+
+export const saveGalleryToLocal = (item: GalleryItem): void => {
+  try {
+    const existing = getLocalGallery();
+    const idx = existing.findIndex((g) => g.id === item.id);
+    let updated: GalleryItem[];
+    if (idx >= 0) {
+      updated = [...existing];
+      updated[idx] = item;
+    } else {
+      updated = [item, ...existing];
+    }
+    localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(updated));
+  } catch (e) {}
+};
+
+export const deleteGalleryFromLocal = (id: string): void => {
+  try {
+    const existing = getLocalGallery();
+    const updated = existing.filter((g) => g.id !== id);
+    localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(updated));
+  } catch (e) {}
+};
+
 export const fetchGallery = async (): Promise<GalleryItem[]> => {
-  const { data, error } = await supabase
-    .from('admin_gallery')
-    .select('*')
-    .order('created_at', { ascending: false });
-  if (error || !data) return [];
-  return data.map((r) => ({
-    id: r.id as string,
-    title: r.title as string,
-    category: r.category as string,
-    description: r.description as string | undefined,
-    mediaUrl: r.media_url as string,
-    mediaType: r.media_type as 'image' | 'video',
-    isFeatured: Boolean(r.is_featured),
-    createdAt: r.created_at as string,
-  }));
+  const localItems = getLocalGallery();
+  try {
+    const { data, error } = await supabase
+      .from('admin_gallery')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (!error && data && data.length > 0) {
+      const remote = data.map((r) => ({
+        id: r.id as string,
+        title: r.title as string,
+        category: r.category as string,
+        description: r.description as string | undefined,
+        mediaUrl: r.media_url as string,
+        mediaType: r.media_type as 'image' | 'video',
+        isFeatured: Boolean(r.is_featured),
+        createdAt: r.created_at as string,
+      }));
+      const remoteIds = new Set(remote.map((r) => r.id));
+      const combined = [...remote, ...localItems.filter((g) => !remoteIds.has(g.id))];
+      localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(combined));
+      return combined;
+    }
+  } catch (e) {}
+  return localItems;
 };
 
 export const insertGalleryItem = async (item: GalleryItem): Promise<GalleryItem | null> => {
-  const { data, error } = await supabase
-    .from('admin_gallery')
-    .upsert({
-      id: item.id || `gal-${Date.now()}`,
-      title: item.title,
-      category: item.category,
-      description: item.description || null,
-      media_url: item.mediaUrl,
-      media_type: item.mediaType || 'image',
-      is_featured: item.isFeatured || false,
-      created_at: item.createdAt || new Date().toISOString(),
-    })
-    .select()
-    .single();
+  saveGalleryToLocal(item);
+  try {
+    const { data, error } = await supabase
+      .from('admin_gallery')
+      .upsert({
+        id: item.id || `gal-${Date.now()}`,
+        title: item.title,
+        category: item.category,
+        description: item.description || null,
+        media_url: item.mediaUrl,
+        media_type: item.mediaType || 'image',
+        is_featured: item.isFeatured || false,
+        created_at: item.createdAt || new Date().toISOString(),
+      })
+      .select()
+      .single();
 
-  if (error || !data) {
-    console.error('insertGalleryItem DB error:', error);
+    if (error || !data) {
+      console.warn('insertGalleryItem DB fallback to local:', error);
+      return item;
+    }
+    const savedItem: GalleryItem = {
+      id: data.id as string,
+      title: data.title as string,
+      category: data.category as string,
+      description: data.description as string | undefined,
+      mediaUrl: data.media_url as string,
+      mediaType: data.media_type as 'image' | 'video',
+      isFeatured: Boolean(data.is_featured),
+      createdAt: data.created_at as string,
+    };
+    saveGalleryToLocal(savedItem);
+    return savedItem;
+  } catch (e) {
     return item;
   }
-  return {
-    id: data.id as string,
-    title: data.title as string,
-    category: data.category as string,
-    description: data.description as string | undefined,
-    mediaUrl: data.media_url as string,
-    mediaType: data.media_type as 'image' | 'video',
-    isFeatured: Boolean(data.is_featured),
-    createdAt: data.created_at as string,
-  };
 };
 
 export const deleteGalleryItem = async (id: string): Promise<boolean> => {
-  const { error } = await supabase.from('admin_gallery').delete().eq('id', id);
-  if (error) {
-    console.error('deleteGalleryItem error:', error);
-    return false;
-  }
+  deleteGalleryFromLocal(id);
+  try {
+    await supabase.from('admin_gallery').delete().eq('id', id);
+  } catch (e) {}
   return true;
 };
 

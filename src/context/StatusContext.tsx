@@ -6,6 +6,10 @@ import {
   fetchHeroBanners,
   insertHeroBanner,
   deleteHeroBanner,
+  insertStory,
+  deleteStoryById,
+  saveStoryToLocal,
+  deleteStoryFromLocal,
   HeroBanner,
 } from '../services/supabaseService';
 
@@ -125,12 +129,20 @@ export const StatusProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       createdAt: new Date().toISOString(),
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     };
+    saveStoryToLocal(newStory);
     setStories((prev) => [newStory, ...prev]);
-    refreshStories();
+    try {
+      await insertStory(newStory);
+    } catch (e) {}
+    await refreshStories();
   };
 
   const deleteStory = async (id: string) => {
+    deleteStoryFromLocal(id);
     setStories((prev) => prev.filter((s) => s.id !== id));
+    try {
+      await deleteStoryById(id);
+    } catch (e) {}
   };
 
   return (

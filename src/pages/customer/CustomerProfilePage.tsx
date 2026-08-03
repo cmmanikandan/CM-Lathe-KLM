@@ -39,7 +39,7 @@ import { useLanguage } from '../../context/LanguageContext';
 
 export const CustomerProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, logout, loginAsAdmin, updateAvatar } = useAuth();
+  const { user, logout, loginAsAdmin, updateAvatar, updateUserProfile } = useAuth();
   const { orders, loading: ordersLoading } = useCustomerOrders(user?.phone || '');
 
   const ADMIN_UID = 'qiiShV5WlAY2Zwok3vNxhedl3N12';
@@ -51,7 +51,7 @@ export const CustomerProfilePage: React.FC = () => {
   const [profileSuccessMsg, setProfileSuccessMsg] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Editable Form State — strictly from real user data, NO fake defaults
+  // Editable Form State — initialized from user
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -94,7 +94,13 @@ export const CustomerProfilePage: React.FC = () => {
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
-    setProfileSuccessMsg('Profile updated successfully!');
+    updateUserProfile({
+      name,
+      phone,
+      email,
+      address,
+    });
+    setProfileSuccessMsg('Profile updated & saved successfully!');
     setTimeout(() => {
       setProfileSuccessMsg('');
       setEditProfileOpen(false);
@@ -131,11 +137,10 @@ export const CustomerProfilePage: React.FC = () => {
   const myEnquiries = getCustomerEnquiries(user?.phone || '');
   const myRefunds = getCustomerRefunds(user?.phone || '');
 
-  // Tailored Menu Items (Rich Vibrant Color Palette)
+  // Menu Items (Sublabels removed as per user request for clean link buttons)
   const menuItems = [
     {
       label: 'My Orders & Invoices',
-      sublabel: 'View active orders, track status & download invoices',
       icon: Package,
       iconColor: 'text-[#2563EB]',
       bgColor: 'bg-blue-50 border border-blue-200/80',
@@ -145,7 +150,6 @@ export const CustomerProfilePage: React.FC = () => {
     },
     {
       label: 'My Custom Enquiries & Quotations',
-      sublabel: 'Track custom fabrication quotes & responses from workshop',
       icon: MessageSquare,
       iconColor: 'text-[#D97706]',
       bgColor: 'bg-amber-50 border border-amber-200/80',
@@ -155,7 +159,6 @@ export const CustomerProfilePage: React.FC = () => {
     },
     {
       label: 'My Refund Requests & Ledger',
-      sublabel: 'View payment refund status & shop transaction receipts',
       icon: RotateCcw,
       iconColor: 'text-[#DC2626]',
       bgColor: 'bg-red-50 border border-red-200/80',
@@ -165,7 +168,6 @@ export const CustomerProfilePage: React.FC = () => {
     },
     {
       label: 'Wishlist & Saved Items',
-      sublabel: 'Saved lathe models & custom gate specifications',
       icon: Heart,
       iconColor: 'text-[#EC4899]',
       bgColor: 'bg-pink-50 border border-pink-200/80',
@@ -175,7 +177,6 @@ export const CustomerProfilePage: React.FC = () => {
     },
     {
       label: 'Workshop Stories & Live Gallery',
-      sublabel: 'Watch live machine turning & fabrication video updates',
       icon: Flame,
       iconColor: 'text-[#F97316]',
       bgColor: 'bg-orange-50 border border-orange-200/80',
@@ -184,7 +185,6 @@ export const CustomerProfilePage: React.FC = () => {
     },
     {
       label: 'WhatsApp Workshop Direct Support',
-      sublabel: 'Chat directly with owner Chellamuthu K',
       icon: MessageCircle,
       iconColor: 'text-[#16A34A]',
       bgColor: 'bg-emerald-50 border border-emerald-200/80',
@@ -193,7 +193,6 @@ export const CustomerProfilePage: React.FC = () => {
     },
     ...(isAdminUser ? [{
       label: 'Open Admin Workshop Portal',
-      sublabel: 'Manage orders, offline walk-ins & live workshop status',
       icon: ShieldCheck,
       iconColor: 'text-white',
       bgColor: 'bg-gradient-to-r from-[#111111] to-slate-900 border border-slate-700 text-white',
@@ -229,73 +228,75 @@ export const CustomerProfilePage: React.FC = () => {
         
         {/* LEFT COLUMN: Profile Header Card & Statistics */}
         <div className="lg:col-span-5 space-y-6">
-          {/* PROFILE HEADER CARD */}
-          <div className="bg-white rounded-[22px] border border-gray-200 p-6 shadow-xs relative overflow-hidden space-y-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          {/* PROFILE HEADER CARD (REDESIGNED PREMIUM CARD STYLING) */}
+          <div className="bg-white rounded-[26px] border border-gray-200 p-6 shadow-sm relative overflow-hidden space-y-5">
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#F97316] via-amber-500 to-[#111111]" />
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-1">
               
               <div className="flex items-center gap-4">
                 {/* Interactive Profile Photo Avatar */}
                 <div className="relative group cursor-pointer" onClick={() => setPhotoModalOpen(true)}>
-                  <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-[#F97316] to-[#111111] p-1 shadow-md relative overflow-hidden">
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-[#F97316] to-[#111111] p-1 shadow-md relative overflow-hidden">
                     {displayAvatarUrl ? (
-                      <img src={displayAvatarUrl} alt={name} referrerPolicy="no-referrer" className="w-full h-full object-cover rounded-full" />
+                      <img src={displayAvatarUrl} alt={name} referrerPolicy="no-referrer" className="w-full h-full object-cover rounded-xl" />
                     ) : (
-                      <div className="w-full h-full rounded-full bg-white flex items-center justify-center font-heading font-black text-2xl text-[#111111] uppercase">
+                      <div className="w-full h-full rounded-xl bg-white flex items-center justify-center font-heading font-black text-2xl text-[#111111] uppercase">
                         {name ? name.charAt(0) : (user?.name ? user.name.charAt(0) : '?')}
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-full">
-                      <Camera size={20} className="text-white" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-xl">
+                      <Camera size={22} className="text-white" />
                     </div>
                   </div>
-                  <span className="absolute bottom-0 right-0 bg-[#22C55E] w-4 h-4 rounded-full border-2 border-white shadow-xs" title="Online" />
+                  <span className="absolute -bottom-1 -right-1 bg-[#22C55E] w-4.5 h-4.5 rounded-full border-2 border-white shadow-xs" title="Online" />
                 </div>
 
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h1 className="font-heading font-black text-xl sm:text-2xl text-[#111111]">
-                      {name}
+                      {name || user?.name}
                     </h1>
-                    <span className="bg-[#DCFCE7] text-[#15803D] text-[10px] font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                    <span className="bg-[#DCFCE7] text-[#15803D] text-[10px] font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1 border border-green-200">
                       <ShieldCheck size={12} /> Verified Customer
                     </span>
                   </div>
 
                   <p className="text-xs text-gray-500 font-mono">Customer ID: <strong className="text-[#111111]">{user?.customerId || '—'}</strong></p>
 
-                  <div className="flex flex-wrap gap-4 text-xs text-gray-600 font-mono pt-0.5">
-                    <span className="flex items-center gap-1"><Phone size={13} className="text-[#F97316]" /> {phone}</span>
-                    <span className="flex items-center gap-1"><Mail size={13} className="text-[#F97316]" /> {email}</span>
+                  <div className="flex flex-wrap gap-3 text-xs text-gray-600 font-mono pt-0.5">
+                    <span className="flex items-center gap-1.5"><Phone size={13} className="text-[#F97316]" /> {phone || user?.phone}</span>
+                    {email && <span className="flex items-center gap-1.5"><Mail size={13} className="text-[#F97316]" /> {email}</span>}
                   </div>
                 </div>
               </div>
 
               <button
                 onClick={() => setEditProfileOpen(!editProfileOpen)}
-                className="bg-[#FFEDD5] hover:bg-[#FED7AA] text-[#F97316] font-heading font-black text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-colors self-stretch sm:self-auto justify-center"
+                className="bg-[#FFEDD5] hover:bg-[#FED7AA] text-[#F97316] font-heading font-black text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-colors self-stretch sm:self-auto justify-center cursor-pointer shadow-xs"
               >
                 <Edit3 size={14} className="text-[#F97316]" /> {editProfileOpen ? 'Close' : 'Edit Profile'}
               </button>
             </div>
 
-            {/* Profile Completion Bar — calculated dynamically */}
-            <div className="bg-gray-50 p-3 rounded-2xl border border-gray-200 space-y-1.5">
+            {/* Profile Completion Bar */}
+            <div className="bg-gray-50/80 p-3.5 rounded-2xl border border-gray-200/80 space-y-2">
               <div className="flex justify-between items-center text-xs font-heading font-bold">
-                <span className="text-gray-700 flex items-center gap-1">
-                  <Sparkles size={14} className="text-[#F97316]" /> Profile Completion
+                <span className="text-gray-700 flex items-center gap-1.5">
+                  <Sparkles size={14} className="text-[#F97316]" /> Profile Completion Status
                 </span>
                 <span className="text-[#F97316] font-mono font-black">{profileCompletion}%</span>
               </div>
-              <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-[#F97316] rounded-full transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-[#F97316] to-amber-500 rounded-full transition-all duration-500"
                   style={{ width: `${profileCompletion}%` }}
                 />
               </div>
             </div>
           </div>
 
-          {/* ── ADMIN PORTAL ACCESS CARD (Prominently shown for UID qiiShV5WlAY2Zwok3vNxhedl3N12 / Admin) ── */}
+          {/* ── ADMIN PORTAL ACCESS CARD ── */}
           {isAdminUser && (
             <div className="bg-gradient-to-br from-[#111111] via-[#1A1A1A] to-[#242424] text-white rounded-[24px] border-2 border-[#F97316] p-5 shadow-xl space-y-3.5 relative overflow-hidden">
               <div className="flex items-center justify-between">
@@ -326,82 +327,86 @@ export const CustomerProfilePage: React.FC = () => {
             </div>
           )}
 
-            {/* EXPANDABLE EDIT PROFILE FORM */}
-            {editProfileOpen && (
-              <form onSubmit={handleSaveProfile} className="bg-gray-50 p-4 sm:p-5 rounded-2xl border border-gray-200 space-y-4 pt-4">
-                <h3 className="font-heading font-black text-xs text-[#111111] uppercase flex items-center gap-2 border-b border-gray-200 pb-2">
-                  <Edit3 size={14} className="text-[#F97316]" /> EDIT PROFILE DETAILS
+          {/* REDESIGNED EXPANDABLE EDIT PROFILE CARD */}
+          {editProfileOpen && (
+            <form onSubmit={handleSaveProfile} className="bg-white p-5 rounded-[24px] border-2 border-[#F97316]/40 shadow-lg space-y-4 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                <h3 className="font-heading font-black text-sm text-[#111111] uppercase flex items-center gap-2">
+                  <Edit3 size={16} className="text-[#F97316]" /> EDIT PROFILE DETAILS
                 </h3>
+                <span className="text-[10px] font-mono text-gray-400">Saves to account</span>
+              </div>
 
-                {profileSuccessMsg && (
-                  <div className="p-3 bg-[#DCFCE7] text-[#15803D] text-xs font-bold rounded-xl flex items-center gap-2">
-                    <CheckCircle2 size={16} /> {profileSuccessMsg}
-                  </div>
-                )}
+              {profileSuccessMsg && (
+                <div className="p-3 bg-[#DCFCE7] text-[#15803D] text-xs font-bold rounded-xl flex items-center gap-2 border border-green-200">
+                  <CheckCircle2 size={16} /> {profileSuccessMsg}
+                </div>
+              )}
 
-                <div className="grid grid-cols-1 gap-3 text-xs">
-                  <div>
-                    <label className="font-bold text-gray-700 block mb-1">Full Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-white p-2.5 rounded-xl border border-gray-300 font-bold outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-gray-700 block mb-1">Mobile Number *</label>
-                    <input
-                      type="tel"
-                      required
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="w-full bg-white p-2.5 rounded-xl border border-gray-300 font-mono font-bold outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-gray-700 block mb-1">Email Address *</label>
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-white p-2.5 rounded-xl border border-gray-300 font-mono outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-gray-700 block mb-1">Delivery Address *</label>
-                    <input
-                      type="text"
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      className="w-full bg-white p-2.5 rounded-xl border border-gray-300 outline-none"
-                    />
-                  </div>
+              <div className="grid grid-cols-1 gap-3.5 text-xs">
+                <div>
+                  <label className="font-bold text-gray-700 block mb-1">Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full bg-gray-50 p-3 rounded-xl border border-gray-300 focus:border-[#F97316] focus:bg-white font-bold outline-none transition-colors"
+                  />
                 </div>
 
-                <div className="flex justify-end gap-2 pt-2 border-t border-gray-200">
-                  <button
-                    type="button"
-                    onClick={() => setEditProfileOpen(false)}
-                    className="bg-gray-200 text-gray-800 font-bold text-xs px-4 py-2 rounded-xl"
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="submit"
-                    className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs px-5 py-2 rounded-xl shadow-xs"
-                  >
-                    Save Changes
-                  </button>
+                <div>
+                  <label className="font-bold text-gray-700 block mb-1">Mobile Number *</label>
+                  <input
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full bg-gray-50 p-3 rounded-xl border border-gray-300 focus:border-[#F97316] focus:bg-white font-mono font-bold outline-none transition-colors"
+                  />
                 </div>
-              </form>
-            )}
+
+                <div>
+                  <label className="font-bold text-gray-700 block mb-1">Email Address *</label>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-gray-50 p-3 rounded-xl border border-gray-300 focus:border-[#F97316] focus:bg-white font-mono outline-none transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-gray-700 block mb-1">Delivery Address *</label>
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Enter village / street address..."
+                    className="w-full bg-gray-50 p-3 rounded-xl border border-gray-300 focus:border-[#F97316] focus:bg-white outline-none transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2.5 pt-3 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setEditProfileOpen(false)}
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs px-4 py-2.5 rounded-xl transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs px-6 py-2.5 rounded-xl shadow-md transition-transform active:scale-95 cursor-pointer"
+                >
+                  Save Profile Changes
+                </button>
+              </div>
+            </form>
+          )}
 
           {/* STATISTICS COUNTERS GRID */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -435,7 +440,7 @@ export const CustomerProfilePage: React.FC = () => {
         {/* RIGHT COLUMN: Account Hub Menu Cards & Actions */}
         <div className="lg:col-span-7 space-y-6">
           
-          {/* VIBRANT MENU CARDS CONTAINER */}
+          {/* MENU CARDS CONTAINER (CLEAN DIRECT BUTTONS WITHOUT SUBLABELS) */}
           <div className="bg-white rounded-[24px] border border-gray-200 shadow-xs divide-y divide-gray-100 overflow-hidden">
             {menuItems.map((item, idx) => {
               const Icon = item.icon;
@@ -464,9 +469,6 @@ export const CustomerProfilePage: React.FC = () => {
                       <span className="font-heading font-extrabold text-sm text-[#111111] group-hover:text-[#F97316] transition-colors block">
                         {item.label}
                       </span>
-                      {item.sublabel && (
-                        <p className="text-xs text-gray-500 font-mono mt-0.5 line-clamp-1">{item.sublabel}</p>
-                      )}
                     </div>
                   </div>
 
@@ -497,11 +499,11 @@ export const CustomerProfilePage: React.FC = () => {
 
       </div>
 
-      {/* 5. CHANGE PROFILE PHOTO BOTTOM SHEET MODAL */}
+      {/* 5. CHANGE PROFILE PHOTO BOTTOM SHEET MODAL (ENHANCED CLEAN MODAL) */}
       {photoModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex justify-end flex-col sm:items-center sm:justify-center p-0 sm:p-4">
-          <div className="bg-white rounded-t-[32px] sm:rounded-[26px] max-w-md w-full p-6 space-y-4 shadow-2xl border border-gray-200 animate-fade-in">
-            <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+          <div className="bg-white rounded-t-[32px] sm:rounded-[26px] max-w-md w-full p-6 space-y-5 shadow-2xl border border-gray-200 animate-fade-in">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="font-heading font-black text-sm text-[#111111] flex items-center gap-2">
                 <Camera size={18} className="text-[#F97316]" /> CHANGE PROFILE PHOTO
               </h3>
@@ -510,86 +512,65 @@ export const CustomerProfilePage: React.FC = () => {
               </button>
             </div>
 
-            <div className="space-y-2 text-xs font-heading font-extrabold">
+            <div className="space-y-3 text-xs font-heading font-extrabold">
+              {/* Option 1: Device Upload */}
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full p-3.5 rounded-2xl bg-orange-50 hover:bg-orange-100 text-[#F97316] flex items-center gap-3 transition-colors text-left"
+                className="w-full p-4 rounded-2xl bg-orange-50 hover:bg-orange-100 text-[#F97316] flex items-center gap-3 transition-colors text-left border border-orange-200/60 shadow-xs cursor-pointer"
               >
-                <Upload size={18} />
-                <div>
-                  <span>Upload Custom Photo (Gallery / Camera)</span>
-                  <p className="text-[10px] text-gray-500 font-mono font-normal">Supports JPG, PNG, WEBP (Max 5 MB)</p>
-                </div>
+                <Upload size={20} />
+                <span className="font-heading font-black text-sm">Upload Photo from Device</span>
               </button>
 
-              {/* Google Profile Picture URL Input & Sign-In Option */}
-              <div className="bg-blue-50/80 p-3.5 rounded-2xl border border-blue-200 space-y-2">
-                <div className="flex items-center gap-2 text-blue-700 font-bold">
+              {/* Option 2: Google Photo URL */}
+              <div className="bg-blue-50/90 p-4 rounded-2xl border border-blue-200 space-y-2.5">
+                <div className="flex items-center gap-2 text-blue-800 font-black text-xs">
                   <Globe size={18} />
-                  <span>Google Account Profile Picture</span>
+                  <span>Google Account Photo URL</span>
                 </div>
                 
-                <p className="text-[10px] text-gray-600 font-mono">
-                  Paste your Google Account photo URL or fetch automatically via Google Sign-In:
-                </p>
-
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <input
-                      type="url"
-                      placeholder="https://lh3.googleusercontent.com/..."
-                      value={googleUrlInput}
-                      onChange={(e) => setGoogleUrlInput(e.target.value)}
-                      className="flex-1 bg-white p-2.5 rounded-xl border border-gray-300 font-mono text-xs outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (googleUrlInput.trim()) {
-                          updateAvatar(googleUrlInput.trim());
-                          setPhotoModalOpen(false);
-                        } else if (user?.googlePhotoURL) {
-                          updateAvatar(user.googlePhotoURL);
-                          setPhotoModalOpen(false);
-                        }
-                      }}
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-heading font-black text-xs px-3 rounded-xl shadow-xs shrink-0"
-                    >
-                      Apply
-                    </button>
-                  </div>
-
+                <div className="flex gap-2 pt-0.5">
+                  <input
+                    type="url"
+                    placeholder="Paste Google photo URL..."
+                    value={googleUrlInput}
+                    onChange={(e) => setGoogleUrlInput(e.target.value)}
+                    className="flex-1 bg-white p-2.5 rounded-xl border border-blue-300 font-mono text-xs outline-none focus:border-blue-600"
+                  />
                   <button
                     type="button"
                     onClick={() => {
-                      const url = prompt('Enter your Google Account Profile Picture URL:', user?.googlePhotoURL ?? '');
-                      if (url) {
-                        updateAvatar(url.trim());
+                      if (googleUrlInput.trim()) {
+                        updateAvatar(googleUrlInput.trim());
+                        setPhotoModalOpen(false);
+                      } else if (user?.googlePhotoURL) {
+                        updateAvatar(user.googlePhotoURL);
                         setPhotoModalOpen(false);
                       }
                     }}
-                    className="w-full bg-white hover:bg-blue-100 text-blue-700 font-bold text-xs py-2 rounded-xl border border-blue-300 flex items-center justify-center gap-1.5 transition-colors"
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-heading font-black text-xs px-4 rounded-xl shadow-xs shrink-0 cursor-pointer"
                   >
-                    🔐 Sync Profile Picture via Google Sign-In URL
+                    Apply
                   </button>
                 </div>
               </div>
 
+              {/* Option 3: Remove Photo */}
               <button
                 onClick={() => {
                   updateAvatar('');
                   setPhotoModalOpen(false);
                 }}
-                className="w-full p-3 rounded-2xl bg-red-50 hover:bg-red-100 text-red-600 flex items-center gap-3 transition-colors text-left font-bold"
+                className="w-full p-3.5 rounded-2xl bg-red-50 hover:bg-red-100 text-red-600 flex items-center gap-3 transition-colors text-left font-bold border border-red-200/60 cursor-pointer"
               >
                 <Trash2 size={18} />
-                <span>Remove Profile Photo (Reset to Initials)</span>
+                <span>Remove Profile Photo</span>
               </button>
             </div>
 
             <button
               onClick={() => setPhotoModalOpen(false)}
-              className="w-full bg-gray-100 text-gray-700 font-bold text-xs py-2.5 rounded-xl"
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs py-3 rounded-xl transition-colors cursor-pointer"
             >
               Cancel
             </button>

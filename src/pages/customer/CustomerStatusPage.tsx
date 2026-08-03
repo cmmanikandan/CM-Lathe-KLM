@@ -18,6 +18,7 @@ import {
   Tag,
   Filter,
   Search,
+  SlidersHorizontal,
   Wrench,
   Package,
   ImageIcon,
@@ -36,6 +37,9 @@ export const CustomerStatusPage: React.FC = () => {
   const [selectedTag, setSelectedTag] = useState<string>('All');
   const [likesMap, setLikesMap] = useState<Record<string, number>>({});
   const [userLikedMap, setUserLikedMap] = useState<Record<string, boolean>>({});
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
   const toggleLike = (e: React.MouseEvent, storyId: string) => {
     e.stopPropagation();
@@ -272,21 +276,67 @@ export const CustomerStatusPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-[#111111] font-sans antialiased pb-24 space-y-6">
       
-      {/* 1. STICKY GLASS HEADER (Clean title without top filter chips) */}
-      <div className="bg-white/80 backdrop-blur-xl border-b border-gray-200/80 sticky top-[64px] z-30 px-4 sm:px-6 py-4 shadow-xs">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-xl bg-orange-100 text-[#F97316]">
-                <Flame size={18} className="animate-pulse" />
-              </span>
-              <h1 className="font-heading font-black text-xl sm:text-2xl text-[#111111]">WORKSHOP STORIES & GALLERY</h1>
-              <span className="bg-[#F97316] text-white text-[10px] font-mono font-black px-2 py-0.5 rounded-full uppercase">
-                Live Factory Feed
-              </span>
+      {/* 1. TOP HEADER CARD (MATCHING ORDERS PAGE STYLE) */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <div className="bg-white p-4 sm:p-6 rounded-[22px] border border-gray-200 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="font-heading font-black text-2xl sm:text-3xl text-[#111111]">WORKSHOP STORIES</h1>
+                <span className="bg-[#F97316] text-white font-mono font-black text-xs px-2.5 py-0.5 rounded-full shadow-xs">
+                  {activeStories.length} Live Stories
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                24h Live stories, real-time manufacturing progress & completed customer orders
+              </p>
             </div>
-            <p className="text-xs text-gray-500 mt-1">24h Live stories, real-time manufacturing progress & completed customer orders</p>
+
+            {/* Search & Filter Controls */}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="relative flex-1 sm:w-64">
+                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search Stories or Gallery..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium text-[#111111] placeholder-gray-400 focus:outline-none focus:border-[#F97316]"
+                />
+              </div>
+
+              <button
+                onClick={() => setFilterSheetOpen(!filterSheetOpen)}
+                className={`px-4 py-2.5 rounded-xl text-xs font-heading font-extrabold flex items-center gap-2 transition-colors shrink-0 cursor-pointer ${
+                  selectedTag !== 'All' ? 'bg-[#F97316] text-white' : 'bg-[#111111] text-white hover:bg-gray-800'
+                }`}
+              >
+                <SlidersHorizontal size={14} /> Filter
+              </button>
+            </div>
           </div>
+
+          {/* Quick Category Filter Pills */}
+          {filterSheetOpen && (
+            <div className="pt-3 border-t border-gray-100 flex flex-wrap gap-2 animate-in fade-in duration-150">
+              <span className="text-xs font-bold text-gray-500 flex items-center gap-1 self-center mr-1">
+                <Filter size={12} /> Category:
+              </span>
+              {tags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => setSelectedTag(tag)}
+                  className={`px-3 py-1 rounded-xl text-[11px] font-mono font-bold border transition-all cursor-pointer ${
+                    selectedTag === tag
+                      ? 'bg-[#111111] text-white border-[#111111]'
+                      : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
