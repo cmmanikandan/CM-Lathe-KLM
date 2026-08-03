@@ -76,7 +76,7 @@ export const PublicAboutPage: React.FC = () => {
 
           <div className="rounded-[22px] overflow-hidden shadow-lg border border-gray-200 aspect-video">
             <img
-              src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1000&q=80"
+              src="/assets/about_workshop_owner.png"
               alt="Chellamuthu K Lathe Workshop"
               className="w-full h-full object-cover"
             />
