@@ -95,7 +95,7 @@ export const OrderDetailPage: React.FC = () => {
             <h1 className="font-heading font-black text-xl text-[#111111] flex items-center gap-2">
               #{order.orderNumber}
               <span className="bg-orange-100 text-[#F97316] text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase border border-orange-300">
-                {order.status}
+                {order.status.replace('_', ' ')}
               </span>
             </h1>
           </div>
