@@ -521,15 +521,15 @@ export const ProductDetailPage: React.FC = () => {
 
                 {/* Stock Status Badge */}
                 {product.stock > 0 && product.stock <= 5 ? (
-                  <span className="bg-amber-100 text-amber-900 text-xs font-mono font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-amber-300 animate-pulse">
-                    <AlertTriangle size={13} className="text-amber-600" /> Low Stock: Only {product.stock} left!
+                  <span className="bg-red-50 text-red-600 text-xs font-mono font-black px-3 py-1 rounded-full flex items-center gap-1 border border-red-200 animate-pulse">
+                    <AlertTriangle size={13} className="text-red-600" /> Low Stock: Only {product.stock} left!
                   </span>
                 ) : product.stock > 5 ? (
-                  <span className="bg-green-100 text-green-800 text-xs font-mono font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-green-300">
+                  <span className="bg-emerald-50 text-emerald-700 text-xs font-mono font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-emerald-200">
                     <CheckCircle size={13} /> In Ready Stock ({product.stock} units)
                   </span>
                 ) : (
-                  <span className="bg-orange-100 text-[#F97316] text-xs font-mono font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-orange-300">
+                  <span className="bg-orange-50 text-[#F97316] text-xs font-mono font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-orange-200">
                     <Clock size={13} /> Custom Made to Order
                   </span>
                 )}
@@ -542,11 +542,11 @@ export const ProductDetailPage: React.FC = () => {
 
             {/* Low Stock Warning Banner */}
             {product.stock > 0 && product.stock <= 5 && (
-              <div className="bg-amber-50 border-2 border-amber-300 p-4 rounded-2xl flex items-center gap-3 text-xs font-sans text-amber-900 font-bold shadow-xs">
-                <AlertTriangle size={24} className="text-[#F97316] shrink-0" />
+              <div className="bg-red-50 border-2 border-red-200 p-4 rounded-2xl flex items-center gap-3 text-xs font-sans text-red-950 font-bold shadow-xs">
+                <AlertTriangle size={24} className="text-red-600 shrink-0 animate-bounce" />
                 <div>
                   <span className="text-xs font-black text-red-600 uppercase block tracking-wider">⚡ LOW STOCK ALERT</span>
-                  <span>Hurry! Only <strong className="font-mono text-sm text-[#111111]">{product.stock}</strong> items left in workshop ready stock. Place your order enquiry before stock runs out!</span>
+                  <span className="text-red-900">Hurry! Only <strong className="font-mono text-sm text-red-700 font-black">{product.stock}</strong> items left in workshop ready stock. Place your order enquiry before stock runs out!</span>
                 </div>
               </div>
             )}
