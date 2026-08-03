@@ -119,8 +119,16 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       name: newProduct.name,
       category: newProduct.category,
       sub_category: newProduct.subCategory,
-      price: newProduct.price,
-      discount_price: newProduct.discountPrice,
+      price: newProduct.originalPrice || newProduct.price,
+      original_price: newProduct.originalPrice || newProduct.price,
+      discount_type: newProduct.discountType || 'none',
+      discount_value: newProduct.discountValue || 0,
+      discount_amount: newProduct.discountAmount || 0,
+      final_selling_price: newProduct.finalSellingPrice || newProduct.price,
+      discount_price: newProduct.discountAmount ? newProduct.finalSellingPrice : null,
+      cost_price: newProduct.costPrice || 0,
+      profit_margin: newProduct.profitMargin || 0,
+      tags: newProduct.tags || [],
       unit: newProduct.unit,
       stock: newProduct.stock,
       is_ready_stock: newProduct.isReadyStock,
@@ -147,8 +155,23 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const mapped: Record<string, unknown> = {};
     if (updated.name !== undefined) mapped.name = updated.name;
     if (updated.category !== undefined) mapped.category = updated.category;
-    if (updated.price !== undefined) mapped.price = updated.price;
-    if (updated.discountPrice !== undefined) mapped.discount_price = updated.discountPrice;
+    if (updated.price !== undefined || updated.originalPrice !== undefined) {
+      const pVal = updated.originalPrice ?? updated.price;
+      mapped.price = pVal;
+      mapped.original_price = pVal;
+    }
+    if (updated.discountType !== undefined) mapped.discount_type = updated.discountType;
+    if (updated.discountValue !== undefined) mapped.discount_value = updated.discountValue;
+    if (updated.discountAmount !== undefined) mapped.discount_amount = updated.discountAmount;
+    if (updated.finalSellingPrice !== undefined) {
+      mapped.final_selling_price = updated.finalSellingPrice;
+      mapped.discount_price = (updated.discountAmount && updated.discountAmount > 0) ? updated.finalSellingPrice : null;
+    } else if (updated.discountPrice !== undefined) {
+      mapped.discount_price = updated.discountPrice;
+    }
+    if (updated.costPrice !== undefined) mapped.cost_price = updated.costPrice;
+    if (updated.profitMargin !== undefined) mapped.profit_margin = updated.profitMargin;
+    if (updated.tags !== undefined) mapped.tags = updated.tags;
     if (updated.stock !== undefined) mapped.stock = updated.stock;
     if (updated.images !== undefined) mapped.images = updated.images;
     if (updated.description !== undefined) mapped.description = updated.description;

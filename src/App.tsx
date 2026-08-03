@@ -60,6 +60,7 @@ import { AdminStatusPage } from './pages/admin/AdminStatusPage';
 import { AdminGalleryPage } from './pages/admin/AdminGalleryPage';
 import { AdminPaymentsPage } from './pages/admin/AdminPaymentsPage';
 import { AdminReportsPage } from './pages/admin/AdminReportsPage';
+import { AdminProfitPage } from './pages/admin/AdminProfitPage';
 import { AdminCustomersPage } from './pages/admin/AdminCustomersPage';
 import { AdminQuickOrderPage } from './pages/admin/AdminQuickOrderPage';
 import { AdminDraftOrdersPage } from './pages/admin/AdminDraftOrdersPage';
@@ -201,6 +202,7 @@ const AppContent: React.FC = () => {
         <Route path="/admin/status" element={<ProtectedAdminRoute><AdminStatusPage /></ProtectedAdminRoute>} />
         <Route path="/admin/gallery" element={<ProtectedAdminRoute><AdminGalleryPage /></ProtectedAdminRoute>} />
         <Route path="/admin/reports" element={<ProtectedAdminRoute><AdminReportsPage /></ProtectedAdminRoute>} />
+        <Route path="/admin/profit" element={<ProtectedAdminRoute><AdminProfitPage /></ProtectedAdminRoute>} />
         <Route path="/admin/payments" element={<ProtectedAdminRoute><AdminPaymentsPage /></ProtectedAdminRoute>} />
 
 

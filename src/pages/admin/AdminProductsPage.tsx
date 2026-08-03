@@ -104,12 +104,35 @@ export const AdminProductsPage: React.FC = () => {
   const [formStatus, setFormStatus] = useState<'Published' | 'Draft' | 'Hidden' | 'Archived'>('Published');
 
   const [formPrice, setFormPrice] = useState<number>(0);
-  const [formDiscountPrice, setFormDiscountPrice] = useState<number>(0);
+  const [formDiscountType, setFormDiscountType] = useState<'none' | 'amount' | 'percentage'>('none');
+  const [formDiscountValue, setFormDiscountValue] = useState<number>(0);
   const [formCostPrice, setFormCostPrice] = useState<number>(0);
   const [formGstPercent, setFormGstPercent] = useState<number>(18);
   const [formIsTaxIncluded, setFormIsTaxIncluded] = useState(true);
   const [formUnit, setFormUnit] = useState('Piece');
   const [formStock, setFormStock] = useState<number>(0);
+
+  // Dynamic Product Feature Tags State
+  const [formTags, setFormTags] = useState<string[]>([]);
+  const [customTagInput, setCustomTagInput] = useState('');
+
+  const PRESET_TAGS = [
+    'Heavy Duty Steel',
+    'CNC Lathe Finished',
+    'Rust Resistant',
+    'Precision Alignment',
+    'High Tensile Strength',
+    'Tractor Tested',
+    'Weatherproof Coating',
+    'Factory Warranty',
+    'Customizable Dimensions',
+    'Low Maintenance',
+    'Hardened Steel Tines',
+    'Heavy Duty Bearings',
+    'Seamless Weld Construction',
+    'On-Site Fitting Available',
+    'Ready Factory Stock'
+  ];
 
   const [formShortDescription, setFormShortDescription] = useState('');
   const [formDescription, setFormDescription] = useState('');
@@ -174,12 +197,15 @@ export const AdminProductsPage: React.FC = () => {
     setFormStatus('Published');
 
     setFormPrice(0);
-    setFormDiscountPrice(0);
+    setFormDiscountType('none');
+    setFormDiscountValue(0);
     setFormCostPrice(0);
     setFormGstPercent(18);
     setFormIsTaxIncluded(true);
     setFormUnit('Piece');
     setFormStock(0);
+    setFormTags([]);
+    setCustomTagInput('');
 
     setFormShortDescription('');
     setFormDescription('');
@@ -310,13 +336,18 @@ export const AdminProductsPage: React.FC = () => {
     setFormProductType(prod.productType || (prod.isReadyStock ? 'Ready Stock' : 'Made To Order'));
     setFormStatus(prod.status || 'Published');
 
-    setFormPrice(prod.price);
-    setFormDiscountPrice(prod.discountPrice || prod.price);
-    setFormCostPrice(prod.costPrice || Math.round(prod.price * 0.65));
+    const origP = prod.originalPrice || prod.price;
+    setFormPrice(origP);
+    const dType = prod.discountType || (prod.discountPrice && prod.discountPrice < prod.price ? 'amount' : 'none');
+    setFormDiscountType(dType);
+    const dVal = prod.discountValue !== undefined ? prod.discountValue : (prod.discountPrice && prod.discountPrice < prod.price ? (prod.price - prod.discountPrice) : 0);
+    setFormDiscountValue(dVal);
+    setFormCostPrice(prod.costPrice || 0);
     setFormGstPercent(prod.gstPercent || 18);
     setFormIsTaxIncluded(prod.isTaxIncluded ?? true);
     setFormUnit(prod.unit || 'Piece');
     setFormStock(prod.stock);
+    setFormTags(prod.tags || []);
 
     setFormDescription(prod.description);
     setFormShortDescription(prod.shortDescription || prod.description.slice(0, 100));
@@ -351,7 +382,31 @@ export const AdminProductsPage: React.FC = () => {
       return;
     }
 
-    const calculatedProfitMargin = formPrice > 0 ? Math.round(((formPrice - formCostPrice) / formPrice) * 100) : 35;
+    const origPrice = Math.max(0, formPrice);
+    if (origPrice <= 0) {
+      alert('Please enter a valid Original Price greater than 0.');
+      return;
+    }
+
+    let calcDiscountAmount = 0;
+    if (formDiscountType === 'amount') {
+      if (formDiscountValue > origPrice) {
+        alert('Discount cannot be greater than the original price.');
+        return;
+      }
+      calcDiscountAmount = Math.max(0, formDiscountValue);
+    } else if (formDiscountType === 'percentage') {
+      if (formDiscountValue > 100) {
+        alert('Discount percentage cannot exceed 100%.');
+        return;
+      }
+      const pct = Math.max(0, formDiscountValue);
+      calcDiscountAmount = (origPrice * pct) / 100;
+    }
+
+    const finalPrice = Math.max(0, origPrice - calcDiscountAmount);
+    const profit = finalPrice - formCostPrice;
+    const calculatedProfitMargin = finalPrice > 0 ? Number(((profit / finalPrice) * 100).toFixed(1)) : 0;
 
     const fullProductData: Omit<Product, 'id' | 'views'> = {
       name: formName,
@@ -365,10 +420,16 @@ export const AdminProductsPage: React.FC = () => {
       productType: formProductType,
       status: formStatus,
 
-      price: formPrice,
-      discountPrice: formDiscountPrice,
+      price: origPrice,
+      originalPrice: origPrice,
+      discountType: formDiscountType,
+      discountValue: formDiscountValue,
+      discountAmount: calcDiscountAmount,
+      finalSellingPrice: finalPrice,
+      discountPrice: calcDiscountAmount > 0 ? finalPrice : undefined,
       costPrice: formCostPrice,
       profitMargin: calculatedProfitMargin,
+      tags: formTags,
       gstPercent: formGstPercent,
       isTaxIncluded: formIsTaxIncluded,
       unit: formUnit,
@@ -447,6 +508,21 @@ export const AdminProductsPage: React.FC = () => {
     link.download = `MANIKANDAN_LATHE_PRODUCTS_${Date.now()}.csv`;
     link.click();
   };
+
+  // Live calculations for current form state
+  const currentOrigPrice = Math.max(0, formPrice);
+  let currentDiscountAmount = 0;
+  if (formDiscountType === 'amount') {
+    currentDiscountAmount = Math.max(0, Math.min(formDiscountValue, currentOrigPrice));
+  } else if (formDiscountType === 'percentage') {
+    const pct = Math.max(0, Math.min(100, formDiscountValue));
+    currentDiscountAmount = (currentOrigPrice * pct) / 100;
+  }
+  const currentFinalSellingPrice = Math.max(0, currentOrigPrice - currentDiscountAmount);
+  const currentDiscountPct = currentOrigPrice > 0 ? (currentDiscountAmount / currentOrigPrice) * 100 : 0;
+  const currentProfit = currentFinalSellingPrice - formCostPrice;
+  const currentProfitMarginPct = currentFinalSellingPrice > 0 ? (currentProfit / currentFinalSellingPrice) * 100 : 0;
+  const isSellingBelowCost = formCostPrice > 0 && currentFinalSellingPrice < formCostPrice;
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-[#111111] font-sans antialiased pb-24">
@@ -726,10 +802,19 @@ export const AdminProductsPage: React.FC = () => {
                             </td>
 
                             <td className="py-3.5 px-4 text-right">
-                              <span className="font-heading font-black text-sm text-[#F97316] block">₹{p.price.toLocaleString('en-IN')}</span>
-                              {p.discountPrice && p.discountPrice < p.price && (
-                                <span className="text-[10px] text-gray-400 line-through font-mono block">₹{p.discountPrice.toLocaleString('en-IN')}</span>
-                              )}
+                              {(() => {
+                                const finalPrice = p.finalSellingPrice !== undefined ? p.finalSellingPrice : (p.discountPrice || p.price);
+                                const origPrice = p.originalPrice || p.price;
+                                const hasDiscount = finalPrice < origPrice;
+                                return (
+                                  <>
+                                    <span className="font-heading font-black text-sm text-[#F97316] block">₹{finalPrice.toLocaleString('en-IN')}</span>
+                                    {hasDiscount && (
+                                      <span className="text-[10px] text-gray-400 line-through font-mono block">₹{origPrice.toLocaleString('en-IN')}</span>
+                                    )}
+                                  </>
+                                );
+                              })()}
                             </td>
 
                             <td className="py-3.5 px-4 text-center font-bold">
@@ -920,50 +1005,160 @@ export const AdminProductsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* SECTION 2: PRICING & GST */}
-              <div className="space-y-4">
-                <h3 className="font-heading font-black text-xs text-[#111111] uppercase tracking-wider flex items-center gap-2 border-b border-gray-100 pb-2">
-                  <DollarSign size={16} className="text-[#F97316]" /> 2. Pricing, Margins & GST Tax
-                </h3>
+              {/* SECTION 2: PRICING, DISCOUNT & MARGIN */}
+              <div className="space-y-6 bg-gray-50/60 p-5 rounded-2xl border border-gray-200">
+                <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+                  <h3 className="font-heading font-black text-sm text-[#111111] uppercase tracking-wider flex items-center gap-2">
+                    <DollarSign size={18} className="text-[#F97316]" /> 2. PRICING, DISCOUNT & MARGIN
+                  </h3>
+                  <span className="text-xs text-gray-400 font-mono">Single Source of Truth for Product Pricing</span>
+                </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-sans">
-                  <div>
-                    <label className="font-bold text-gray-700 block mb-1">Original Price (₹) *</label>
-                    <input
-                      type="number"
-                      required
-                      value={formPrice}
-                      onChange={(e) => setFormPrice(Number(e.target.value))}
-                      className="w-full bg-gray-50 p-3 rounded-xl border border-gray-300 font-mono font-bold text-sm outline-none focus:border-[#F97316]"
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-5 text-xs font-sans items-start">
+                  {/* Original Price */}
+                  <div className="md:col-span-4 space-y-1">
+                    <label className="font-bold text-gray-800 block">Original Price (₹) *</label>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-gray-500 text-sm">₹</span>
+                      <input
+                        type="number"
+                        required
+                        min={1}
+                        value={formPrice || ''}
+                        onChange={(e) => setFormPrice(Number(e.target.value))}
+                        placeholder="e.g. 40000"
+                        className="w-full bg-white pl-8 pr-4 py-3 rounded-xl border border-gray-300 font-mono font-black text-sm text-[#111111] outline-none focus:border-[#F97316] shadow-xs"
+                      />
+                    </div>
+                    <span className="text-[10px] text-gray-400 font-mono block">Normal/base selling price before discount</span>
                   </div>
 
-                  <div>
-                    <label className="font-bold text-gray-700 block mb-1">Offer / Special Price (₹)</label>
-                    <input
-                      type="number"
-                      value={formDiscountPrice}
-                      onChange={(e) => setFormDiscountPrice(Number(e.target.value))}
-                      className="w-full bg-gray-50 p-3 rounded-xl border border-gray-300 font-mono font-bold text-sm text-[#F97316] outline-none"
-                    />
+                  {/* Discount Type Selector */}
+                  <div className="md:col-span-4 space-y-1">
+                    <label className="font-bold text-gray-800 block">Discount Type</label>
+                    <div className="grid grid-cols-3 gap-1 bg-white p-1 rounded-xl border border-gray-300">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormDiscountType('none');
+                          setFormDiscountValue(0);
+                        }}
+                        className={`py-2 text-[11px] font-heading font-bold rounded-lg transition-all cursor-pointer ${
+                          formDiscountType === 'none'
+                            ? 'bg-[#111111] text-white shadow-xs'
+                            : 'text-gray-600 hover:text-black hover:bg-gray-100'
+                        }`}
+                      >
+                        No Discount
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormDiscountType('amount')}
+                        className={`py-2 text-[11px] font-heading font-bold rounded-lg transition-all cursor-pointer ${
+                          formDiscountType === 'amount'
+                            ? 'bg-[#F97316] text-white shadow-xs'
+                            : 'text-gray-600 hover:text-black hover:bg-gray-100'
+                        }`}
+                      >
+                        ₹ Amount
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormDiscountType('percentage')}
+                        className={`py-2 text-[11px] font-heading font-bold rounded-lg transition-all cursor-pointer ${
+                          formDiscountType === 'percentage'
+                            ? 'bg-[#F97316] text-white shadow-xs'
+                            : 'text-gray-600 hover:text-black hover:bg-gray-100'
+                        }`}
+                      >
+                        % Percentage
+                      </button>
+                    </div>
+                    <span className="text-[10px] text-gray-400 font-mono block">Select ₹ flat discount or % percentage</span>
                   </div>
 
-                  <div>
-                    <label className="font-bold text-gray-700 block mb-1">Cost Price (₹)</label>
-                    <input
-                      type="number"
-                      value={formCostPrice}
-                      onChange={(e) => setFormCostPrice(Number(e.target.value))}
-                      className="w-full bg-gray-50 p-3 rounded-xl border border-gray-300 font-mono text-xs outline-none"
-                    />
+                  {/* Discount Value */}
+                  <div className="md:col-span-4 space-y-1">
+                    <label className="font-bold text-gray-800 block">
+                      Discount Value {formDiscountType === 'amount' ? '(₹)' : formDiscountType === 'percentage' ? '(%)' : ''}
+                    </label>
+                    <div className="relative">
+                      {formDiscountType === 'amount' && (
+                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-gray-500 text-sm">₹</span>
+                      )}
+                      <input
+                        type="number"
+                        disabled={formDiscountType === 'none'}
+                        value={formDiscountType === 'none' ? 0 : (formDiscountValue || '')}
+                        onChange={(e) => setFormDiscountValue(Number(e.target.value))}
+                        placeholder={formDiscountType === 'amount' ? 'e.g. 3000' : formDiscountType === 'percentage' ? 'e.g. 7.5' : 'No Discount'}
+                        className={`w-full bg-white py-3 rounded-xl border font-mono font-bold text-sm outline-none transition-all ${
+                          formDiscountType === 'amount' ? 'pl-8 pr-4' : 'px-4'
+                        } ${
+                          formDiscountType === 'none'
+                            ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                            : 'text-[#F97316] border-gray-300 focus:border-[#F97316]'
+                        }`}
+                      />
+                    </div>
+                    {formDiscountType === 'amount' && formDiscountValue > currentOrigPrice && (
+                      <span className="text-[11px] text-red-600 font-bold block animate-fade-in">
+                        ⚠ Discount cannot be greater than the original price.
+                      </span>
+                    )}
+                    {formDiscountType === 'percentage' && formDiscountValue > 100 && (
+                      <span className="text-[11px] text-red-600 font-bold block animate-fade-in">
+                        ⚠ Discount percentage cannot exceed 100%.
+                      </span>
+                    )}
                   </div>
 
-                  <div>
-                    <label className="font-bold text-gray-700 block mb-1">Unit of Measurement</label>
+                  {/* Final Selling Price (READ ONLY AUTO CALCULATED) */}
+                  <div className="md:col-span-4 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="font-bold text-gray-900 block">Final Selling Price (₹)</label>
+                      <span className="bg-orange-100 text-[#F97316] text-[9px] font-mono font-black px-2 py-0.5 rounded uppercase">
+                        AUTO CALCULATED
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-[#F97316] text-sm">₹</span>
+                      <input
+                        type="text"
+                        readOnly
+                        value={currentFinalSellingPrice.toLocaleString('en-IN')}
+                        className="w-full bg-orange-50/70 pl-8 pr-4 py-3 rounded-xl border-2 border-orange-200 font-mono font-black text-base text-[#F97316] shadow-xs cursor-default outline-none"
+                      />
+                    </div>
+                    <span className="text-[10px] text-gray-500 font-mono block">
+                      Customer selling price (Original - Discount)
+                    </span>
+                  </div>
+
+                  {/* Cost Price */}
+                  <div className="md:col-span-4 space-y-1">
+                    <label className="font-bold text-gray-800 block">Cost Price (₹)</label>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-gray-500 text-sm">₹</span>
+                      <input
+                        type="number"
+                        min={0}
+                        value={formCostPrice || ''}
+                        onChange={(e) => setFormCostPrice(Number(e.target.value))}
+                        placeholder="e.g. 24050"
+                        className="w-full bg-white pl-8 pr-4 py-3 rounded-xl border border-gray-300 font-mono text-sm font-bold outline-none focus:border-[#F97316]"
+                      />
+                    </div>
+                    <span className="text-[10px] text-gray-400 font-mono block">Actual manufacturing / purchase cost to MANIKANDAN LATHE</span>
+                  </div>
+
+                  {/* Unit of Measurement */}
+                  <div className="md:col-span-4 space-y-1">
+                    <label className="font-bold text-gray-800 block">Unit of Measurement</label>
                     <select
                       value={formUnit}
                       onChange={(e) => setFormUnit(e.target.value)}
-                      className="w-full bg-gray-50 p-3 rounded-xl border border-gray-300 font-bold outline-none"
+                      className="w-full bg-white p-3 rounded-xl border border-gray-300 font-bold outline-none focus:border-[#F97316]"
                     >
                       <option value="Piece">Piece</option>
                       <option value="Set">Set</option>
@@ -973,7 +1168,204 @@ export const AdminProductsPage: React.FC = () => {
                       <option value="Meter">Meter</option>
                       <option value="Job">Job / Custom</option>
                     </select>
+                    <span className="text-[10px] text-gray-400 font-mono block">Selling unit denomination</span>
                   </div>
+                </div>
+
+                {/* Loss Warning Banner */}
+                {isSellingBelowCost && (
+                  <div className="bg-red-50 border-2 border-red-300 p-4 rounded-2xl flex items-center justify-between gap-3 text-red-950 font-sans shadow-xs animate-pulse">
+                    <div className="flex items-center gap-3">
+                      <AlertTriangle size={24} className="text-red-600 shrink-0" />
+                      <div>
+                        <span className="font-heading font-black text-xs text-red-700 uppercase tracking-wider block">
+                          ⚠ SELLING BELOW COST WARNING
+                        </span>
+                        <span className="text-xs font-medium text-red-900">
+                          Final Selling Price (₹{currentFinalSellingPrice.toLocaleString('en-IN')}) is lower than Cost Price (₹{formCostPrice.toLocaleString('en-IN')}).
+                          Estimated Loss: <strong className="font-mono text-red-700">-₹{Math.abs(currentProfit).toLocaleString('en-IN')}</strong>
+                        </span>
+                      </div>
+                    </div>
+                    <span className="bg-red-200 text-red-900 text-[10px] font-mono font-bold px-2.5 py-1 rounded-full uppercase shrink-0">
+                      Loss Allowed on Save
+                    </span>
+                  </div>
+                )}
+
+                {/* PRICE SUMMARY CARD */}
+                <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs space-y-3">
+                  <h4 className="font-heading font-black text-xs text-[#111111] uppercase tracking-wider flex items-center gap-2 border-b border-gray-100 pb-2">
+                    <Sparkles size={15} className="text-[#F97316]" /> Live Price, Profit & Margin Summary
+                  </h4>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-sans">
+                    <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                      <span className="text-[10px] text-gray-500 font-mono block uppercase">Original Base Price</span>
+                      <span className="font-heading font-black text-base text-[#111111]">
+                        ₹{currentOrigPrice.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+
+                    <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                      <span className="text-[10px] text-gray-500 font-mono block uppercase">Discount Amount</span>
+                      <span className="font-heading font-black text-base text-[#F97316]">
+                        {currentDiscountAmount > 0 ? `-₹${currentDiscountAmount.toLocaleString('en-IN')} (${currentDiscountPct.toFixed(1)}%)` : 'No Discount'}
+                      </span>
+                    </div>
+
+                    <div className="bg-orange-50 p-3 rounded-xl border border-orange-200">
+                      <span className="text-[10px] text-orange-950 font-mono font-bold block uppercase">FINAL SELLING PRICE</span>
+                      <span className="font-heading font-black text-lg text-[#F97316]">
+                        ₹{currentFinalSellingPrice.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+
+                    <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                      <span className="text-[10px] text-gray-500 font-mono block uppercase">Cost Price</span>
+                      <span className="font-heading font-black text-base text-gray-700">
+                        ₹{formCostPrice.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div className={`p-3 rounded-xl border flex items-center justify-between ${
+                      currentProfit >= 0 ? 'bg-emerald-50 border-emerald-200 text-emerald-950' : 'bg-red-50 border-red-200 text-red-950'
+                    }`}>
+                      <div>
+                        <span className="text-[10px] font-mono uppercase font-bold block">Estimated Profit per Unit</span>
+                        <span className={`font-heading font-black text-base ${currentProfit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                          {currentProfit >= 0 ? `+₹${currentProfit.toLocaleString('en-IN')}` : `-₹${Math.abs(currentProfit).toLocaleString('en-IN')}`}
+                        </span>
+                      </div>
+                      <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                        currentProfit >= 0 ? 'bg-emerald-200 text-emerald-900' : 'bg-red-200 text-red-900'
+                      }`}>
+                        {currentProfit >= 0 ? 'Profit' : 'Loss'}
+                      </span>
+                    </div>
+
+                    <div className={`p-3 rounded-xl border flex items-center justify-between ${
+                      currentProfitMarginPct >= 0 ? 'bg-emerald-50 border-emerald-200 text-emerald-950' : 'bg-red-50 border-red-200 text-red-950'
+                    }`}>
+                      <div>
+                        <span className="text-[10px] font-mono uppercase font-bold block">Profit Margin Percentage</span>
+                        <span className={`font-heading font-black text-base ${currentProfitMarginPct >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                          {currentProfitMarginPct.toFixed(1)}%
+                        </span>
+                      </div>
+                      <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                        currentProfitMarginPct >= 0 ? 'bg-emerald-200 text-emerald-900' : 'bg-red-200 text-red-900'
+                      }`}>
+                        Margin %
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 2.5: SELECTABLE PRODUCT FEATURE TAGS */}
+              <div className="space-y-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-xs">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                  <h3 className="font-heading font-black text-xs text-[#111111] uppercase tracking-wider flex items-center gap-2">
+                    <Tag size={16} className="text-[#F97316]" /> Selectable Product Feature Tags
+                  </h3>
+                  <span className="text-[11px] text-gray-500 font-mono">Displayed on Customer Product Detail Page</span>
+                </div>
+
+                <p className="text-xs text-gray-600 font-sans">
+                  Select feature tags for this product. Only the selected tags will be displayed on the customer product detail page.
+                </p>
+
+                {/* Selected Tags Chips */}
+                <div className="space-y-2">
+                  <label className="font-bold text-xs text-gray-800 block">Currently Selected Tags ({formTags.length})</label>
+                  {formTags.length === 0 ? (
+                    <span className="text-xs text-gray-400 italic block font-mono">No tags selected yet. Click preset tags below or add custom tags.</span>
+                  ) : (
+                    <div className="flex flex-wrap gap-2 py-1">
+                      {formTags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center gap-1.5 bg-orange-50 border border-orange-300 text-[#111111] text-xs font-heading font-extrabold px-3 py-1.5 rounded-xl shadow-xs"
+                        >
+                          <CheckCircle2 size={14} className="text-[#F97316]" />
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => setFormTags(formTags.filter((t) => t !== tag))}
+                            className="text-gray-400 hover:text-red-600 transition-colors ml-1 cursor-pointer"
+                            title="Remove Tag"
+                          >
+                            <X size={14} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Preset Tags Chooser */}
+                <div className="space-y-2 pt-2 border-t border-gray-100">
+                  <label className="font-bold text-xs text-gray-700 block">Available Preset Tags</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {PRESET_TAGS.map((tag) => {
+                      const isSelected = formTags.includes(tag);
+                      return (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => {
+                            if (isSelected) {
+                              setFormTags(formTags.filter((t) => t !== tag));
+                            } else {
+                              setFormTags([...formTags, tag]);
+                            }
+                          }}
+                          className={`text-xs font-heading font-extrabold px-3 py-1.5 rounded-xl transition-all border cursor-pointer ${
+                            isSelected
+                              ? 'bg-[#F97316] text-white border-[#F97316] shadow-xs'
+                              : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 hover:border-gray-300'
+                          }`}
+                        >
+                          {isSelected ? '✓ ' : '+ '} {tag}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Custom Tag Input */}
+                <div className="flex items-center gap-2 pt-2">
+                  <input
+                    type="text"
+                    value={customTagInput}
+                    onChange={(e) => setCustomTagInput(e.target.value)}
+                    placeholder="Type custom feature tag..."
+                    className="flex-1 bg-gray-50 text-xs text-[#111111] p-2.5 rounded-xl border border-gray-300 outline-none focus:border-[#F97316]"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (customTagInput.trim() && !formTags.includes(customTagInput.trim())) {
+                          setFormTags([...formTags, customTagInput.trim()]);
+                          setCustomTagInput('');
+                        }
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (customTagInput.trim() && !formTags.includes(customTagInput.trim())) {
+                        setFormTags([...formTags, customTagInput.trim()]);
+                        setCustomTagInput('');
+                      }
+                    }}
+                    className="bg-[#111111] hover:bg-[#F97316] text-white text-xs font-heading font-black px-4 py-2.5 rounded-xl transition-colors shrink-0 cursor-pointer"
+                  >
+                    + Add Custom Tag
+                  </button>
                 </div>
               </div>
 

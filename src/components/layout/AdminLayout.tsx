@@ -39,6 +39,7 @@ import {
   Search,
   PanelLeftClose,
   PanelLeftOpen,
+  TrendingUp,
 } from 'lucide-react';
 import { GlobalSearchModal } from '../common/GlobalSearchModal';
 
@@ -136,6 +137,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   // Bottom nav items (after catalog)
   const bottomNavItems = [
+    { name: 'Profit & Margin', path: '/admin/profit', icon: TrendingUp },
     { name: 'Refund Management', path: '/admin/refunds', icon: RotateCcw, badge: pendingRefundsCount },
     { name: 'Payment Ledger', path: '/admin/payments', icon: Wallet },
     { name: 'Reports & Analytics', path: '/admin/reports', icon: BarChart3 },

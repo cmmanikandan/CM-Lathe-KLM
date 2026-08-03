@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useOrders } from '../../context/OrderContext';
 import { useProducts } from '../../context/ProductContext';
 import { PDFInvoiceModal } from '../../components/common/PDFInvoiceModal';
-import { Order, OrderItem, CustomerUser, DeliveryDetails, PaymentTransaction } from '../../types';
+import { Order, OrderItem, CustomerUser, DeliveryDetails, PaymentTransaction, getProductSellingPrice } from '../../types';
 import { fetchAllCustomerProfiles, upsertCustomerProfile } from '../../services/supabaseService';
 import { createDeliveryWhatsAppMessage } from '../../services/whatsappService';
 import {
@@ -163,7 +163,7 @@ export const AdminOfflineOrderPage: React.FC = () => {
           productId: prod.id,
           productName: prod.name,
           image: prod.images[0] || '',
-          unitPrice: prod.discountPrice || prod.price,
+          unitPrice: getProductSellingPrice(prod),
           quantity: 1,
           stock: prod.stock,
           sku: prod.sku || `SKU-${prod.id}`,

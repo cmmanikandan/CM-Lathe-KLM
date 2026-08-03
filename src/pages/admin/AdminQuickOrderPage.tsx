@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../../context/ProductContext';
 import { useOrders } from '../../context/OrderContext';
-import { Product, PaymentTransaction, Order } from '../../types';
+import { Product, PaymentTransaction, Order, getProductSellingPrice } from '../../types';
 import { AdminPOSReceiptModal } from '../../components/common/AdminPOSReceiptModal';
 import { generateRazorpayQRData, createRazorpayPaymentLink } from '../../services/razorpayService';
 import { fetchAllCustomerProfiles } from '../../services/supabaseService';
@@ -144,7 +144,7 @@ export const AdminQuickOrderPage: React.FC = () => {
           product,
           quantity: 1,
           variantSize: product.variants?.[0]?.name || 'Standard',
-          unitPrice: product.variants?.[0]?.price || product.price,
+          unitPrice: product.variants?.[0]?.price || getProductSellingPrice(product),
         },
       ];
     });
@@ -442,9 +442,23 @@ export const AdminQuickOrderPage: React.FC = () => {
                     </div>
 
                     <div className="flex items-center justify-between pt-1 border-t border-gray-100">
-                      <strong className="font-mono text-sm text-[#111111]">
-                        ₹{product.price.toLocaleString('en-IN')}
-                      </strong>
+                      {(() => {
+                        const sellingP = getProductSellingPrice(product);
+                        const origP = product.originalPrice || product.price;
+                        const hasDisc = sellingP < origP;
+                        return (
+                          <div>
+                            <strong className="font-mono text-sm text-[#F97316] block leading-none">
+                              ₹{sellingP.toLocaleString('en-IN')}
+                            </strong>
+                            {hasDisc && (
+                              <span className="text-[9px] text-gray-400 line-through font-mono block mt-0.5">
+                                ₹{origP.toLocaleString('en-IN')}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       <button
                         type="button"

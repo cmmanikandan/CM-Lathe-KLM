@@ -206,9 +206,20 @@ export const ProductDetailPage: React.FC = () => {
     );
   }
 
-  // Dynamic price calculation
-  const basePrice = product.price || 0;
-  const currentPrice = selectedVariant ? selectedVariant.price : basePrice;
+  // Dynamic price & discount calculation
+  const origPrice = selectedVariant
+    ? (selectedVariant.price || 0)
+    : (product.originalPrice || product.price || 0);
+
+  const sellingPrice = selectedVariant
+    ? (selectedVariant.price || 0)
+    : (product.finalSellingPrice !== undefined ? product.finalSellingPrice : (product.discountPrice || product.price || 0));
+
+  const discountAmount = origPrice > sellingPrice ? origPrice - sellingPrice : 0;
+  const discountPercent = origPrice > 0 && discountAmount > 0 ? Math.round((discountAmount / origPrice) * 100) : 0;
+  const hasDiscount = discountAmount > 0;
+
+  const currentPrice = sellingPrice;
 
   // Wishlist toggle handler
   const handleToggleWishlist = () => {
@@ -556,19 +567,21 @@ export const ProductDetailPage: React.FC = () => {
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <div>
                   <span className="text-xs text-gray-400 font-mono uppercase font-bold block">Special Factory Price</span>
-                  <div className="flex items-baseline gap-3">
+                  <div className="flex items-baseline gap-3 flex-wrap">
                     <span className="font-heading font-black text-3xl sm:text-4xl text-[#F97316]">
-                      ₹{currentPrice.toLocaleString('en-IN')}
+                      ₹{sellingPrice.toLocaleString('en-IN')}
                     </span>
-                    {product.discountPrice && (
+                    {hasDiscount && (
                       <span className="text-base text-gray-400 line-through font-mono">
-                        ₹{product.discountPrice.toLocaleString('en-IN')}
+                        ₹{origPrice.toLocaleString('en-IN')}
+                      </span>
+                    )}
+                    {hasDiscount && (
+                      <span className="bg-orange-100 text-[#F97316] text-xs font-heading font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow-xs">
+                        {discountPercent}% OFF
                       </span>
                     )}
                   </div>
-                  <span className="text-[11px] text-gray-500 font-mono block mt-0.5">
-                    GST Invoice included • Free delivery in Kallimandhayam radius
-                  </span>
                 </div>
 
                 {/* Rating Badge */}
@@ -589,13 +602,16 @@ export const ProductDetailPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Feature Chips */}
-              <div className="pt-3 border-t border-gray-100 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-heading font-bold text-gray-700">
-                <span className="flex items-center gap-1"><CheckCircle2 size={14} className="text-[#F97316]" /> Heavy Duty Steel</span>
-                <span className="flex items-center gap-1"><CheckCircle2 size={14} className="text-[#F97316]" /> CNC Lathe Finished</span>
-                <span className="flex items-center gap-1"><CheckCircle2 size={14} className="text-[#F97316]" /> Rust Resistant</span>
-                <span className="flex items-center gap-1"><CheckCircle2 size={14} className="text-[#F97316]" /> On-Site Fitting</span>
-              </div>
+              {/* Dynamic Feature Chips (Displays ONLY selected tags for this product) */}
+              {product.tags && product.tags.length > 0 && (
+                <div className="pt-3 border-t border-gray-100 flex flex-wrap gap-2 text-[11px] font-heading font-bold text-gray-700">
+                  {product.tags.map((tag) => (
+                    <span key={tag} className="flex items-center gap-1.5 bg-orange-50/70 border border-orange-200 text-gray-900 px-3 py-1.5 rounded-xl">
+                      <CheckCircle2 size={14} className="text-[#F97316]" /> {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* 5. SELECTABLE PRODUCT VARIANTS (ONLY SHOWN IF PRODUCT HAS VARIANTS) */}

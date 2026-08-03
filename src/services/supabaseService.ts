@@ -55,18 +55,29 @@ export const mapCustomerProfile = (row: Record<string, unknown>): CustomerUser =
   createdAt: row.created_at as string | undefined,
 });
 
-const mapOrderItem = (row: Record<string, unknown>): OrderItem => ({
-  productId: row.product_id as string,
-  productName: row.product_name as string,
-  image: row.image as string,
-  variant: row.variant as OrderItem['variant'],
-  customMeasurements: row.custom_measurements as string | undefined,
-  drawingUrl: row.drawing_url as string | undefined,
-  referenceNotes: row.reference_notes as string | undefined,
-  quantity: Number(row.quantity),
-  unitPrice: Number(row.unit_price),
-  totalPrice: Number(row.total_price),
-});
+const mapOrderItem = (row: Record<string, unknown>): OrderItem => {
+  const unitPrice = Number(row.unit_price || 0);
+  const qty = Number(row.quantity || 1);
+  const totalPrice = Number(row.total_price || unitPrice * qty);
+
+  return {
+    productId: row.product_id as string,
+    productName: row.product_name as string,
+    image: row.image as string,
+    variant: row.variant as OrderItem['variant'],
+    customMeasurements: row.custom_measurements as string | undefined,
+    drawingUrl: row.drawing_url as string | undefined,
+    referenceNotes: row.reference_notes as string | undefined,
+    quantity: qty,
+    unitPrice: unitPrice,
+    totalPrice: totalPrice,
+    originalPriceAtOrder: row.original_price_at_order !== undefined && row.original_price_at_order !== null ? Number(row.original_price_at_order) : (row.original_price !== undefined ? Number(row.original_price) : unitPrice),
+    productDiscountAtOrder: row.product_discount_at_order !== undefined && row.product_discount_at_order !== null ? Number(row.product_discount_at_order) : (row.discount_amount !== undefined ? Number(row.discount_amount) : 0),
+    unitSellingPriceAtOrder: row.unit_selling_price_at_order !== undefined && row.unit_selling_price_at_order !== null ? Number(row.unit_selling_price_at_order) : unitPrice,
+    costPriceAtOrder: row.cost_price_at_order !== undefined && row.cost_price_at_order !== null ? Number(row.cost_price_at_order) : (row.cost_price !== undefined ? Number(row.cost_price) : undefined),
+    lineTotal: row.line_total !== undefined && row.line_total !== null ? Number(row.line_total) : totalPrice,
+  };
+};
 
 const mapPayment = (row: Record<string, unknown>): PaymentTransaction => ({
   id: row.id as string,
@@ -91,31 +102,82 @@ const mapPayment = (row: Record<string, unknown>): PaymentTransaction => ({
 });
 
 
-const mapProduct = (row: Record<string, unknown>): Product => ({
-  id: row.id as string,
-  name: row.name as string,
-  category: row.category as string,
-  subCategory: row.sub_category as string | undefined,
-  price: Number(row.price),
-  discountPrice: row.discount_price ? Number(row.discount_price) : undefined,
-  unit: row.unit as string,
-  stock: Number(row.stock),
-  isReadyStock: row.is_ready_stock as boolean,
-  isMadeToOrder: row.is_made_to_order as boolean,
-  images: (row.images as string[]) || [],
-  description: row.description as string,
-  specifications: row.specifications as Product['specifications'],
-  rating: Number(row.rating),
-  reviewCount: Number(row.review_count),
-  isRecommended: row.is_recommended as boolean | undefined,
-  isBestSelling: row.is_best_selling as boolean | undefined,
-  isTrending: row.is_trending as boolean | undefined,
-  isPremium: row.is_premium as boolean | undefined,
-  isBudgetFriendly: row.is_budget_friendly as boolean | undefined,
-  isFestivalOffer: row.is_festival_offer as boolean | undefined,
-  views: Number(row.views),
-  badgeText: row.badge_text as string | undefined,
-});
+const mapProduct = (row: Record<string, unknown>): Product => {
+  const price = Number(row.price || 0);
+  const discountPrice = row.discount_price ? Number(row.discount_price) : undefined;
+  const originalPrice = row.original_price !== undefined && row.original_price !== null ? Number(row.original_price) : price;
+  
+  let discountType: Product['discountType'] = 'none';
+  if (row.discount_type) {
+    discountType = row.discount_type as Product['discountType'];
+  } else if (discountPrice && discountPrice < originalPrice) {
+    discountType = 'amount';
+  }
+
+  let discountAmount = 0;
+  if (row.discount_amount !== undefined && row.discount_amount !== null) {
+    discountAmount = Number(row.discount_amount);
+  } else if (discountPrice && discountPrice < originalPrice) {
+    discountAmount = originalPrice - discountPrice;
+  }
+
+  let discountValue = 0;
+  if (row.discount_value !== undefined && row.discount_value !== null) {
+    discountValue = Number(row.discount_value);
+  } else {
+    discountValue = discountAmount;
+  }
+
+  let finalSellingPrice = originalPrice;
+  if (row.final_selling_price !== undefined && row.final_selling_price !== null) {
+    finalSellingPrice = Number(row.final_selling_price);
+  } else if (discountPrice) {
+    finalSellingPrice = discountPrice;
+  } else if (discountAmount > 0) {
+    finalSellingPrice = originalPrice - discountAmount;
+  }
+
+  const costPrice = row.cost_price !== undefined && row.cost_price !== null ? Number(row.cost_price) : 0;
+  const profit = finalSellingPrice - costPrice;
+  const calculatedMargin = finalSellingPrice > 0 ? Number(((profit / finalSellingPrice) * 100).toFixed(1)) : 0;
+  const profitMargin = row.profit_margin !== undefined && row.profit_margin !== null ? Number(row.profit_margin) : calculatedMargin;
+
+  const tags = (row.tags as string[]) || (row.features_tags as string[]) || [];
+
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    category: row.category as string,
+    subCategory: row.sub_category as string | undefined,
+    price: originalPrice,
+    originalPrice,
+    discountType,
+    discountValue,
+    discountAmount,
+    finalSellingPrice,
+    discountPrice: discountAmount > 0 ? finalSellingPrice : undefined,
+    costPrice,
+    profitMargin,
+    tags,
+    unit: row.unit as string,
+    stock: Number(row.stock),
+    isReadyStock: row.is_ready_stock as boolean,
+    isMadeToOrder: row.is_made_to_order as boolean,
+    images: (row.images as string[]) || [],
+    description: row.description as string,
+    specifications: row.specifications as Product['specifications'],
+    rating: Number(row.rating),
+    reviewCount: Number(row.review_count),
+    isRecommended: row.is_recommended as boolean | undefined,
+    isBestSelling: row.is_best_selling as boolean | undefined,
+    isTrending: row.is_trending as boolean | undefined,
+    isPremium: row.is_premium as boolean | undefined,
+    isBudgetFriendly: row.is_budget_friendly as boolean | undefined,
+    isFestivalOffer: row.is_festival_offer as boolean | undefined,
+    views: Number(row.views),
+    badgeText: row.badge_text as string | undefined,
+  };
+};
 
 const mapStory = (row: Record<string, unknown>): StatusStory => ({
   id: row.id as string,

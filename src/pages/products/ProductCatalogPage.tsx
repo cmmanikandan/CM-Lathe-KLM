@@ -200,16 +200,31 @@ export const ProductCatalogPage: React.FC = () => {
                   </p>
 
                   <div className="pt-1 flex items-center justify-between border-t border-gray-100">
-                    <div>
-                      <span className="font-heading font-black text-sm text-[#F97316] block leading-none">
-                        ₹{product.price.toLocaleString('en-IN')}
-                      </span>
-                      {product.discountPrice && (
-                        <span className="text-[9px] text-gray-400 line-through">
-                          ₹{product.discountPrice.toLocaleString('en-IN')}
-                        </span>
-                      )}
-                    </div>
+                    {(() => {
+                      const finalPrice = product.finalSellingPrice !== undefined ? product.finalSellingPrice : (product.discountPrice || product.price);
+                      const origPrice = product.originalPrice || product.price;
+                      const hasDiscount = finalPrice < origPrice;
+                      const discountPct = origPrice > 0 ? Math.round(((origPrice - finalPrice) / origPrice) * 100) : 0;
+                      return (
+                        <div>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-heading font-black text-sm text-[#F97316] block leading-none">
+                              ₹{finalPrice.toLocaleString('en-IN')}
+                            </span>
+                            {hasDiscount && (
+                              <span className="bg-orange-100 text-[#F97316] text-[9px] font-black px-1.5 py-0.5 rounded">
+                                {discountPct}% OFF
+                              </span>
+                            )}
+                          </div>
+                          {hasDiscount && (
+                            <span className="text-[9px] text-gray-400 line-through block mt-0.5 font-mono">
+                              ₹{origPrice.toLocaleString('en-IN')}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     <a
                       href={createProductInquiryWhatsApp(product.name, product.category)}

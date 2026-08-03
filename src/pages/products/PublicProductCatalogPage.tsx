@@ -175,12 +175,26 @@ export const PublicProductCatalogPage: React.FC = () => {
                     <p className="text-xs text-gray-500 line-clamp-2">{product.description}</p>
 
                     <div className="pt-2 flex items-baseline justify-between border-t border-gray-100">
-                      <div>
-                        <span className="text-[10px] text-gray-400 font-mono uppercase block">Starting Price</span>
-                        <span className="font-heading font-black text-base text-[#F97316]">
-                          ₹{product.price.toLocaleString('en-IN')}
-                        </span>
-                      </div>
+                      {(() => {
+                        const finalPrice = product.finalSellingPrice !== undefined ? product.finalSellingPrice : (product.discountPrice || product.price);
+                        const origPrice = product.originalPrice || product.price;
+                        const hasDiscount = finalPrice < origPrice;
+                        return (
+                          <div>
+                            <span className="text-[10px] text-gray-400 font-mono uppercase block">Special Factory Price</span>
+                            <div className="flex items-baseline gap-2">
+                              <span className="font-heading font-black text-base text-[#F97316]">
+                                ₹{finalPrice.toLocaleString('en-IN')}
+                              </span>
+                              {hasDiscount && (
+                                <span className="text-xs text-gray-400 line-through font-mono">
+                                  ₹{origPrice.toLocaleString('en-IN')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
                       <span className="text-xs font-bold text-[#111111] group-hover:text-[#F97316] flex items-center gap-0.5">
                         View Details →
                       </span>

@@ -95,9 +95,15 @@ export interface Product {
   status?: 'Draft' | 'Published' | 'Hidden' | 'Archived';
   
   price: number;
+  originalPrice?: number;
+  discountType?: 'none' | 'amount' | 'percentage';
+  discountValue?: number;
+  discountAmount?: number;
+  finalSellingPrice?: number;
   discountPrice?: number;
   costPrice?: number;
   profitMargin?: number;
+  tags?: string[];
   gstPercent?: number;
   isTaxIncluded?: boolean;
   unit: string;
@@ -148,6 +154,17 @@ export interface Product {
   badgeText?: string;
 }
 
+export function getProductSellingPrice(product: Partial<Product> | null | undefined): number {
+  if (!product) return 0;
+  if (typeof product.finalSellingPrice === 'number' && !isNaN(product.finalSellingPrice)) {
+    return product.finalSellingPrice;
+  }
+  if (typeof product.discountPrice === 'number' && product.discountPrice > 0) {
+    return product.discountPrice;
+  }
+  return product.originalPrice || product.price || 0;
+}
+
 export interface OrderItem {
   productId: string;
   productName: string;
@@ -169,6 +186,53 @@ export interface OrderItem {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
+
+  // Sale-time snapshot fields for exact profit auditing:
+  originalPriceAtOrder?: number;
+  productDiscountAtOrder?: number;
+  unitSellingPriceAtOrder?: number;
+  costPriceAtOrder?: number;
+  lineTotal?: number;
+}
+
+export interface NormalizedProfitItem {
+  productId: string;
+  productName: string;
+  quantity: number;
+  originalUnitPrice: number;
+  productDiscount: number;
+  unitSellingPrice: number;
+  lineSellingTotal: number;
+  costUnitPrice: number;
+  lineCostTotal: number;
+  orderDiscountShare: number;
+  actualNetRevenue: number;
+  grossProfit: number;
+  marginPercentage: number;
+}
+
+export interface NormalizedProfitTransaction {
+  id: string;
+  orderId: string;
+  orderNumber: string;
+  date: string;
+  timestamp: number;
+  channel: 'Online' | 'Offline / Fabrication' | 'POS / Walk-in';
+  customerName: string;
+  customerPhone: string;
+  status: OrderStatus;
+  items: NormalizedProfitItem[];
+  grossRevenue: number;
+  totalProductDiscount: number;
+  totalOrderDiscount: number;
+  refundAmount: number;
+  netSalesRevenue: number;
+  totalCost: number;
+  grossProfit: number;
+  marginPercentage: number;
+  amountCollected: number;
+  balanceReceivable: number;
+  paymentStatus: 'PAID' | 'PARTIALLY PAID' | 'UNPAID' | 'REFUNDED' | 'PARTIALLY REFUNDED';
 }
 
 export interface PaymentTransaction {

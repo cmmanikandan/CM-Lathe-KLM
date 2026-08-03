@@ -134,8 +134,19 @@ export const PublicProductDetailPage: React.FC = () => {
     );
   }
 
-  const basePrice = product.price || 0;
-  const currentPrice = selectedVariant ? selectedVariant.price : basePrice;
+  const origPrice = selectedVariant
+    ? (selectedVariant.price || 0)
+    : (product.originalPrice || product.price || 0);
+
+  const sellingPrice = selectedVariant
+    ? (selectedVariant.price || 0)
+    : (product.finalSellingPrice !== undefined ? product.finalSellingPrice : (product.discountPrice || product.price || 0));
+
+  const discountAmount = origPrice > sellingPrice ? origPrice - sellingPrice : 0;
+  const discountPercent = origPrice > 0 && discountAmount > 0 ? Math.round((discountAmount / origPrice) * 100) : 0;
+  const hasDiscount = discountAmount > 0;
+
+  const currentPrice = sellingPrice;
 
   const handleToggleWishlist = () => {
     try {
@@ -298,17 +309,40 @@ export const PublicProductDetailPage: React.FC = () => {
             )}
 
             <div className="bg-white p-5 rounded-[22px] border border-gray-200/90 shadow-xs space-y-3">
-              <div className="flex items-baseline justify-between">
+              <div className="flex items-baseline justify-between flex-wrap gap-2">
                 <div>
                   <span className="text-xs text-gray-400 font-mono uppercase font-bold block">Special Factory Price</span>
-                  <span className="font-heading font-black text-3xl sm:text-4xl text-[#F97316]">
-                    ₹{currentPrice.toLocaleString('en-IN')}
-                  </span>
+                  <div className="flex items-baseline gap-3 flex-wrap">
+                    <span className="font-heading font-black text-3xl sm:text-4xl text-[#F97316]">
+                      ₹{sellingPrice.toLocaleString('en-IN')}
+                    </span>
+                    {hasDiscount && (
+                      <span className="text-base text-gray-400 line-through font-mono">
+                        ₹{origPrice.toLocaleString('en-IN')}
+                      </span>
+                    )}
+                    {hasDiscount && (
+                      <span className="bg-orange-100 text-[#F97316] text-xs font-heading font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow-xs">
+                        {discountPercent}% OFF
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="bg-orange-50 border border-orange-200 p-2.5 rounded-2xl text-xs text-amber-500 flex items-center gap-1 font-bold">
                   ★ {reviews.length > 0 ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : (product.rating || 5.0).toFixed(1)} ({reviews.length} {reviews.length === 1 ? 'Review' : 'Reviews'})
                 </div>
               </div>
+
+              {/* Dynamic Feature Chips (Displays ONLY selected tags for this product) */}
+              {product.tags && product.tags.length > 0 && (
+                <div className="pt-3 border-t border-gray-100 flex flex-wrap gap-2 text-[11px] font-heading font-bold text-gray-700">
+                  {product.tags.map((tag) => (
+                    <span key={tag} className="flex items-center gap-1.5 bg-orange-50/70 border border-orange-200 text-gray-900 px-3 py-1.5 rounded-xl">
+                      <CheckCircle2 size={14} className="text-[#F97316]" /> {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Selectable Variants (Only shown if product has variants) */}
