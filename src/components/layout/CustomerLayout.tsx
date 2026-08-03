@@ -114,62 +114,64 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
       {/* Responsive Container */}
       <div className="w-full max-w-[1440px] mx-auto min-h-screen bg-[#F8F9FA] relative shadow-md flex flex-col">
         
-        {/* 1. ALWAYS STICKY TOP APP BAR */}
-        <header className="sticky top-0 z-50 h-[64px] bg-white/95 backdrop-blur-md border-b border-gray-200/80 shadow-xs px-4 sm:px-6 lg:px-8 flex items-center justify-between shrink-0 transition-all duration-300">
-          
-          <BrandLogo 
-            size="mobile" 
-            theme="light"
-            onClick={() => navigate('/customer/home')} 
-          />
+        {/* 1. ALWAYS STICKY TOP APP BAR (Hidden on Detail Pages) */}
+        {!isDetailPage && (
+          <header className="sticky top-0 z-50 h-[64px] bg-white/95 backdrop-blur-md border-b border-gray-200/80 shadow-xs px-4 sm:px-6 lg:px-8 flex items-center justify-between shrink-0 transition-all duration-300">
+            
+            <BrandLogo 
+              size="mobile" 
+              theme="light"
+              onClick={() => navigate('/customer/home')} 
+            />
 
-          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
 
-            <button
-              onClick={() => navigate('/customer/notifications')}
-              className="relative p-2 rounded-full text-gray-700 hover:bg-gray-100 active:scale-95 transition-all cursor-pointer"
-              aria-label="View notifications"
-            >
-              <Bell size={20} />
-              {unreadNotifCount > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 bg-[#F97316] text-white text-[9px] font-mono font-black rounded-full flex items-center justify-center border-2 border-white shadow-xs">
-                  {unreadNotifCount}
-                </span>
-              )}
-            </button>
-
-            {isLoggedIn ? (
               <button
-                onClick={() => navigate('/customer/profile')}
-                className="flex items-center gap-2 p-1 pl-2.5 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200/80 transition-all cursor-pointer"
+                onClick={() => navigate('/customer/notifications')}
+                className="relative p-2 rounded-full text-gray-700 hover:bg-gray-100 active:scale-95 transition-all cursor-pointer"
+                aria-label="View notifications"
               >
-                <span className="text-xs font-bold text-[#111111] hidden sm:inline">
-                  {user?.name?.split(' ')[0]}
-                </span>
-                {user?.avatarUrl ? (
-                  <img
-                    src={user.avatarUrl}
-                    alt={user.name || 'User Avatar'}
-                    className="w-7 h-7 rounded-full object-cover border border-[#F97316]"
-                  />
-                ) : (
-                  <div className="w-7 h-7 rounded-full bg-[#F97316] text-white flex items-center justify-center text-xs font-extrabold shadow-xs">
-                    {getInitials(user?.name || '')}
-                  </div>
+                <Bell size={20} />
+                {unreadNotifCount > 0 && (
+                  <span className="absolute top-1 right-1 w-4 h-4 bg-[#F97316] text-white text-[9px] font-mono font-black rounded-full flex items-center justify-center border-2 border-white shadow-xs">
+                    {unreadNotifCount}
+                  </span>
                 )}
               </button>
-            ) : (
-              <Link
-                to="/login"
-                className="bg-[#F97316] hover:bg-[#EA580C] text-white text-xs font-heading font-extrabold px-4 py-2 rounded-full shadow-md transition-all flex items-center gap-1.5 active:scale-95"
-              >
-                <LogIn size={14} /> Login
-              </Link>
-            )}
 
-          </div>
+              {isLoggedIn ? (
+                <button
+                  onClick={() => navigate('/customer/profile')}
+                  className="flex items-center gap-2 p-1 pl-2.5 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200/80 transition-all cursor-pointer"
+                >
+                  <span className="text-xs font-bold text-[#111111] hidden sm:inline">
+                    {user?.name?.split(' ')[0]}
+                  </span>
+                  {user?.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.name || 'User Avatar'}
+                      className="w-7 h-7 rounded-full object-cover border border-[#F97316]"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-[#F97316] text-white flex items-center justify-center text-xs font-extrabold shadow-xs">
+                      {getInitials(user?.name || '')}
+                    </div>
+                  )}
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  className="bg-[#F97316] hover:bg-[#EA580C] text-white text-xs font-heading font-extrabold px-4 py-2 rounded-full shadow-md transition-all flex items-center gap-1.5 active:scale-95"
+                >
+                  <LogIn size={14} /> Login
+                </Link>
+              )}
 
-        </header>
+            </div>
+
+          </header>
+        )}
 
         {/* 2. SCROLLABLE PAGE CONTENT CONTAINER */}
         <main className={`flex-1 ${shouldShowBottomNav ? 'pb-28 min-h-[calc(100vh-148px)]' : 'pb-6 min-h-[calc(100vh-64px)]'}`}>

@@ -96,6 +96,20 @@ export const ProductDetailPage: React.FC = () => {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
+  const handleShareClick = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: product?.name || 'MANIKANDAN LATHE Product',
+        text: `Check out ${product?.name} at MANIKANDAN LATHE!`,
+        url: window.location.href,
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+    }
+  };
+
   // Reviews state synced with localStorage per product (no demo reviews)
   const reviewsStorageKey = `ml_reviews_${product?.id || 'default'}`;
   const [reviews, setReviews] = useState<Array<{
@@ -386,90 +400,46 @@ export const ProductDetailPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-[#111111] font-sans antialiased pb-28 relative">
       
-      {/* 1. GLASSMORPHISM STICKY HEADER (Appears after 150px scroll) */}
-      <AnimatePresence>
-        {showStickyHeader && (
-          <motion.div
-            initial={{ y: -80, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -80, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="fixed top-0 left-0 right-0 z-40 bg-white/85 backdrop-blur-xl border-b border-gray-200/80 shadow-md py-2.5 px-4 sm:px-6 flex items-center justify-between max-w-[1440px] mx-auto"
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <button
-                onClick={() => navigate(-1)}
-                className="p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-[#111111] transition-colors shrink-0"
-              >
-                <ArrowLeft size={16} />
-              </button>
-              <div className="min-w-0">
-                <h3 className="font-heading font-black text-xs sm:text-sm text-[#111111] truncate max-w-[180px] sm:max-w-xs md:max-w-md">
-                  {product.name}
-                </h3>
-                <span className="font-heading font-black text-xs text-[#F97316]">
-                  ₹{currentPrice.toLocaleString('en-IN')}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={handleToggleWishlist}
-                className={`p-2 rounded-full border transition-all active:scale-95 ${
-                  isWishlisted ? 'bg-red-50 text-red-600 border-red-200' : 'bg-gray-100 text-gray-600 border-gray-200'
-                }`}
-                title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
-              >
-                <Heart size={18} className={isWishlisted ? 'fill-red-600 text-red-600' : ''} />
-              </button>
-
-              <button
-                onClick={handleShareClick}
-                className="p-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
-                title="Share Product"
-              >
-                <Share2 size={18} />
-              </button>
-
-              <button
-                onClick={() => {
-                  setEnquiryStep(1);
-                  setEnquirySuccess(false);
-                  setIsEnquiryModalOpen(true);
-                }}
-                className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs px-4 py-2 rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
-              >
-                <ShoppingBag size={14} /> Submit Order Enquiry
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Main Page Layout Container */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
         
-        {/* Navigation Breadcrumbs */}
-        <div className="flex items-center justify-between text-xs border-b border-gray-200/80 pb-3">
-          <button
-            onClick={() => {
-              if (window.history.length > 1) {
-                navigate(-1);
-              } else {
-                navigate('/customer/products');
-              }
-            }}
-            className="inline-flex items-center gap-1.5 font-heading font-extrabold text-gray-600 hover:text-black transition-colors cursor-pointer"
-          >
-            <ArrowLeft size={16} className="text-[#F97316]" /> Back to Products Catalog
-          </button>
-          <div className="flex items-center gap-2 font-mono text-[11px] text-gray-500">
-            <Link to="/customer/home" className="hover:underline">Home</Link>
-            <span>/</span>
-            <Link to="/customer/products" className="hover:underline">{product.category}</Link>
-            <span>/</span>
-            <span className="text-[#111111] font-bold truncate max-w-[120px]">{product.name}</span>
+        {/* Navigation Breadcrumbs & Share Action Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 text-xs border-b border-gray-200/80 pb-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                if (window.history.length > 1) {
+                  navigate(-1);
+                } else {
+                  navigate('/customer/products');
+                }
+              }}
+              className="inline-flex items-center gap-1.5 font-heading font-extrabold text-gray-800 hover:text-black transition-colors cursor-pointer bg-white px-3 py-1.5 rounded-xl border border-gray-200 shadow-xs"
+            >
+              <ArrowLeft size={16} className="text-[#F97316]" /> Back to Products
+            </button>
+            <div className="hidden sm:flex items-center gap-2 font-mono text-[11px] text-gray-500">
+              <Link to="/customer/home" className="hover:underline">Home</Link>
+              <span>/</span>
+              <Link to="/customer/products" className="hover:underline">{product.category}</Link>
+              <span>/</span>
+              <span className="text-[#111111] font-bold truncate max-w-[150px]">{product.name}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {copiedLink && (
+              <span className="text-[11px] font-mono text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded-full font-bold animate-fade-in">
+                ✓ Link Copied!
+              </span>
+            )}
+            <button
+              onClick={handleShareClick}
+              className="bg-white hover:bg-gray-50 text-[#111111] border border-gray-200 text-xs font-heading font-extrabold px-3.5 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+              title="Share Product"
+            >
+              <Share2 size={15} className="text-[#F97316]" /> Share Product
+            </button>
           </div>
         </div>
 
@@ -477,7 +447,7 @@ export const ProductDetailPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* ── LEFT COLUMN: Image Gallery & Zoom Viewer (6 Columns) ── */}
-          <div className="lg:col-span-6 space-y-4 sticky top-20">
+          <div className="lg:col-span-6 space-y-4">
             {/* Main Interactive Product Preview Image */}
             <div
               className="relative aspect-square rounded-[26px] overflow-hidden bg-white border border-gray-200/90 shadow-md cursor-pointer group flex items-center justify-center"
@@ -496,18 +466,32 @@ export const ProductDetailPage: React.FC = () => {
                 </span>
               )}
 
-              {/* Wishlist Floating Button on Image */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleToggleWishlist();
-                }}
-                className={`absolute top-4 right-4 p-2.5 rounded-full backdrop-blur-md transition-all active:scale-95 shadow-md ${
-                  isWishlisted ? 'bg-white text-red-600' : 'bg-black/40 text-white hover:bg-black/60'
-                }`}
-              >
-                <Heart size={20} className={isWishlisted ? 'fill-red-600 text-red-600' : ''} />
-              </button>
+              {/* Top-Right Image Action Buttons (Share + Wishlist) */}
+              <div className="absolute top-4 right-4 flex items-center gap-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleShareClick();
+                  }}
+                  className="p-2.5 rounded-full bg-black/40 text-white hover:bg-black/60 backdrop-blur-md transition-all active:scale-95 shadow-md cursor-pointer"
+                  title="Share Product"
+                >
+                  <Share2 size={18} />
+                </button>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleWishlist();
+                  }}
+                  className={`p-2.5 rounded-full backdrop-blur-md transition-all active:scale-95 shadow-md cursor-pointer ${
+                    isWishlisted ? 'bg-white text-red-600' : 'bg-black/40 text-white hover:bg-black/60'
+                  }`}
+                  title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                >
+                  <Heart size={18} className={isWishlisted ? 'fill-red-600 text-red-600' : ''} />
+                </button>
+              </div>
 
               {/* Fullscreen Trigger Overlay Pill */}
               <div className="absolute bottom-4 right-4 bg-black/80 backdrop-blur-md text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-md group-hover:bg-[#F97316] transition-colors">
@@ -680,11 +664,19 @@ export const ProductDetailPage: React.FC = () => {
                 href={createProductInquiryWhatsApp(product.name, product.category)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-[#25D366] hover:bg-[#20ba5a] text-white font-heading font-black text-sm px-5 py-4 rounded-2xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-98"
+                className="bg-[#25D366] hover:bg-[#20ba5a] text-white font-heading font-black text-sm px-4 py-4 rounded-2xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-98"
                 title="WhatsApp Inquiry"
               >
                 <MessageCircle size={18} /> Inquiry
               </a>
+
+              <button
+                onClick={handleShareClick}
+                className="bg-white hover:bg-gray-100 text-gray-800 border border-gray-200 font-heading font-black text-sm px-4 py-4 rounded-2xl shadow-xs flex items-center justify-center gap-1.5 transition-all active:scale-98 cursor-pointer"
+                title="Share Product"
+              >
+                <Share2 size={18} className="text-[#F97316]" /> Share
+              </button>
             </div>
           </div>
         </div>
