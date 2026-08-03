@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../../context/ProductContext';
 import { FlipkartAutoSuggestSearch } from '../../components/common/FlipkartAutoSuggestSearch';
+import { ProductCompareModal } from '../../components/customer/ProductCompareModal';
 import {
   Search,
   Mic,
@@ -83,6 +84,21 @@ export const CustomerProductsPage: React.FC = () => {
   const [filterStock, setFilterStock] = useState<'all' | 'ready' | 'made-to-order'>('all');
   const [maxPrice, setMaxPrice] = useState<number>(200000);
   const [wishlist, setWishlist] = useState<string[]>([]);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [compareModalOpen, setCompareModalOpen] = useState(false);
+
+  const toggleCompare = (id: string) => {
+    setCompareIds((prev) => {
+      if (prev.includes(id)) {
+        return prev.filter((item) => item !== id);
+      }
+      if (prev.length >= 3) {
+        alert('You can compare up to 3 products at a time.');
+        return prev;
+      }
+      return [...prev, id];
+    });
+  };
 
   const categoryIcons: Record<string, string> = {
     'All': '✨',
@@ -242,17 +258,35 @@ export const CustomerProductsPage: React.FC = () => {
                   <h3 className="font-heading font-extrabold text-xs sm:text-sm text-[#111111] line-clamp-1">{product.name}</h3>
                   <p className="text-[10px] text-gray-500 font-mono line-clamp-1">{product.specifications.material}</p>
                   
-                  <div className="pt-2 flex items-center justify-between border-t border-gray-100">
-                    <span className="font-heading font-black text-sm sm:text-base text-[#F97316]">₹{product.price.toLocaleString('en-IN')}</span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/customer/products/${product.id}`);
-                      }}
-                      className="px-3 py-1.5 bg-[#F97316] hover:bg-[#EA580C] text-white text-xs font-heading font-black rounded-xl shadow-xs flex items-center gap-1 active:scale-95"
-                    >
-                      <ShoppingBag size={12} /> Order
-                    </button>
+                  <div className="pt-2 flex items-center justify-between gap-1 border-t border-gray-100">
+                    <span className="font-heading font-black text-xs sm:text-base text-[#F97316]">₹{product.price.toLocaleString('en-IN')}</span>
+                    
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleCompare(product.id);
+                        }}
+                        className={`px-2 py-1 rounded-xl text-[10px] font-heading font-extrabold border transition-all ${
+                          compareIds.includes(product.id)
+                            ? 'bg-[#111111] text-white border-[#111111]'
+                            : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-200'
+                        }`}
+                        title="Compare Product"
+                      >
+                        {compareIds.includes(product.id) ? '✓ Compared' : '+ Compare'}
+                      </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/customer/products/${product.id}`);
+                        }}
+                        className="px-2.5 py-1 bg-[#F97316] hover:bg-[#EA580C] text-white text-[11px] font-heading font-black rounded-xl shadow-xs flex items-center gap-1 active:scale-95"
+                      >
+                        <ShoppingBag size={11} /> Order
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -261,6 +295,43 @@ export const CustomerProductsPage: React.FC = () => {
           })}
         </div>
       )}
+
+      {/* FLOATING COMPARE BAR */}
+      {compareIds.length > 0 && (
+        <div className="fixed bottom-20 left-4 right-4 z-40 max-w-lg mx-auto bg-[#111111] text-white p-3.5 rounded-2xl shadow-2xl border-2 border-[#F97316] flex items-center justify-between gap-3 animate-in slide-in-from-bottom duration-200 font-sans">
+          <div className="flex items-center gap-2">
+            <span className="bg-[#F97316] text-white text-xs font-mono font-black w-6 h-6 rounded-full flex items-center justify-center">
+              {compareIds.length}
+            </span>
+            <span className="text-xs font-heading font-bold text-white">
+              Selected for Comparison
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCompareIds([])}
+              className="text-xs text-gray-400 hover:text-white px-2 py-1 font-mono font-bold"
+            >
+              Clear
+            </button>
+            <button
+              onClick={() => setCompareModalOpen(true)}
+              className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs px-3.5 py-2 rounded-xl shadow-md flex items-center gap-1 active:scale-95 transition-transform cursor-pointer"
+            >
+              Compare Side-by-Side →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* PRODUCT COMPARE MODAL */}
+      <ProductCompareModal
+        products={products.filter((p) => compareIds.includes(p.id))}
+        isOpen={compareModalOpen}
+        onClose={() => setCompareModalOpen(false)}
+        onRemoveProduct={(id) => setCompareIds((prev) => prev.filter((i) => i !== id))}
+      />
 
       {/* 1. FILTER BOTTOM SHEET */}
       {filterSheetOpen && (

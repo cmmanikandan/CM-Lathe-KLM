@@ -893,13 +893,30 @@ export const AdminQuickOrderPage: React.FC = () => {
               )}
 
               {/* GENERATE POS BILL BUTTON */}
-              <button
-                type="submit"
-                disabled={isSubmitting || cart.length === 0}
-                className="w-full py-4 bg-[#111111] hover:bg-black disabled:opacity-50 text-white font-heading font-black text-sm rounded-2xl shadow-xl flex items-center justify-center gap-2 transition-transform active:scale-98 cursor-pointer"
-              >
-                <Zap size={18} className="text-[#F97316]" /> GENERATE POS BILL & PRINT RECEIPT (₹{grandTotal.toLocaleString('en-IN')})
-              </button>
+              <div className="space-y-2">
+                <button
+                  type="submit"
+                  disabled={isSubmitting || cart.length === 0}
+                  className="w-full py-4 bg-[#111111] hover:bg-black disabled:opacity-50 text-white font-heading font-black text-sm rounded-2xl shadow-xl flex items-center justify-center gap-2 transition-transform active:scale-98 cursor-pointer"
+                >
+                  <Zap size={18} className="text-[#F97316]" /> GENERATE POS BILL & PRINT RECEIPT (₹{grandTotal.toLocaleString('en-IN')})
+                </button>
+
+                {createdOrder && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const cleanPhone = createdOrder.customerPhone.replace(/\D/g, '').slice(-10);
+                      const baseUrl = window.location.origin;
+                      const msg = `🧾 *MANIKANDAN LATHE*\n\nHello ${createdOrder.customerName},\nThank you for choosing MANIKANDAN LATHE.\n\n*Order No:* #${createdOrder.orderNumber}\n*Amount Paid:* ₹${createdOrder.finalPrice.toLocaleString('en-IN')}\n\n📄 *Tax Invoice:* ${baseUrl}/invoice/${createdOrder.id}\n🧾 *Thermal Receipt:* ${baseUrl}/r/${createdOrder.id}\n\n📞 +91 96592 86268`;
+                      window.open(`https://wa.me/91${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+                    }}
+                    className="w-full py-3 bg-[#25D366] hover:bg-[#20ba5a] text-white font-heading font-black text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    <MessageCircle size={16} /> 📲 Send Invoice & Receipt on WhatsApp (+91 {createdOrder.customerPhone})
+                  </button>
+                )}
+              </div>
 
             </form>
 
