@@ -38,8 +38,8 @@ export const AdminOrdersPage: React.FC = () => {
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<
-    'ALL' | 'ONLINE' | 'OFFLINE' | 'DRAFTS' | 'COMPLETED' | 'CANCELLED'
-  >('ALL');
+    'NEW' | 'ALL' | 'ACCEPTED' | 'COMPLETED' | 'CANCELLED'
+  >('NEW');
 
   // Advanced Filters
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -94,6 +94,10 @@ export const AdminOrdersPage: React.FC = () => {
 
     // 2. Tab Filter
     let matchesTab = true;
+    if (activeTab === 'NEW') matchesTab = o.status === 'PENDING';
+    if (activeTab === 'ALL') matchesTab = true;
+    if (activeTab === 'ACCEPTED')
+      matchesTab = ['ACCEPTED', 'MATERIAL_READY', 'IN_PRODUCTION', 'QUALITY_CHECK', 'READY', 'OUT_FOR_DELIVERY', 'INSTALLED'].includes(o.status);
     if (activeTab === 'COMPLETED') matchesTab = o.status === 'COMPLETED';
     if (activeTab === 'CANCELLED') matchesTab = o.status === 'REJECTED';
 
@@ -183,7 +187,15 @@ export const AdminOrdersPage: React.FC = () => {
         <div className="bg-white p-2 rounded-2xl border border-gray-200 shadow-xs flex items-center justify-between gap-2 overflow-x-auto text-xs font-heading">
           <div className="flex items-center gap-1">
             {[
-              { id: 'ALL', title: 'All Online Orders', count: onlineOrders.length },
+              { id: 'NEW', title: 'New Orders', count: onlineOrders.filter(o => o.status === 'PENDING').length },
+              { id: 'ALL', title: 'All Orders', count: onlineOrders.length },
+              {
+                id: 'ACCEPTED',
+                title: 'Accepted',
+                count: onlineOrders.filter(o =>
+                  ['ACCEPTED', 'MATERIAL_READY', 'IN_PRODUCTION', 'QUALITY_CHECK', 'READY', 'OUT_FOR_DELIVERY', 'INSTALLED'].includes(o.status)
+                ).length,
+              },
               { id: 'COMPLETED', title: 'Completed', count: onlineOrders.filter(o => o.status === 'COMPLETED').length },
               { id: 'CANCELLED', title: 'Cancelled', count: onlineOrders.filter(o => o.status === 'REJECTED').length },
             ].map((tab) => {
