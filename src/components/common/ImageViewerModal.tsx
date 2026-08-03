@@ -26,6 +26,10 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
   onClose,
   title
 }) => {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [zoomScale, setZoomScale] = useState(1);
+  const [rotation, setRotation] = useState(0);
+
   const isPushedRef = React.useRef(false);
 
   React.useEffect(() => {
