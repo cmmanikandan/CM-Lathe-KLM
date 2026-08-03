@@ -208,24 +208,28 @@ const AppContent: React.FC = () => {
   );
 };
 
+import { LanguageProvider } from './context/LanguageContext';
+
 export function App() {
   return (
-    <AuthProvider>
-      <ProductProvider>
-        <OrderProvider>
-          <RefundProvider>
-            <EnquiryProvider>
-              <StatusProvider>
-                <Router>
-                  <SplashScreen />
-                  <AppContent />
-                </Router>
-              </StatusProvider>
-            </EnquiryProvider>
-          </RefundProvider>
-        </OrderProvider>
-      </ProductProvider>
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <ProductProvider>
+          <OrderProvider>
+            <RefundProvider>
+              <EnquiryProvider>
+                <StatusProvider>
+                  <Router>
+                    <SplashScreen />
+                    <AppContent />
+                  </Router>
+                </StatusProvider>
+              </EnquiryProvider>
+            </RefundProvider>
+          </OrderProvider>
+        </ProductProvider>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }
 

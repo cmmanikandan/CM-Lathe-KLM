@@ -87,9 +87,12 @@ export const InstallPWAPrompt: React.FC = () => {
         <div className="bg-[#111111] text-white p-4 rounded-2xl shadow-2xl border border-[#F97316]/40 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <img
-              src="/assets/logo.png"
+              src="/assets/dark_logo.png"
               alt="MANIKANDAN LATHE App"
-              className="w-11 h-11 object-contain bg-white p-1 rounded-xl shrink-0"
+              className="w-11 h-11 object-contain shrink-0"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/dark_logo.png';
+              }}
             />
             <div>
               <h4 className="font-heading font-extrabold text-xs flex items-center gap-1 text-white">

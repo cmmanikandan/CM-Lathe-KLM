@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Loader2 } from 'lucide-react';
-import { BrandLogo } from './BrandLogo';
+import { MapPin, Loader2, ShieldCheck } from 'lucide-react';
 
 interface SplashScreenProps {
   onComplete?: () => void;
@@ -11,103 +9,95 @@ interface SplashScreenProps {
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({
   onComplete,
-  minDisplayTime = 1400
+  minDisplayTime = 1000
 }) => {
-  const location = useLocation();
   const [isVisible, setIsVisible] = useState(true);
 
-  // Trigger splash screen on route change to /login or /admin/login or initial load
   useEffect(() => {
-    if (location.pathname === '/login' || location.pathname === '/admin/login' || location.pathname === '/') {
-      setIsVisible(true);
-    }
-  }, [location.pathname]);
-
-  useEffect(() => {
-    if (!isVisible) return;
-
     const timer = setTimeout(() => {
       setIsVisible(false);
       if (onComplete) onComplete();
     }, minDisplayTime);
 
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [isVisible, minDisplayTime, onComplete]);
+    return () => clearTimeout(timer);
+  }, [minDisplayTime, onComplete]);
 
   return (
     <AnimatePresence>
       {isVisible && (
         <motion.div
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0, transition: { duration: 0.35, ease: 'easeInOut' } }}
-          className="fixed inset-0 w-screen h-screen min-h-screen z-[999999] bg-white text-[#111111] flex flex-col items-center justify-center p-6 select-none overflow-hidden font-sans"
+          exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.3, ease: 'easeOut' } }}
+          className="fixed inset-0 w-screen h-screen z-[999999] bg-[#111111] text-white flex flex-col items-center justify-center p-6 select-none overflow-hidden font-sans"
         >
-          {/* Vibrant Warm Soft Glow Background */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-orange-100/60 rounded-full blur-3xl pointer-events-none" />
+          {/* Subtle Ambient Radial Glow */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] sm:w-[600px] sm:h-[600px] bg-[#F97316]/15 rounded-full blur-[100px] pointer-events-none" />
 
-          {/* Center Content Container */}
-          <div className="relative z-10 flex flex-col items-center text-center space-y-6 max-w-sm my-auto">
+          {/* Center Brand Container */}
+          <div className="relative z-10 flex flex-col items-center text-center space-y-5 max-w-sm my-auto">
             
-            {/* Top Location Badge */}
+            {/* Location & Certification Pill */}
             <motion.div
-              initial={{ opacity: 0, y: -15 }}
+              initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.35 }}
-              className="inline-flex items-center gap-2 bg-slate-900 text-white font-mono text-xs font-black px-5 py-2 rounded-full shadow-xl border border-orange-500/50"
+              transition={{ delay: 0.05, duration: 0.3 }}
+              className="inline-flex items-center gap-2 bg-white/10 text-white font-mono text-[11px] font-extrabold px-4 py-1.5 rounded-full border border-white/15 backdrop-blur-md shadow-md"
             >
-              <MapPin size={16} className="text-[#F97316] animate-bounce" />
-              <span className="text-[#F97316] uppercase tracking-wider font-extrabold">Kallimandhayam</span>
-              <span className="text-slate-300 font-normal">• Dindigul District</span>
+              <MapPin size={14} className="text-[#F97316]" />
+              <span className="text-[#F97316] uppercase tracking-wider">Kallimandhayam</span>
+              <span className="text-gray-400">• Dindigul</span>
             </motion.div>
 
-            {/* Solid White Logo Card with Bold Orange Border */}
+            {/* High Definition Logo Container */}
             <motion.div
-              initial={{ scale: 0.85, opacity: 0 }}
+              initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 240, damping: 22 }}
-              className="relative"
+              transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+              className="relative py-2"
             >
-              <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-3xl bg-white border-4 border-[#F97316] p-4 flex items-center justify-center shadow-2xl shadow-orange-500/30 overflow-hidden">
+              <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl bg-white/5 border border-white/20 p-4 flex items-center justify-center backdrop-blur-xl shadow-2xl relative group">
                 <img
-                  src="/logo.png"
+                  src="/assets/dark_logo.png"
                   alt="MANIKANDAN LATHE Logo"
-                  className="w-full h-full object-contain filter drop-shadow-lg"
+                  className="w-full h-full object-contain filter drop-shadow-2xl"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/assets/logo.png';
+                    (e.target as HTMLImageElement).src = '/dark_logo.png';
                   }}
                 />
               </div>
             </motion.div>
 
-            {/* Ultra High Contrast Brand Title */}
+            {/* Typography Header */}
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15, duration: 0.35 }}
-              className="space-y-2.5"
+              transition={{ delay: 0.1, duration: 0.3 }}
+              className="space-y-1.5"
             >
-              <h1 className="font-heading font-black text-3xl sm:text-5xl text-black tracking-tight leading-none">
+              <h1 className="font-heading font-black text-2xl sm:text-4xl text-white tracking-tight leading-none">
                 MANIKANDAN <span className="text-[#F97316]">LATHE</span>
               </h1>
-              <p className="text-xs sm:text-sm font-mono font-extrabold uppercase tracking-widest bg-slate-900 text-white px-5 py-2 rounded-full shadow-lg border border-slate-800 inline-block">
-                LATHE MACHINES & STEEL FABRICATION
+              <p className="text-[10px] sm:text-xs font-heading font-bold text-[#F97316] uppercase tracking-widest pt-0.5">
+                STRENGTH IN STEEL. TRUST FOR LIFE.
               </p>
             </motion.div>
 
-            {/* Ultra Bold Spinner Icon Only */}
+            {/* Minimalist Spinner */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.25 }}
-              className="pt-2"
+              transition={{ delay: 0.2 }}
+              className="pt-4 flex items-center justify-center gap-2 text-xs font-mono text-gray-400"
             >
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white border-4 border-[#F97316] shadow-2xl shadow-orange-500/20">
-                <Loader2 size={26} className="animate-spin text-[#F97316] stroke-[3]" />
-              </div>
+              <Loader2 size={18} className="animate-spin text-[#F97316]" />
+              <span>Loading Workshop Portal...</span>
             </motion.div>
 
+          </div>
+
+          {/* Footer Copyright */}
+          <div className="absolute bottom-6 left-0 right-0 text-center text-[10px] text-gray-500 font-mono">
+            © MANIKANDAN LATHE WORKS • KALLIMANDHAYAM
           </div>
 
         </motion.div>

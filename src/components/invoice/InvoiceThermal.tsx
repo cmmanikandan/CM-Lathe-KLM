@@ -5,9 +5,10 @@ import { QRCodeSVG } from '../common/QRCodeSVG';
 interface InvoiceThermalProps {
   order: Order;
   containerRef?: React.Ref<HTMLDivElement>;
+  width?: '58mm' | '80mm';
 }
 
-export const InvoiceThermal: React.FC<InvoiceThermalProps> = ({ order, containerRef }) => {
+export const InvoiceThermal: React.FC<InvoiceThermalProps> = ({ order, containerRef, width = '80mm' }) => {
   const invoiceNumber = order.orderNumber.startsWith('INV-') ? order.orderNumber : `INV-${order.orderNumber}`;
   const dateStr = new Date(order.createdAt).toLocaleString('en-IN', {
     day: '2-digit',
@@ -40,8 +41,8 @@ export const InvoiceThermal: React.FC<InvoiceThermalProps> = ({ order, container
       id="printable-thermal-container"
       className="invoice-thermal-container bg-[#FFFFFF] text-[#111111] p-3.5 font-mono text-[11px] leading-tight mx-auto border border-[#D1D5DB] shadow-xl rounded-xl space-y-2.5"
       style={{
-        width: '80mm',
-        maxWidth: '80mm',
+        width: width,
+        maxWidth: width,
         backgroundColor: '#FFFFFF',
         boxSizing: 'border-box',
       }}
@@ -49,9 +50,12 @@ export const InvoiceThermal: React.FC<InvoiceThermalProps> = ({ order, container
       {/* Shop Header */}
       <div className="text-center space-y-1 border-b border-dashed border-[#111111] pb-2">
         <img
-          src="/logo.png"
+          src="/assets/light_logo.png"
           alt="MANIKANDAN LATHE Logo"
           className="w-10 h-10 object-contain mx-auto"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = '/light_logo.png';
+          }}
         />
         <h2 className="font-heading font-black text-xs uppercase text-[#111111] tracking-tight">
           MANIKANDAN LATHE

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useOrders } from '../../context/OrderContext';
 import { PDFInvoiceModal } from '../../components/common/PDFInvoiceModal';
 import { RazorpayPaymentModal } from '../../components/common/RazorpayPaymentModal';
+import { createCancellationWhatsAppMessage } from '../../services/whatsappService';
 import {
   ArrowLeft,
   FileText,
@@ -458,9 +459,19 @@ export const OrderDetailPage: React.FC = () => {
                   await cancelOrder(order.id, finalReason);
                   setIsCancelling(false);
                   setCancelModalOpen(false);
+
+                  // Open professional WhatsApp cancellation message to owner Chellamuthu K
+                  const waUrl = createCancellationWhatsAppMessage({
+                    orderNumber: order.orderNumber,
+                    customerName: order.customerName,
+                    customerPhone: order.customerPhone,
+                    productName: order.items.map((i) => i.productName).join(', '),
+                    reason: finalReason,
+                  });
+                  window.open(waUrl, '_blank');
                 }}
                 disabled={isCancelling}
-                className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white font-heading font-black text-xs py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5"
+                className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white font-heading font-black text-xs py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 {isCancelling ? (
                   <><Loader2 size={14} className="animate-spin" /> Cancelling...</>

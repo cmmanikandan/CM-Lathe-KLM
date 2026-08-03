@@ -15,7 +15,9 @@ import {
   ArrowRight,
   TrendingUp,
   ShieldCheck,
+  Download,
 } from 'lucide-react';
+import { exportOrdersToCSV } from '../../utils/exportUtils';
 
 export const AdminDashboardPage: React.FC = () => {
   const { orders } = useOrders();
@@ -48,100 +50,108 @@ export const AdminDashboardPage: React.FC = () => {
     <div className="min-h-screen bg-[#FAFAFA] text-[#111111] pb-24">
       
       {/* Header Banner */}
-      <div className="bg-[#111111] text-white py-8 px-4 sm:px-6 lg:px-8 border-b border-gray-800">
+      <div className="bg-[#111111] text-white py-5 sm:py-8 px-4 sm:px-6 lg:px-8 border-b border-gray-800">
         <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <span className="text-[#F97316] font-heading font-extrabold text-xs uppercase tracking-widest flex items-center gap-1.5">
+            <span className="text-[#F97316] font-heading font-extrabold text-[10px] sm:text-xs uppercase tracking-widest flex items-center gap-1.5">
               <ShieldCheck size={16} /> OFFICIAL MANAGEMENT PORTAL
             </span>
-            <h1 className="font-heading font-black text-3xl text-white mt-1">
+            <h1 className="font-heading font-black text-xl sm:text-3xl text-white mt-1">
               MANIKANDAN LATHE DASHBOARD
             </h1>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <Link
               to="/admin/offline-order"
-              className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
+              className="flex-1 sm:flex-initial bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-extrabold text-xs px-3.5 sm:px-4 py-2.5 rounded-xl shadow-lg flex items-center justify-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
             >
-              <PlusCircle size={16} /> New Walk-in Offline Order
+              <PlusCircle size={16} /> New Walk-in Order
             </Link>
 
             <Link
               to="/admin/customers"
-              className="bg-white/10 hover:bg-white/20 text-white font-heading font-bold text-xs px-3.5 py-2.5 rounded-xl border border-white/20 flex items-center gap-1.5 cursor-pointer"
+              className="bg-white/10 hover:bg-white/20 text-white font-heading font-bold text-xs px-3.5 py-2.5 rounded-xl border border-white/20 flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <UserCheck size={16} className="text-[#F97316]" /> Customers
             </Link>
+
+            <button
+              onClick={() => exportOrdersToCSV(orders, `manikandan_lathe_report_${new Date().toISOString().slice(0, 10)}.csv`)}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-md flex items-center justify-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
+              title="Export revenue and order history to Excel / CSV"
+            >
+              <Download size={16} /> Export Excel / CSV
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <div className="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8">
         
-        {/* Metric Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Metric Cards Grid — 2 columns on mobile for tight clean layout */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           
           {/* Revenue Collected */}
-          <div className="card-industrial p-6 bg-white border-l-4 border-l-[#F97316]">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-mono text-gray-500 font-bold uppercase">Total Revenue Collected</span>
-              <div className="w-10 h-10 rounded-xl bg-[#F97316]/10 text-[#F97316] flex items-center justify-center font-bold">
-                <IndianRupee size={20} />
+          <div className="card-industrial p-3.5 sm:p-6 bg-white border-l-4 border-l-[#F97316]">
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[10px] sm:text-xs font-mono text-gray-500 font-bold uppercase truncate">Total Revenue</span>
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#F97316]/10 text-[#F97316] flex items-center justify-center font-bold shrink-0">
+                <IndianRupee size={16} className="sm:w-5 sm:h-5" />
               </div>
             </div>
-            <h3 className="font-heading font-black text-3xl text-[#111111] mt-3">
+            <h3 className="font-heading font-black text-lg sm:text-3xl text-[#111111] mt-2 sm:mt-3 truncate">
               ₹{totalRevenue.toLocaleString('en-IN')}
             </h3>
-            <p className="text-[11px] text-green-600 font-bold mt-1 flex items-center gap-1">
-              <TrendingUp size={12} /> Received across all transactions
+            <p className="text-[10px] sm:text-[11px] text-green-600 font-bold mt-1 flex items-center gap-1 truncate">
+              <TrendingUp size={12} /> Across all orders
             </p>
           </div>
 
           {/* Pending Customer Balances */}
-          <div className="card-industrial p-6 bg-white border-l-4 border-l-amber-500">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-mono text-gray-500 font-bold uppercase">Pending Balance Due</span>
-              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
-                <AlertTriangle size={20} />
+          <div className="card-industrial p-3.5 sm:p-6 bg-white border-l-4 border-l-amber-500">
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[10px] sm:text-xs font-mono text-gray-500 font-bold uppercase truncate">Pending Due</span>
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold shrink-0">
+                <AlertTriangle size={16} className="sm:w-5 sm:h-5" />
               </div>
             </div>
-            <h3 className="font-heading font-black text-3xl text-amber-900 mt-3">
+            <h3 className="font-heading font-black text-lg sm:text-3xl text-amber-900 mt-2 sm:mt-3 truncate">
               ₹{pendingBalanceTotal.toLocaleString('en-IN')}
             </h3>
-            <p className="text-[11px] text-amber-700 font-medium mt-1">
-              Outstanding across active orders
+            <p className="text-[10px] sm:text-[11px] text-amber-700 font-medium mt-1 truncate">
+              Active balance due
             </p>
           </div>
 
           {/* Online vs Offline Orders Count */}
-          <div className="card-industrial p-6 bg-white border-l-4 border-l-blue-600">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-mono text-gray-500 font-bold uppercase">🌐 Online App Orders</span>
-              <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
-                <ShoppingBag size={20} />
+          <div className="card-industrial p-3.5 sm:p-6 bg-white border-l-4 border-l-blue-600">
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[10px] sm:text-xs font-mono text-gray-500 font-bold uppercase truncate">🌐 Online App</span>
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold shrink-0">
+                <ShoppingBag size={16} className="sm:w-5 sm:h-5" />
               </div>
             </div>
-            <h3 className="font-heading font-black text-3xl text-blue-600 mt-3">
+            <h3 className="font-heading font-black text-lg sm:text-3xl text-blue-600 mt-2 sm:mt-3">
               {onlineOrders.length}
             </h3>
-            <p className="text-[11px] text-blue-700 font-bold mt-1">
-              ₹{onlineRevenue.toLocaleString('en-IN')} total revenue
+            <p className="text-[10px] sm:text-[11px] text-blue-700 font-bold mt-1 truncate">
+              ₹{onlineRevenue.toLocaleString('en-IN')} total
             </p>
           </div>
 
           {/* Offline Walk-in Shop Count */}
-          <div className="card-industrial p-6 bg-white border-l-4 border-l-emerald-600">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-mono text-gray-500 font-bold uppercase">🏪 Offline Walk-in</span>
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
-                <CheckCircle size={20} />
+          <div className="card-industrial p-3.5 sm:p-6 bg-white border-l-4 border-l-emerald-600">
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[10px] sm:text-xs font-mono text-gray-500 font-bold uppercase truncate">🏪 Walk-in Shop</span>
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold shrink-0">
+                <CheckCircle size={16} className="sm:w-5 sm:h-5" />
               </div>
             </div>
-            <h3 className="font-heading font-black text-3xl text-emerald-600 mt-3">
+            <h3 className="font-heading font-black text-lg sm:text-3xl text-emerald-600 mt-2 sm:mt-3">
               {offlineOrders.length}
             </h3>
-            <p className="text-[11px] text-emerald-700 font-bold mt-1">
+            <p className="text-[10px] sm:text-[11px] text-emerald-700 font-bold mt-1 truncate">
               ₹{offlineRevenue.toLocaleString('en-IN')} shop counter
             </p>
           </div>

@@ -33,6 +33,44 @@ export const CustomerProductsPage: React.FC = () => {
 
   const [isListening, setIsListening] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  const handleVoiceSearch = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Voice search is supported on Google Chrome / mobile browsers. Please type your search query.');
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'ta-IN'; // Tamil & Indian English voice recognition
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) {
+          setSearchQuery(transcript);
+        }
+        setIsListening(false);
+      };
+
+      recognition.onerror = () => {
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch (err) {
+      setIsListening(false);
+    }
+  };
   
   // Bottom Sheet Controls
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
@@ -64,14 +102,6 @@ export const CustomerProductsPage: React.FC = () => {
     { id: 'best-selling', label: 'Best Selling' },
     { id: 'rating', label: 'Customer Rating' }
   ];
-
-  const handleVoiceSearch = () => {
-    setIsListening(true);
-    setTimeout(() => {
-      setSearchQuery('Kalappai');
-      setIsListening(false);
-    }, 1500);
-  };
 
   const toggleWishlist = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();

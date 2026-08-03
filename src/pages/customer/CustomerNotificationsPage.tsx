@@ -16,6 +16,12 @@ export const CustomerNotificationsPage: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'ORDERS' | 'PAYMENTS'>('ALL');
   const [cleared, setCleared] = useState(false);
 
+  // Mark all notifications as seen when entering notifications page
+  React.useEffect(() => {
+    localStorage.setItem('ml_notifications_last_seen', new Date().toISOString());
+    window.dispatchEvent(new Event('ml_notifications_seen'));
+  }, []);
+
   interface NotificationItem {
     id: string;
     type: 'ORDERS' | 'PAYMENTS';

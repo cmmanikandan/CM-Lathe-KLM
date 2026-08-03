@@ -119,23 +119,23 @@ export const LoginPage: React.FC = () => {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="max-w-[520px] w-full bg-white rounded-[22px] p-6 sm:p-8 shadow-xl border border-gray-200/90 space-y-6"
+          className="max-w-[520px] w-full bg-white rounded-2xl sm:rounded-[22px] p-4 sm:p-8 shadow-xl border border-gray-200/90 space-y-4 sm:space-y-6"
         >
           {success ? (
-            <div className="text-center py-8 space-y-4">
-              <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center mx-auto shadow-md">
-                <CheckCircle2 size={36} />
+            <div className="text-center py-6 sm:py-8 space-y-4">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center mx-auto shadow-md">
+                <CheckCircle2 size={32} />
               </div>
-              <h2 className="font-heading font-black text-2xl text-[#111111]">SIGN IN SUCCESSFUL!</h2>
+              <h2 className="font-heading font-black text-xl sm:text-2xl text-[#111111]">SIGN IN SUCCESSFUL!</h2>
               <p className="text-xs text-gray-500 font-mono">Opening your account portal...</p>
             </div>
           ) : (
             <>
               {/* Brand Header */}
-              <div className="text-center space-y-3 flex flex-col items-center">
+              <div className="text-center space-y-2 sm:space-y-3 flex flex-col items-center">
                 <BrandLogo size="login" className="justify-center" />
-                <div className="pt-2">
-                  <h1 className="font-heading font-black text-2xl text-[#111111]">WELCOME BACK</h1>
+                <div className="pt-1 sm:pt-2">
+                  <h1 className="font-heading font-black text-xl sm:text-2xl text-[#111111]">WELCOME BACK</h1>
                   <p className="text-gray-500 text-xs mt-1">Sign in to track orders, view invoices & digital receipts.</p>
                 </div>
               </div>

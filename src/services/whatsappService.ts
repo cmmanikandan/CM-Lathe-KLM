@@ -156,3 +156,30 @@ export const createProductInquiryWhatsApp = (productName: string, category: stri
   return `https://wa.me/${SHOP_PHONE}?text=${encodeURIComponent(text)}`;
 };
 
+export const createCancellationWhatsAppMessage = (data: {
+  enquiryNumber?: string;
+  orderNumber?: string;
+  customerName: string;
+  customerPhone: string;
+  productName?: string;
+  reason?: string;
+}): string => {
+  const refNo = data.enquiryNumber || data.orderNumber || 'N/A';
+  const text = `*MANIKANDAN LATHE WORKS*
+*FORMAL CANCELLATION REQUEST*
+━━━━━━━━━━━━━━━━━━━━
+*To Owner:* Chellamuthu K
+*Reference No:* ${refNo}
+*Customer Name:* ${data.customerName}
+*Customer Mobile:* ${data.customerPhone}
+${data.productName ? `*Item / Work:* ${data.productName}\n` : ''}
+*CANCELLATION REASON:*
+"${data.reason || 'Plan changed by customer.'}"
+
+━━━━━━━━━━━━━━━━━━━━
+*Dear Chellamuthu Sir,*
+I am writing to formally notify you regarding the cancellation of my order/enquiry (${refNo}). Please update the status in the workshop system and contact me if any further details are required. Thank you!`;
+
+  return `https://wa.me/${SHOP_PHONE}?text=${encodeURIComponent(text)}`;
+};
+

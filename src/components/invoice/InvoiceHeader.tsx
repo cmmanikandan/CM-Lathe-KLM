@@ -27,9 +27,12 @@ export const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({ order, isCompact =
         {/* Left: Company Details & Logo */}
         <div className="flex items-center gap-3">
           <img
-            src="/logo.png"
+            src="/assets/light_logo.png"
             alt="MANIKANDAN LATHE Logo"
             className={`${isCompact ? 'w-12 h-12' : 'w-16 h-16'} object-contain shrink-0`}
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/light_logo.png';
+            }}
           />
           <div className="space-y-0.5">
             <h1 className={`font-heading font-black text-[#111111] tracking-tight leading-none uppercase ${isCompact ? 'text-base' : 'text-xl'}`}>

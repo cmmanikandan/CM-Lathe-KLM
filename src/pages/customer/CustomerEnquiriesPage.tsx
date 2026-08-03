@@ -21,7 +21,7 @@ import { createCustomerEnquiryWhatsAppMessage } from '../../services/whatsappSer
 
 export const CustomerEnquiriesPage: React.FC = () => {
   const { user } = useAuth();
-  const { getCustomerEnquiries, loading, refreshEnquiries } = useEnquiries();
+  const { getCustomerEnquiries, loading } = useEnquiries();
   const navigate = useNavigate();
 
   const userPhone = user?.phone || '';

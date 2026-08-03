@@ -35,6 +35,7 @@ import {
   RotateCcw,
   MessageSquare
 } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 export const CustomerProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -123,65 +124,80 @@ export const CustomerProfilePage: React.FC = () => {
     { label: 'Invoices Issued', value: ordersLoading ? '—' : orders.length, icon: FileText, iconColor: 'text-[#D97706]', bgColor: 'bg-[#FEF3C7]' }
   ];
 
+  const { language, setLanguage } = useLanguage();
   const { getCustomerEnquiries } = useEnquiries();
   const { getCustomerRefunds } = useRefunds();
 
   const myEnquiries = getCustomerEnquiries(user?.phone || '');
   const myRefunds = getCustomerRefunds(user?.phone || '');
 
-  // Tailored Menu Items (Clean & Essential — Main Title Only)
+  // Tailored Menu Items (Rich Vibrant Color Palette)
   const menuItems = [
     {
       label: 'My Orders & Invoices',
+      sublabel: 'View active orders, track status & download invoices',
       icon: Package,
       iconColor: 'text-[#2563EB]',
-      bgColor: 'bg-[#DBEAFE]',
+      bgColor: 'bg-blue-50 border border-blue-200/80',
+      badgeBg: 'bg-blue-100 text-blue-800 border-blue-300',
       path: '/customer/orders',
       badge: `${pendingOrders > 0 ? `${pendingOrders} Active` : `${orders.length} Total`}`
     },
     {
       label: 'My Custom Enquiries & Quotations',
+      sublabel: 'Track custom fabrication quotes & responses from workshop',
       icon: MessageSquare,
       iconColor: 'text-[#D97706]',
-      bgColor: 'bg-[#FEF3C7]',
+      bgColor: 'bg-amber-50 border border-amber-200/80',
+      badgeBg: 'bg-amber-100 text-amber-900 border-amber-300',
       path: '/customer/enquiries',
       badge: myEnquiries.length > 0 ? `${myEnquiries.length} Enquiries` : undefined
     },
     {
       label: 'My Refund Requests & Ledger',
+      sublabel: 'View payment refund status & shop transaction receipts',
       icon: RotateCcw,
       iconColor: 'text-[#DC2626]',
-      bgColor: 'bg-[#FEE2E2]',
+      bgColor: 'bg-red-50 border border-red-200/80',
+      badgeBg: 'bg-red-100 text-red-800 border-red-300',
       path: '/customer/refunds',
       badge: myRefunds.length > 0 ? `${myRefunds.length} Refunds` : undefined
     },
     {
       label: 'Wishlist & Saved Items',
+      sublabel: 'Saved lathe models & custom gate specifications',
       icon: Heart,
-      iconColor: 'text-[#EF4444]',
-      bgColor: 'bg-[#FEE2E2]',
+      iconColor: 'text-[#EC4899]',
+      bgColor: 'bg-pink-50 border border-pink-200/80',
+      badgeBg: 'bg-pink-100 text-pink-800 border-pink-300',
       path: '/customer/wishlist',
       badge: wishlistCount > 0 ? `${wishlistCount} Saved` : undefined
     },
     {
       label: 'Workshop Stories & Live Gallery',
+      sublabel: 'Watch live machine turning & fabrication video updates',
       icon: Flame,
       iconColor: 'text-[#F97316]',
-      bgColor: 'bg-[#FFEDD5]',
+      bgColor: 'bg-orange-50 border border-orange-200/80',
+      badgeBg: 'bg-orange-100 text-orange-800 border-orange-300',
       path: '/customer/status'
     },
     {
-      label: 'WhatsApp Workshop Support',
+      label: 'WhatsApp Workshop Direct Support',
+      sublabel: 'Chat directly with owner Chellamuthu K',
       icon: MessageCircle,
-      iconColor: 'text-[#22C55E]',
-      bgColor: 'bg-[#DCFCE7]',
+      iconColor: 'text-[#16A34A]',
+      bgColor: 'bg-emerald-50 border border-emerald-200/80',
+      badgeBg: 'bg-emerald-100 text-emerald-800 border-emerald-300',
       path: 'https://wa.me/919659286268'
     },
     ...(isAdminUser ? [{
       label: 'Open Admin Workshop Portal',
+      sublabel: 'Manage orders, offline walk-ins & live workshop status',
       icon: ShieldCheck,
       iconColor: 'text-white',
-      bgColor: 'bg-[#F97316]',
+      bgColor: 'bg-gradient-to-r from-[#111111] to-slate-900 border border-slate-700 text-white',
+      badgeBg: 'bg-[#F97316] text-white',
       badge: 'ADMIN PORTAL',
       action: 'open_admin'
     }] : [])
@@ -418,7 +434,9 @@ export const CustomerProfilePage: React.FC = () => {
 
         {/* RIGHT COLUMN: Account Hub Menu Cards & Actions */}
         <div className="lg:col-span-7 space-y-6">
-          <div className="bg-white rounded-[22px] border border-gray-200 shadow-xs divide-y divide-gray-100 overflow-hidden">
+          
+          {/* VIBRANT MENU CARDS CONTAINER */}
+          <div className="bg-white rounded-[24px] border border-gray-200 shadow-xs divide-y divide-gray-100 overflow-hidden">
             {menuItems.map((item, idx) => {
               const Icon = item.icon;
               return (
@@ -436,22 +454,25 @@ export const CustomerProfilePage: React.FC = () => {
                       navigate(item.path);
                     }
                   }}
-                  className="p-4 flex items-center justify-between hover:bg-gray-50 cursor-pointer transition-colors group"
+                  className="p-4 sm:p-5 flex items-center justify-between hover:bg-gray-50/80 cursor-pointer transition-colors group"
                 >
                   <div className="flex items-center gap-3.5">
-                    <div className={`w-10 h-10 rounded-xl ${item.bgColor} flex items-center justify-center shrink-0`}>
-                      <Icon size={20} className={item.iconColor} />
+                    <div className={`w-11 h-11 rounded-2xl ${item.bgColor} flex items-center justify-center shrink-0 shadow-xs`}>
+                      <Icon size={22} className={item.iconColor} />
                     </div>
                     <div>
                       <span className="font-heading font-extrabold text-sm text-[#111111] group-hover:text-[#F97316] transition-colors block">
                         {item.label}
                       </span>
+                      {item.sublabel && (
+                        <p className="text-xs text-gray-500 font-mono mt-0.5 line-clamp-1">{item.sublabel}</p>
+                      )}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
                     {item.badge && (
-                      <span className="bg-orange-100 text-[#F97316] text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-orange-200">
+                      <span className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border ${item.badgeBg || 'bg-orange-100 text-[#F97316] border-orange-200'}`}>
                         {item.badge}
                       </span>
                     )}

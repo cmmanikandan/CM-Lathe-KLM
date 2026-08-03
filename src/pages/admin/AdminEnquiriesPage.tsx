@@ -40,9 +40,24 @@ export const AdminEnquiriesPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('ALL');
+  const [filterStatus, setFilterStatus] = useState<string>('ENQUIRY_RECEIVED');
   const [filterPayment, setFilterPayment] = useState<string>('ALL');
   const [selectedEnquiry, setSelectedEnquiry] = useState<CustomerEnquiry | null>(null);
+
+  // Status Filter Tabs Config
+  const statusTabs: { id: string; label: string }[] = [
+    { id: 'ENQUIRY_RECEIVED', label: '🆕 New Enquiries' },
+    { id: 'ORDER_ACCEPTED', label: '✅ Accepted' },
+    { id: 'UNDER_REVIEW', label: '⏳ Under Review' },
+    { id: 'INFO_REQUESTED', label: '💬 Info Requested' },
+    { id: 'REJECTED', label: '❌ Rejected' },
+    { id: 'ALL', label: '📋 All Enquiries' },
+  ];
+
+  const getTabCount = (tabId: string) => {
+    if (tabId === 'ALL') return enquiries.length;
+    return enquiries.filter((e) => e.status === tabId).length;
+  };
 
   // Action Modals State
   const [rejectModalEnquiry, setRejectModalEnquiry] = useState<CustomerEnquiry | null>(null);
@@ -175,41 +190,60 @@ export const AdminEnquiriesPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Filter Controls */}
-        <div className="bg-white p-4 rounded-[24px] border border-gray-200 shadow-xs flex flex-col md:flex-row gap-3 justify-between items-center">
-          <div className="relative w-full md:w-96">
-            <Search size={16} className="absolute left-3.5 top-3 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by Enquiry #, Name, Phone, Product..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-xs outline-none focus:border-[#F97316]"
-            />
+        {/* Filter Tabs Bar */}
+        <div className="bg-white p-3.5 sm:p-4 rounded-[24px] border border-gray-200 shadow-xs space-y-3">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar">
+            {statusTabs.map((tab) => {
+              const active = filterStatus === tab.id;
+              const count = getTabCount(tab.id);
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setFilterStatus(tab.id)}
+                  className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-heading font-extrabold text-xs whitespace-nowrap transition-all flex items-center gap-2 cursor-pointer ${
+                    active
+                      ? 'bg-[#F97316] text-white shadow-md scale-102'
+                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-[#111111] border border-gray-200'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                      active ? 'bg-white text-[#F97316]' : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
-          <div className="flex flex-wrap gap-2 w-full md:w-auto text-xs font-bold">
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl outline-none"
-            >
-              <option value="ALL">All Statuses</option>
-              <option value="ENQUIRY_RECEIVED">Enquiry Received</option>
-              <option value="INFO_REQUESTED">Info Requested</option>
-              <option value="ORDER_ACCEPTED">Order Accepted</option>
-              <option value="REJECTED">Rejected</option>
-            </select>
+          {/* Search & Payment Filter Bar */}
+          <div className="flex flex-col md:flex-row gap-3 justify-between items-center pt-1 border-t border-gray-100">
+            <div className="relative w-full md:w-96">
+              <Search size={16} className="absolute left-3.5 top-3 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by Enquiry #, Name, Phone, Product..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-xs outline-none focus:border-[#F97316]"
+              />
+            </div>
 
-            <select
-              value={filterPayment}
-              onChange={(e) => setFilterPayment(e.target.value)}
-              className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl outline-none"
-            >
-              <option value="ALL">All Payments</option>
-              <option value="ADVANCE_PAID">Advance Online Paid</option>
-              <option value="PAY_LATER">Pay Later (Enquiry)</option>
-            </select>
+            <div className="flex items-center gap-2 w-full md:w-auto text-xs font-bold">
+              <span className="text-gray-400 font-mono text-[11px] hidden sm:inline">Payment Filter:</span>
+              <select
+                value={filterPayment}
+                onChange={(e) => setFilterPayment(e.target.value)}
+                className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl outline-none text-xs w-full md:w-auto"
+              >
+                <option value="ALL">All Payments</option>
+                <option value="ADVANCE_PAID">Advance Online Paid</option>
+                <option value="PAY_LATER">Pay Later (Enquiry)</option>
+              </select>
+            </div>
           </div>
         </div>
 
