@@ -73,6 +73,9 @@ export const OrderDetailPage: React.FC = () => {
     { label: 'Delivery / Pickup', date: 'Final Step', done: ['COMPLETED'].includes(order.status) }
   ];
 
+  const isCompleted = order.status === 'COMPLETED';
+  const canCancel = order.status === 'PENDING' || order.status === 'ACCEPTED';
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 font-sans max-w-5xl mx-auto">
       
@@ -106,7 +109,7 @@ export const OrderDetailPage: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <span className={`text-[11px] font-mono font-black px-3 py-1 rounded-full uppercase border ${
-              order.status === 'COMPLETED'
+              isCompleted
                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                 : order.status === 'ACCEPTED'
                 ? 'bg-orange-50 text-[#F97316] border-orange-200'
@@ -127,24 +130,28 @@ export const OrderDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Action Row: Invoice Button (ONLY WHEN COMPLETED) & Cancel Order */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100">
-          {order.status === 'COMPLETED' ? (
-            <button
-              onClick={() => setPdfModalOpen(true)}
-              className="bg-[#111111] hover:bg-[#F97316] text-white font-heading font-black text-xs px-4 py-2.5 rounded-xl shadow-xs flex items-center gap-2 transition-all cursor-pointer"
-            >
-              <FileText size={15} className="text-[#F97316]" /> Download / View Tax Invoice →
-            </button>
-          ) : order.status !== 'REJECTED' ? (
-            <button
-              onClick={() => setCancelModalOpen(true)}
-              className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-heading font-black text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <XCircle size={14} /> Cancel Order
-            </button>
-          ) : null}
-        </div>
+        {/* Action Row: Small Compact Actions (View Tax Invoice Page or Cancel Order) */}
+        {(isCompleted || canCancel) && (
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100">
+            {isCompleted && (
+              <button
+                onClick={() => navigate(`/invoice/${order.id}`)}
+                className="bg-[#111111] hover:bg-[#F97316] text-white font-heading font-extrabold text-xs px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <FileText size={13} className="text-[#F97316]" /> View Tax Invoice Page →
+              </button>
+            )}
+
+            {canCancel && (
+              <button
+                onClick={() => setCancelModalOpen(true)}
+                className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold text-xs px-2.5 py-1.5 rounded-xl flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <XCircle size={13} /> Cancel Order
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 2. ORDERED PRODUCTS LIST */}
