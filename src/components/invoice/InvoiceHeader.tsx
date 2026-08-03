@@ -45,7 +45,6 @@ export const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({ order, isCompact =
               Kallimandhayam, Dindigul Dist, Tamil Nadu - 624614
             </p>
             <div className={`flex flex-wrap gap-x-3 text-[#374151] font-mono ${isCompact ? 'text-[9px]' : 'text-[10px]'}`}>
-              <span><strong>GSTIN:</strong> 33AAAPM9281K1Z5</span>
               <span><strong>Phone:</strong> +91 96592 86268</span>
             </div>
           </div>

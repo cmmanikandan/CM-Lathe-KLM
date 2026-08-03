@@ -5,6 +5,7 @@ import { Order } from '../../types';
 import { AdminPaymentCollectionModal } from '../../components/common/AdminPaymentCollectionModal';
 import { AdminPaymentRequestModal } from '../../components/common/AdminPaymentRequestModal';
 import { AdminDeliveredMessageModal } from '../../components/common/AdminDeliveredMessageModal';
+import { AdminWorkshopProgressModal } from '../../components/admin/AdminWorkshopProgressModal';
 import { PDFInvoiceModal } from '../../components/common/PDFInvoiceModal';
 import { createDeliveredThankYouWhatsAppMessage } from '../../services/whatsappService';
 import {
@@ -27,11 +28,12 @@ import {
   SlidersHorizontal,
   Trash2,
   AlertTriangle,
+  Camera,
 } from 'lucide-react';
 
 export const AdminOrdersPage: React.FC = () => {
   const navigate = useNavigate();
-  const { orders, getDraftOrders, deleteOrder, updateOrderStatus } = useOrders();
+  const { orders, getDraftOrders, deleteOrder, updateOrderStatus, updateOrderWorkshopProgress } = useOrders();
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
@@ -52,6 +54,7 @@ export const AdminOrdersPage: React.FC = () => {
   const [deletingOrder, setDeletingOrder] = useState<Order | null>(null);
   const [payingOrder, setPayingOrder] = useState<Order | null>(null);
   const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
+  const [progressModalOrder, setProgressModalOrder] = useState<Order | null>(null);
 
   // Draft Orders count
   const drafts = getDraftOrders();
@@ -452,6 +455,14 @@ export const AdminOrdersPage: React.FC = () => {
                     </a>
 
                     <button
+                      onClick={() => setProgressModalOrder(ord)}
+                      className="py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl flex items-center justify-center cursor-pointer"
+                      title="Upload Live Workshop Progress Photo"
+                    >
+                      <Camera size={13} />
+                    </button>
+
+                    <button
                       onClick={() => setDeliveredModalOrder(ord)}
                       className="py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center cursor-pointer"
                       title="Send Delivery Thank You Message (MANIKANDAN LATHE)"
@@ -574,6 +585,12 @@ export const AdminOrdersPage: React.FC = () => {
         isOpen={Boolean(deliveredModalOrder)}
         onClose={() => setDeliveredModalOrder(null)}
         order={deliveredModalOrder}
+      />
+      <AdminWorkshopProgressModal
+        order={progressModalOrder}
+        isOpen={Boolean(progressModalOrder)}
+        onClose={() => setProgressModalOrder(null)}
+        onUpdateOrderProgress={updateOrderWorkshopProgress}
       />
     </div>
   );

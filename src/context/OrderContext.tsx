@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Order, OrderStatus, PaymentTransaction, DeliveryDetails, OrderItem } from '../types';
+import { Order, OrderStatus, PaymentTransaction, DeliveryDetails, OrderItem, WorkshopProgressStage } from '../types';
 import { supabase } from '../services/supabase';
 import {
   fetchAllOrders,
@@ -77,6 +77,7 @@ interface OrderContextType {
   updateOrderStatus: (orderId: string, status: OrderStatus, logMessage?: string) => Promise<void>;
   updateOrderPriority: (orderId: string, priority: Order['priority']) => Promise<void>;
   updateOrderProduction: (orderId: string, workerName: string, machineName: string, expectedFinish?: string, notes?: string) => Promise<void>;
+  updateOrderWorkshopProgress: (orderId: string, workshopProgress: WorkshopProgressStage[]) => Promise<void>;
   logOrderActivity: (orderId: string, action: string, performedBy: string, details?: string) => Promise<void>;
   assignDeliveryDetails: (orderId: string, details: DeliveryDetails) => Promise<void>;
   uploadCompletedImages: (orderId: string, images: string[]) => Promise<void>;
@@ -418,6 +419,18 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     await refreshOrders();
   };
 
+  const updateOrderWorkshopProgress = async (orderId: string, workshopProgress: WorkshopProgressStage[]) => {
+    setOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, workshopProgress } : o))
+    );
+    try {
+      await supabase.from('orders').update({ workshop_progress: workshopProgress }).eq('id', orderId);
+    } catch (err) {
+      console.warn('Supabase workshop_progress update fallback:', err);
+    }
+    await logOrderActivity(orderId, 'Updated Live Workshop Crafting Progress Photos', 'Chellamuthu K (Owner)');
+  };
+
   const assignDeliveryDetails = async (orderId: string, details: DeliveryDetails) => {
     await supabase.from('orders').update({ delivery_details: details }).eq('id', orderId);
     await logOrderActivity(orderId, `Delivery assigned to ${details.personName}`, 'Dispatch Team');
@@ -557,7 +570,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       createOrder, createOfflineOrder,
       adminAcceptOrder, adminRejectOrder,
       addPaymentToOrder, updateOrderDiscount, updateOrderStatus,
-      updateOrderPriority, updateOrderProduction,
+      updateOrderPriority, updateOrderProduction, updateOrderWorkshopProgress,
       logOrderActivity, saveDraftOrder, getDraftOrders, deleteDraftOrder,
       createPaymentRequest, payPaymentRequest, cancelPaymentRequest,
       assignDeliveryDetails, uploadCompletedImages, cancelOrder,

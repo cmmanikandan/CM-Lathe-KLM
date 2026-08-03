@@ -173,7 +173,116 @@ export const OrderDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. ORDER STATUS PRODUCTION TIMELINE */}
+      {/* 3. LIVE WORKSHOP CRAFTING STAGE & PHOTOS (Real-time Updates) */}
+      <div className="bg-white p-6 rounded-[24px] border border-gray-200 shadow-xs space-y-4 font-sans">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
+          <div>
+            <h2 className="font-heading font-black text-sm text-[#111111] uppercase tracking-wider flex items-center gap-2">
+              <Sparkles size={16} className="text-[#F97316]" /> LIVE WORKSHOP CRAFTING STAGE & PHOTOS
+            </h2>
+            <p className="text-xs text-gray-500 font-mono">
+              Real-time forging, lathe machining & anti-rust coating photos from Kallimandhayam factory
+            </p>
+          </div>
+
+          <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full shrink-0">
+            ✓ Live Factory Sync
+          </span>
+        </div>
+
+        {/* 4 Workshop Stage Progress Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            {
+              stage: 'RAW_METAL_FORGING',
+              title: '1. Metal Forging & Cutting',
+              desc: 'Steel channels & pipe cutting',
+              icon: '🔨',
+            },
+            {
+              stage: 'LATHE_PRECISION_ALIGNMENT',
+              title: '2. Lathe Machine Alignment',
+              desc: 'Precision shaft & bush turning',
+              icon: '⚙',
+            },
+            {
+              stage: 'ANTI_RUST_PRIMER',
+              title: '3. Red Oxide Anti-Rust Primer',
+              desc: 'Corrosion-proof spray coating',
+              icon: '🎨',
+            },
+            {
+              stage: 'READY_FOR_LOADING',
+              title: '4. Ready for Loading & Dispatch',
+              desc: 'Final inspection & vehicle loading',
+              icon: '🚚',
+            },
+          ].map((s, sIdx) => {
+            const stageData = order.workshopProgress?.find((p) => p.stage === s.stage);
+            const hasPhotos = stageData?.photos && stageData.photos.length > 0;
+            const isCompleted = Boolean(stageData?.completedAt);
+
+            return (
+              <div
+                key={s.stage}
+                className={`p-3.5 rounded-2xl border transition-all flex flex-col justify-between space-y-3 ${
+                  isCompleted
+                    ? 'bg-orange-50/70 border-orange-200'
+                    : 'bg-gray-50/70 border-gray-200 opacity-80'
+                }`}
+              >
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-base">{s.icon}</span>
+                    {isCompleted ? (
+                      <span className="text-[9px] font-mono font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                        ✓ Completed
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-mono text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full">
+                        Pending
+                      </span>
+                    )}
+                  </div>
+
+                  <h4 className="font-heading font-black text-xs text-[#111111] leading-tight pt-1">
+                    {s.title}
+                  </h4>
+                  <p className="text-[10px] text-gray-500 line-clamp-1">{stageData?.description || s.desc}</p>
+                </div>
+
+                {/* Stage Photo Gallery */}
+                {hasPhotos ? (
+                  <div className="space-y-1.5 pt-1 border-t border-orange-200/60">
+                    <span className="text-[9px] font-mono text-gray-500 font-bold uppercase block">
+                      📸 Live Photos ({stageData.photos!.length})
+                    </span>
+                    <div className="flex gap-1.5 overflow-x-auto">
+                      {stageData.photos!.map((photo, pIdx) => (
+                        <a
+                          key={pIdx}
+                          href={photo}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-12 h-12 rounded-xl overflow-hidden border border-gray-300 shrink-0 bg-white hover:scale-105 transition-transform"
+                        >
+                          <img src={photo} alt={`Stage ${sIdx + 1} Photo ${pIdx + 1}`} className="w-full h-full object-cover" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-[10px] text-gray-400 font-mono pt-1">
+                    No photo uploaded yet
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 4. ORDER STATUS PRODUCTION TIMELINE */}
       <div className="bg-white p-6 rounded-[22px] border border-gray-200 shadow-xs space-y-4">
         <h2 className="font-heading font-black text-sm text-[#111111] uppercase tracking-wider flex items-center gap-2">
           <Clock size={16} className="text-[#F97316]" /> WORKSHOP PRODUCTION TIMELINE

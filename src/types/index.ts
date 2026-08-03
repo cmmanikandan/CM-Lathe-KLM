@@ -244,6 +244,15 @@ export interface PaymentRequest {
   expiresAt?: string;
 }
 
+export interface WorkshopProgressStage {
+  stage: 'RAW_METAL_FORGING' | 'LATHE_PRECISION_ALIGNMENT' | 'ANTI_RUST_PRIMER' | 'READY_FOR_LOADING';
+  title: string;
+  description: string;
+  photos?: string[];
+  completedAt?: string;
+  isCurrent?: boolean;
+}
+
 export interface Order {
   id: string;
   orderNumber: string;
@@ -272,6 +281,7 @@ export interface Order {
   paymentHistory: PaymentTransaction[];
   paymentRequests?: PaymentRequest[];
   deliveryDetails?: DeliveryDetails;
+  workshopProgress?: WorkshopProgressStage[];
   createdAt: string;
   updatedAt?: string;
   expectedDate?: string;
