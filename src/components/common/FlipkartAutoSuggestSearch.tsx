@@ -113,7 +113,7 @@ export const FlipkartAutoSuggestSearch: React.FC<FlipkartAutoSuggestSearchProps>
       
       {/* 1. COMPACT TRIGGER SEARCH BAR (Shown on Home / Products page) */}
       <div
-        onClick={() => setIsFullScreenModal(true)}
+        onClick={() => navigate('/customer/search')}
         className="relative flex items-center cursor-pointer group"
       >
         <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#F97316]" />

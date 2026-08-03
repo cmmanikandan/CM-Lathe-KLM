@@ -46,7 +46,8 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
   const isDetailPage = 
     location.pathname.startsWith('/customer/products/') || 
     location.pathname.startsWith('/customer/orders/') ||
-    location.pathname.startsWith('/customer/enquiry/');
+    location.pathname.startsWith('/customer/enquiry/') ||
+    location.pathname.startsWith('/customer/search');
 
   const bottomNavPaths = [
     '/customer/home',

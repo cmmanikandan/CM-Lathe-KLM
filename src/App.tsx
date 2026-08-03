@@ -39,6 +39,7 @@ import { CustomerGalleryPage } from './pages/gallery/CustomerGalleryPage';
 import { CustomerWishlistPage } from './pages/customer/CustomerWishlistPage';
 import { OrderDetailPage } from './pages/customer/OrderDetailPage';
 import { CustomerEnquiryFormPage } from './pages/customer/CustomerEnquiryFormPage';
+import { CustomerSearchPage } from './pages/customer/CustomerSearchPage';
 
 // Clean Authentication Pages
 import { LoginPage } from './pages/auth/LoginPage';
@@ -150,6 +151,7 @@ const AppContent: React.FC = () => {
         <Route path="/customer" element={<ProtectedCustomerRoute><CustomerHomePage /></ProtectedCustomerRoute>} />
         <Route path="/customer/home" element={<ProtectedCustomerRoute><CustomerHomePage /></ProtectedCustomerRoute>} />
         <Route path="/customer/products" element={<ProtectedCustomerRoute><CustomerProductsPage /></ProtectedCustomerRoute>} />
+        <Route path="/customer/search" element={<ProtectedCustomerRoute><CustomerSearchPage /></ProtectedCustomerRoute>} />
         <Route path="/customer/products/:id" element={<ProtectedCustomerRoute><ProductDetailPage /></ProtectedCustomerRoute>} />
         <Route path="/customer/orders" element={<ProtectedCustomerRoute><CustomerOrdersPage /></ProtectedCustomerRoute>} />
         <Route path="/customer/orders/:id" element={<ProtectedCustomerRoute><OrderDetailPage /></ProtectedCustomerRoute>} />
