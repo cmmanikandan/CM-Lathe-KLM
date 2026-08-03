@@ -18,6 +18,7 @@ import {
   CreditCard,
   MessageCircle,
   CheckCircle2,
+  Check,
   Printer,
   Sparkles,
   ShoppingBag,
@@ -85,6 +86,7 @@ export const AdminQuickOrderPage: React.FC = () => {
   const [cashReceived, setCashReceived] = useState<number | ''>('');
   const [upiPaidAmount, setUpiPaidAmount] = useState<number | ''>('');
   const [utrNumber, setUtrNumber] = useState<string>('');
+  const [isUpiSplitPaid, setIsUpiSplitPaid] = useState<boolean>(false);
 
   // POS Submission & Receipt Modal
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -757,12 +759,30 @@ export const AdminQuickOrderPage: React.FC = () => {
                 </div>
               )}
 
-              {/* SPLIT PAYMENT (CASH + UPI) */}
+              {/* SPLIT PAYMENT (CASH + UPI) WITH DYNAMIC QR SCANNER & MARK AS PAID */}
               {paymentMode === 'Split' && (
-                <div className="p-3.5 bg-blue-50 rounded-2xl border border-blue-200 space-y-2 font-mono text-xs">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="font-bold text-blue-900 block">Cash Amount (₹):</label>
+                <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50/80 rounded-2xl border border-blue-200 space-y-3 font-sans text-xs shadow-xs">
+                  <div className="flex items-center justify-between border-b border-blue-200/80 pb-2">
+                    <span className="font-heading font-black text-xs text-blue-950 flex items-center gap-1.5">
+                      <Layers size={15} className="text-[#F97316]" /> SPLIT PAYMENT (CASH + UPI)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const remaining = Math.max(0, grandTotal - numCash);
+                        setUpiPaidAmount(remaining);
+                        setIsUpiSplitPaid(false);
+                      }}
+                      className="text-[10px] font-mono font-bold bg-white text-blue-800 hover:bg-blue-100 border border-blue-300 px-2.5 py-1 rounded-lg transition-colors cursor-pointer shadow-xs"
+                    >
+                      ⚡ Auto-Fill Remaining UPI: ₹{Math.max(0, grandTotal - numCash).toLocaleString('en-IN')}
+                    </button>
+                  </div>
+
+                  {/* Cash & UPI Input Row */}
+                  <div className="grid grid-cols-2 gap-3 font-mono">
+                    <div className="space-y-1">
+                      <label className="font-bold text-gray-800 text-[11px] block">1. Cash Amount (₹):</label>
                       <input
                         type="number"
                         min="0"
@@ -778,11 +798,11 @@ export const AdminQuickOrderPage: React.FC = () => {
                             setCashReceived(isNaN(num) ? '' : num);
                           }
                         }}
-                        className="w-full bg-white p-2 rounded-xl border border-blue-300 font-bold text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full bg-white p-2.5 rounded-xl border border-blue-300 font-bold text-right text-gray-900 outline-none focus:border-[#F97316] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </div>
-                    <div>
-                      <label className="font-bold text-blue-900 block">UPI Amount (₹):</label>
+                    <div className="space-y-1">
+                      <label className="font-bold text-blue-900 text-[11px] block">2. UPI Amount (₹):</label>
                       <input
                         type="number"
                         min="0"
@@ -791,6 +811,7 @@ export const AdminQuickOrderPage: React.FC = () => {
                         onFocus={(e) => e.target.select()}
                         onChange={(e) => {
                           const val = e.target.value;
+                          setIsUpiSplitPaid(false);
                           if (val === '') {
                             setUpiPaidAmount('');
                           } else {
@@ -798,14 +819,75 @@ export const AdminQuickOrderPage: React.FC = () => {
                             setUpiPaidAmount(isNaN(num) ? '' : num);
                           }
                         }}
-                        className="w-full bg-white p-2 rounded-xl border border-blue-300 font-bold text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full bg-white p-2.5 rounded-xl border border-blue-300 font-bold text-right text-blue-900 outline-none focus:border-blue-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </div>
                   </div>
-                  <div className="flex justify-between items-center text-xs font-bold pt-1 border-t border-blue-200">
-                    <span>Total Paid: ₹{(numCash + numUpi).toLocaleString('en-IN')}</span>
-                    <span className={balanceDue > 0 ? 'text-red-600' : 'text-emerald-700'}>
-                      {balanceDue > 0 ? `Balance Due: ₹${balanceDue.toLocaleString('en-IN')}` : '✓ Fully Paid'}
+
+                  {/* UPI QR SCANNER FOR SPLIT AMOUNT */}
+                  {numUpi > 0 && (
+                    <div className="bg-white p-3.5 rounded-xl border border-blue-200 shadow-xs space-y-3 mt-2">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={qrData.qrCodeUrl}
+                          alt="Split UPI QR"
+                          className="w-24 h-24 rounded-xl border-2 border-blue-300 shrink-0 p-1 bg-white shadow-xs"
+                        />
+                        <div className="space-y-1.5 flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-mono font-bold text-blue-700 uppercase tracking-wide">
+                              SCAN TO PAY UPI PORTION
+                            </span>
+                            <span className="bg-blue-100 text-blue-900 text-[10px] font-mono font-black px-2 py-0.5 rounded-full">
+                              ₹{numUpi.toLocaleString('en-IN')}
+                            </span>
+                          </div>
+                          <h4 className="font-heading font-black text-xs text-[#111111] truncate">
+                            Scan with GPay / PhonePe / Paytm
+                          </h4>
+                          <p className="text-[10px] text-gray-500 font-mono">
+                            UPI ID: <span className="font-bold text-gray-800">9659286268@okbizaxis</span>
+                          </p>
+
+                          {/* Click as Paid Button */}
+                          <button
+                            type="button"
+                            onClick={() => setIsUpiSplitPaid(!isUpiSplitPaid)}
+                            className={`w-full py-2 px-3 rounded-xl font-heading font-black text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer ${
+                              isUpiSplitPaid
+                                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                : 'bg-[#111111] hover:bg-gray-800 text-white'
+                            }`}
+                          >
+                            {isUpiSplitPaid ? (
+                              <>
+                                <CheckCircle2 size={14} className="text-white" /> UPI ₹{numUpi.toLocaleString('en-IN')} Verified & Paid ✓
+                              </>
+                            ) : (
+                              <>
+                                <Check size={14} className="text-emerald-400" /> Click as Paid (Confirm UPI Payment)
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Optional UTR / Ref No field */}
+                      <input
+                        type="text"
+                        placeholder="Enter UTR / UPI Transaction Ref No (Optional)"
+                        value={utrNumber}
+                        onChange={(e) => setUtrNumber(e.target.value)}
+                        className="w-full bg-gray-50 p-2 rounded-lg border border-gray-300 font-mono text-xs outline-none focus:border-blue-600"
+                      />
+                    </div>
+                  )}
+
+                  {/* Summary Footer */}
+                  <div className="flex justify-between items-center text-xs font-mono font-bold pt-2 border-t border-blue-200">
+                    <span className="text-gray-700">Total Collected: ₹{(numCash + numUpi).toLocaleString('en-IN')}</span>
+                    <span className={balanceDue > 0 ? 'text-red-600 font-black' : 'text-emerald-700 font-black'}>
+                      {balanceDue > 0 ? `Remaining Due: ₹${balanceDue.toLocaleString('en-IN')}` : '✓ Fully Paid'}
                     </span>
                   </div>
                 </div>
