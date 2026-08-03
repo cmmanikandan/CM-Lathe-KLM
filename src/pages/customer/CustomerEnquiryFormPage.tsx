@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useProducts } from '../../context/ProductContext';
 import { useEnquiries } from '../../context/EnquiryContext';
 import { useAuth } from '../../context/AuthContext';
@@ -8,7 +8,6 @@ import { uploadToCloudinary } from '../../services/cloudinaryService';
 import { createCustomerEnquiryWhatsAppMessage } from '../../services/whatsappService';
 import {
   ArrowLeft,
-  ShoppingBag,
   CheckCircle2,
   Upload,
   CreditCard,
@@ -19,7 +18,10 @@ import {
   Phone,
   Sparkles,
   ShieldCheck,
-  Award
+  Award,
+  Package,
+  Wrench,
+  ShoppingBag
 } from 'lucide-react';
 
 export const CustomerEnquiryFormPage: React.FC = () => {
@@ -149,13 +151,13 @@ export const CustomerEnquiryFormPage: React.FC = () => {
           setEnquirySuccess(true);
           window.open(wa, '_blank');
         },
-        onFailure: () => {
+        onFailure: (err) => {
           setIsSubmitting(false);
-          alert('Advance payment was cancelled or failed. You can switch to "Pay Later" to submit your enquiry.');
+          alert(`Payment failed: ${err.message || 'Transaction cancelled.'}`);
         },
       });
     } else {
-      // Pay Later
+      // Pay Later Choice
       const newEnq = await submitEnquiry({
         customerName,
         customerPhone,
@@ -185,38 +187,46 @@ export const CustomerEnquiryFormPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] text-[#111111] font-sans antialiased pb-24">
+    <div className="min-h-screen bg-[#F8F9FA] text-[#111111] font-sans antialiased flex flex-col">
       
-      {/* 1. TOP DEDICATED FULL-PAGE HEADER */}
-      <div className="bg-white border-b border-gray-200 py-4 px-4 sm:px-8 shadow-xs sticky top-0 z-30">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+      {/* 1. TOP STICKY HEADER (Proper Z-Index & Clean Mobile Alignment) */}
+      <div className="bg-white border-b border-gray-200 py-3.5 px-4 sm:px-8 shadow-xs sticky top-0 z-40 shrink-0">
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
           <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 font-heading font-extrabold text-xs text-[#111111] bg-gray-100 hover:bg-gray-200 px-3.5 py-2 rounded-xl transition-colors cursor-pointer"
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate('/customer/products');
+              }
+            }}
+            className="flex items-center gap-1.5 font-heading font-extrabold text-xs text-[#111111] bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-xl transition-colors cursor-pointer shrink-0"
+            title="Back"
           >
             <ArrowLeft size={16} className="text-[#F97316]" /> Back
           </button>
 
-          <div className="text-center">
-            <h1 className="font-heading font-black text-base sm:text-lg text-[#111111]">
+          <div className="text-center min-w-0 flex-1">
+            <h1 className="font-heading font-black text-xs sm:text-base text-[#111111] truncate">
               Submit Custom Fabrication Order Enquiry
             </h1>
-            <span className="text-[11px] text-gray-500 font-mono">
+            <span className="text-[10px] sm:text-[11px] text-gray-500 font-mono block truncate">
               MANIKANDAN LATHE WORKS • Kallimandhayam Factory
             </span>
           </div>
 
-          <div className="hidden sm:flex items-center gap-1 text-[11px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full font-bold">
+          <div className="hidden sm:flex items-center gap-1 text-[11px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full font-bold shrink-0">
             <ShieldCheck size={14} /> Factory Direct
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-6">
+      {/* 2. SCROLLABLE FORM CONTENT */}
+      <div className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 pt-5 pb-32">
         
         {/* SUCCESS CELEBRATION EFFECT SCREEN */}
         {enquirySuccess ? (
-          <div className="bg-white rounded-[26px] border-2 border-emerald-500 p-8 sm:p-12 shadow-2xl text-center space-y-6 animate-in zoom-in-95 duration-300">
+          <div className="bg-white rounded-[26px] border-2 border-emerald-500 p-8 sm:p-12 shadow-2xl text-center space-y-6 animate-in zoom-in-95 duration-300 my-4">
             <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-lg animate-bounce">
               <CheckCircle2 size={48} />
             </div>
@@ -254,43 +264,43 @@ export const CustomerEnquiryFormPage: React.FC = () => {
           </div>
         ) : (
           /* FULL-PAGE ENQUIRY FORM */
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form id="enquiry-form" onSubmit={handleSubmit} className="space-y-6">
             
             {/* Selected Product Hero Card */}
-            <div className="bg-white p-5 rounded-[22px] border border-gray-200 shadow-xs flex items-center gap-4">
+            <div className="bg-white p-4 sm:p-5 rounded-[22px] border border-gray-200 shadow-xs flex items-center gap-4">
               <img
-                src={selectedProduct?.images?.[0] || 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=300&q=80'}
+                src={selectedProduct?.images?.[0] || 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=200&q=80'}
                 alt={selectedProduct?.name}
-                className="w-20 h-20 rounded-2xl object-contain bg-gray-50 border border-gray-200 p-1 shrink-0"
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-contain bg-white border border-gray-200 p-1 shrink-0 shadow-xs"
               />
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 space-y-1 flex-1">
                 <span className="text-[10px] font-mono font-bold text-[#F97316] uppercase block">
-                  Selected Item: {selectedProduct?.category}
+                  SELECTED ITEM: {selectedProduct?.category}
                 </span>
-                <h3 className="font-heading font-black text-lg text-[#111111] truncate">
+                <h3 className="font-heading font-black text-sm sm:text-base text-[#111111] truncate">
                   {selectedProduct?.name}
                 </h3>
-                <span className="font-heading font-black text-base text-[#F97316] block mt-0.5">
-                  Est. Factory Price: ₹{currentUnitPrice.toLocaleString('en-IN')}
+                <span className="font-heading font-extrabold text-xs sm:text-sm text-[#F97316] block">
+                  Est. Factory Price: ₹{totalEstPrice.toLocaleString('en-IN')}
                 </span>
               </div>
             </div>
 
-            {/* STEP 1: Customer Contact & Delivery Info */}
-            <div className="bg-white p-6 rounded-[24px] border border-gray-200 shadow-xs space-y-4">
-              <h2 className="font-heading font-black text-sm text-[#111111] uppercase tracking-wider flex items-center gap-2 border-b border-gray-100 pb-3">
-                <Sparkles size={18} className="text-[#F97316]" /> 1. Customer Contact & Delivery Details
+            {/* STEP 1: Customer Contact Details */}
+            <div className="bg-white p-5 sm:p-6 rounded-[24px] border border-gray-200 shadow-xs space-y-4">
+              <h2 className="font-heading font-black text-xs sm:text-sm text-[#111111] uppercase tracking-wider flex items-center gap-2 border-b border-gray-100 pb-3">
+                <Sparkles size={16} className="text-[#F97316]" /> 1. Customer Contact & Delivery Details
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-sans">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 <div>
                   <label className="font-bold text-gray-800 block mb-1">Your Full Name *</label>
                   <input
                     type="text"
                     required
+                    placeholder="e.g. Manikandan P"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="Enter your name"
                     className="w-full bg-gray-50 text-gray-900 font-medium p-3 rounded-xl border border-gray-300 outline-none focus:border-[#F97316] focus:bg-white"
                   />
                 </div>
@@ -300,106 +310,80 @@ export const CustomerEnquiryFormPage: React.FC = () => {
                   <input
                     type="tel"
                     required
+                    placeholder="e.g. 9842188412"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
-                    placeholder="10-digit mobile number"
                     className="w-full bg-gray-50 text-gray-900 font-mono font-medium p-3 rounded-xl border border-gray-300 outline-none focus:border-[#F97316] focus:bg-white"
                   />
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="font-bold text-gray-800 block mb-1">Delivery / Installation Address *</label>
+                  <label className="font-bold text-gray-800 block mb-1">Site Delivery Address / Installation Location *</label>
                   <textarea
                     rows={2}
                     required
+                    placeholder="e.g. Kallimandhayam Main Road, Dindigul Dist"
                     value={customerAddress}
                     onChange={(e) => setCustomerAddress(e.target.value)}
-                    placeholder="Street, Town, District, Pincode..."
                     className="w-full bg-gray-50 text-gray-900 font-medium p-3 rounded-xl border border-gray-300 outline-none focus:border-[#F97316] focus:bg-white"
                   />
                 </div>
 
-                <div className="sm:col-span-2 space-y-2">
-                  <label className="font-bold text-gray-800 block">Delivery Method:</label>
-                  <div className="grid grid-cols-2 gap-3">
+                <div className="sm:col-span-2 space-y-1">
+                  <label className="font-bold text-gray-800 block mb-1">Delivery Method:</label>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
                     <button
                       type="button"
                       onClick={() => setDeliveryType('Home Delivery')}
-                      className={`p-3 rounded-xl border-2 text-left font-bold text-xs transition-all ${
+                      className={`p-3 rounded-xl border font-bold text-left transition-all ${
                         deliveryType === 'Home Delivery'
-                          ? 'bg-orange-50 border-[#F97316] text-[#111111]'
-                          : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                          ? 'bg-orange-50 border-[#F97316] text-[#F97316]'
+                          : 'bg-gray-50 border-gray-200 text-gray-700'
                       }`}
                     >
-                      <Truck size={16} className="text-[#F97316] mb-1" />
-                      <span>Workshop On-Site Delivery</span>
+                      <Truck size={16} className="mb-1" /> Workshop On-Site Delivery
                     </button>
-
                     <button
                       type="button"
                       onClick={() => setDeliveryType('Pickup')}
-                      className={`p-3 rounded-xl border-2 text-left font-bold text-xs transition-all ${
+                      className={`p-3 rounded-xl border font-bold text-left transition-all ${
                         deliveryType === 'Pickup'
-                          ? 'bg-orange-50 border-[#F97316] text-[#111111]'
-                          : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                          ? 'bg-orange-50 border-[#F97316] text-[#F97316]'
+                          : 'bg-gray-50 border-gray-200 text-gray-700'
                       }`}
                     >
-                      <Award size={16} className="text-[#F97316] mb-1" />
-                      <span>Self Factory Pickup</span>
+                      <Award size={16} className="mb-1" /> Self Factory Pickup
                     </button>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* STEP 2: Custom Specifications & Quantity */}
-            <div className="bg-white p-6 rounded-[24px] border border-gray-200 shadow-xs space-y-4">
-              <h2 className="font-heading font-black text-sm text-[#111111] uppercase tracking-wider flex items-center gap-2 border-b border-gray-100 pb-3">
-                <ShoppingBag size={18} className="text-[#F97316]" /> 2. Custom Dimensions & Requirements
+            {/* STEP 2: Custom Dimensions & Requirements */}
+            <div className="bg-white p-5 sm:p-6 rounded-[24px] border border-gray-200 shadow-xs space-y-4">
+              <h2 className="font-heading font-black text-xs sm:text-sm text-[#111111] uppercase tracking-wider flex items-center gap-2 border-b border-gray-100 pb-3">
+                <ShoppingBag size={16} className="text-[#F97316]" /> 2. Custom Dimensions & Requirements
               </h2>
 
-              <div className="space-y-4 text-xs font-sans">
+              <div className="space-y-4 text-xs">
                 
-                {/* Variant Selection if available */}
-                {selectedProduct?.variants && selectedProduct.variants.length > 0 && (
-                  <div>
-                    <label className="font-bold text-gray-800 block mb-1">Select Size / Variant:</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {selectedProduct.variants.map((v) => (
-                        <button
-                          key={v.id}
-                          type="button"
-                          onClick={() => setSelectedVariantId(v.id)}
-                          className={`p-3 rounded-xl border-2 text-left transition-all ${
-                            selectedVariantId === v.id
-                              ? 'bg-orange-50 border-[#F97316] text-[#111111]'
-                              : 'bg-white border-gray-200 text-gray-700'
-                          }`}
-                        >
-                          <strong className="block">{v.name}</strong>
-                          <span className="text-[11px] text-[#F97316] font-mono font-bold">₹{v.price.toLocaleString('en-IN')}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
+                {/* Quantity & Variant */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="font-bold text-gray-800 block mb-1">Order Quantity (Units):</label>
-                    <div className="flex items-center gap-3 bg-gray-50 p-2 rounded-xl border border-gray-300 w-fit">
+                    <div className="flex items-center gap-3">
                       <button
                         type="button"
                         onClick={() => setOrderQuantity((q) => Math.max(1, q - 1))}
-                        className="w-8 h-8 bg-white text-[#111111] font-black rounded-lg border shadow-xs hover:bg-gray-100"
+                        className="w-10 h-10 bg-gray-100 text-[#111111] font-black rounded-xl border border-gray-300 hover:bg-gray-200 cursor-pointer"
                       >
                         -
                       </button>
-                      <span className="font-mono font-black text-sm text-gray-900 px-3">{orderQuantity}</span>
+                      <span className="font-mono font-black text-base w-8 text-center">{orderQuantity}</span>
                       <button
                         type="button"
                         onClick={() => setOrderQuantity((q) => q + 1)}
-                        className="w-8 h-8 bg-white text-[#111111] font-black rounded-lg border shadow-xs hover:bg-gray-100"
+                        className="w-10 h-10 bg-gray-100 text-[#111111] font-black rounded-xl border border-gray-300 hover:bg-gray-200 cursor-pointer"
                       >
                         +
                       </button>
@@ -449,8 +433,8 @@ export const CustomerEnquiryFormPage: React.FC = () => {
             </div>
 
             {/* STEP 3: Payment Option & Total Estimated Price */}
-            <div className="bg-white p-6 rounded-[24px] border border-gray-200 shadow-xs space-y-4">
-              <h2 className="font-heading font-black text-sm text-[#111111] uppercase tracking-wider flex items-center gap-2 border-b border-gray-100 pb-3">
+            <div className="bg-white p-5 sm:p-6 rounded-[24px] border border-gray-200 shadow-xs space-y-4">
+              <h2 className="font-heading font-black text-xs sm:text-sm text-[#111111] uppercase tracking-wider flex items-center gap-2 border-b border-gray-100 pb-3">
                 <CreditCard size={18} className="text-[#F97316]" /> 3. Payment Option & Summary
               </h2>
 
@@ -495,11 +479,11 @@ export const CustomerEnquiryFormPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Submit Button */}
+              {/* Submit Button inside Section 3 */}
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-sm py-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 active:scale-98 transition-all cursor-pointer"
+                className="w-full bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs sm:text-sm py-4 px-6 rounded-2xl shadow-xl flex items-center justify-center gap-2 active:scale-98 transition-all cursor-pointer"
               >
                 {isSubmitting ? (
                   <><Loader2 size={18} className="animate-spin" /> Submitting Enquiry to Workshop...</>
