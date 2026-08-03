@@ -25,6 +25,7 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
   isOpen,
   onClose,
   title
+}) => {
   const isPushedRef = React.useRef(false);
 
   React.useEffect(() => {
