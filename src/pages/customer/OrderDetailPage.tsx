@@ -20,7 +20,8 @@ import {
   ChevronRight,
   XCircle,
   AlertTriangle,
-  Loader2
+  Loader2,
+  Sparkles
 } from 'lucide-react';
 
 export const OrderDetailPage: React.FC = () => {

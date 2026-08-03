@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../../context/ProductContext';
 import { FlipkartAutoSuggestSearch } from '../../components/common/FlipkartAutoSuggestSearch';
-import { ProductCompareModal } from '../../components/customer/ProductCompareModal';
 import {
   Search,
   Mic,
@@ -84,21 +83,6 @@ export const CustomerProductsPage: React.FC = () => {
   const [filterStock, setFilterStock] = useState<'all' | 'ready' | 'made-to-order'>('all');
   const [maxPrice, setMaxPrice] = useState<number>(200000);
   const [wishlist, setWishlist] = useState<string[]>([]);
-  const [compareIds, setCompareIds] = useState<string[]>([]);
-  const [compareModalOpen, setCompareModalOpen] = useState(false);
-
-  const toggleCompare = (id: string) => {
-    setCompareIds((prev) => {
-      if (prev.includes(id)) {
-        return prev.filter((item) => item !== id);
-      }
-      if (prev.length >= 3) {
-        alert('You can compare up to 3 products at a time.');
-        return prev;
-      }
-      return [...prev, id];
-    });
-  };
 
   const categoryIcons: Record<string, string> = {
     'All': '✨',
@@ -290,35 +274,6 @@ export const CustomerProductsPage: React.FC = () => {
               </div>
             );
           })}
-        </div>
-      )}
-
-      {/* FLOATING COMPARE BAR TAKING CUSTOMER TO FULL COMPARE PAGE */}
-      {compareIds.length > 0 && (
-        <div className="fixed bottom-20 left-4 right-4 z-40 max-w-lg mx-auto bg-[#111111] text-white p-3.5 rounded-2xl shadow-2xl border-2 border-[#F97316] flex items-center justify-between gap-3 animate-in slide-in-from-bottom duration-200 font-sans">
-          <div className="flex items-center gap-2">
-            <span className="bg-[#F97316] text-white text-xs font-mono font-black w-6 h-6 rounded-full flex items-center justify-center">
-              {compareIds.length}
-            </span>
-            <span className="text-xs font-heading font-bold text-white">
-              Selected for Comparison
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCompareIds([])}
-              className="text-xs text-gray-400 hover:text-white px-2 py-1 font-mono font-bold"
-            >
-              Clear
-            </button>
-            <button
-              onClick={() => navigate(`/customer/compare?ids=${compareIds.join(',')}`)}
-              className="bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs px-3.5 py-2 rounded-xl shadow-md flex items-center gap-1 active:scale-95 transition-transform cursor-pointer"
-            >
-              Open Full Compare Page →
-            </button>
-          </div>
         </div>
       )}
 
