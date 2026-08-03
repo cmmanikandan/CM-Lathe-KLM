@@ -112,10 +112,10 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
     <div className="min-h-screen bg-[#F3F4F6] text-[#111111] font-sans antialiased flex flex-col selection:bg-[#F97316] selection:text-white">
       
       {/* Responsive Container */}
-      <div className="w-full max-w-[1440px] mx-auto min-h-screen bg-[#F8F9FA] relative shadow-md flex flex-col overflow-x-hidden">
+      <div className="w-full max-w-[1440px] mx-auto min-h-screen bg-[#F8F9FA] relative shadow-md flex flex-col">
         
-        {/* 1. FLOATING GLASSMORPHISM TOP APP BAR */}
-        <header className="sticky top-0 z-40 h-[64px] bg-white/80 backdrop-blur-xl border-b border-white/50 shadow-xs px-4 sm:px-6 lg:px-8 flex items-center justify-between shrink-0 transition-all duration-300">
+        {/* 1. ALWAYS STICKY TOP APP BAR */}
+        <header className="sticky top-0 z-50 h-[64px] bg-white/95 backdrop-blur-md border-b border-gray-200/80 shadow-xs px-4 sm:px-6 lg:px-8 flex items-center justify-between shrink-0 transition-all duration-300">
           
           <BrandLogo 
             size="mobile" 
