@@ -72,8 +72,40 @@ export const CustomerStatusPage: React.FC = () => {
   const [viewerIndex, setViewerIndex] = useState(0);
 
   const [activeFolderItem, setActiveFolderItem] = useState<any | null>(null);
-
   const [folderPhotoIndex, setFolderPhotoIndex] = useState(0);
+
+  const folderPushedRef = React.useRef(false);
+
+  useEffect(() => {
+    if (!activeFolderItem) {
+      folderPushedRef.current = false;
+      return;
+    }
+
+    if (!folderPushedRef.current) {
+      window.history.pushState({ modalType: 'folderAlbum' }, '');
+      folderPushedRef.current = true;
+    }
+
+    const handlePopState = () => {
+      folderPushedRef.current = false;
+      setActiveFolderItem(null);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [activeFolderItem]);
+
+  const handleCloseFolder = () => {
+    if (folderPushedRef.current) {
+      folderPushedRef.current = false;
+      window.history.back();
+    } else {
+      setActiveFolderItem(null);
+    }
+  };
 
   const categories = [
     'All',
@@ -143,8 +175,8 @@ export const CustomerStatusPage: React.FC = () => {
         <div className="bg-white/90 backdrop-blur-xl border-b border-gray-200 sticky top-[64px] z-30 px-4 sm:px-6 py-4 shadow-xs">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <button
-              onClick={() => setActiveFolderItem(null)}
-              className="bg-gray-100 hover:bg-[#111111] hover:text-white text-gray-800 text-xs font-heading font-black px-4 py-2.5 rounded-2xl flex items-center gap-2 transition-all shrink-0 active:scale-95"
+              onClick={handleCloseFolder}
+              className="bg-gray-100 hover:bg-[#111111] hover:text-white text-gray-800 text-xs font-heading font-black px-4 py-2.5 rounded-2xl flex items-center gap-2 transition-all shrink-0 active:scale-95 cursor-pointer"
             >
               <ArrowLeft size={16} /> Back to Gallery
             </button>

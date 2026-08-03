@@ -25,10 +25,47 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
   isOpen,
   onClose,
   title
-}) => {
-  const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const [zoomScale, setZoomScale] = useState(1);
-  const [rotation, setRotation] = useState(0);
+  const isPushedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!isOpen) {
+      isPushedRef.current = false;
+      return;
+    }
+
+    if (!isPushedRef.current) {
+      window.history.pushState({ modalType: 'imageViewer' }, '');
+      isPushedRef.current = true;
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleDismiss();
+      }
+    };
+
+    const handlePopState = () => {
+      isPushedRef.current = false;
+      onClose();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isOpen, onClose]);
+
+  const handleDismiss = () => {
+    if (isPushedRef.current) {
+      isPushedRef.current = false;
+      window.history.back();
+    } else {
+      onClose();
+    }
+  };
 
   if (!isOpen || images.length === 0) return null;
 
@@ -77,7 +114,7 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
         <div className="p-4 flex items-center justify-between border-b border-white/10 bg-black/50 z-20">
           <div className="flex items-center gap-3">
             <button
-              onClick={onClose}
+              onClick={handleDismiss}
               className="p-2 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white"
               title="Close Viewer"
             >

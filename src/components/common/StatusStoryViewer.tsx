@@ -32,13 +32,23 @@ export const StatusStoryViewer: React.FC<StatusStoryViewerProps> = ({
 
   const currentStory = stories[currentIndex];
 
-  // 1. Keyboard ESC & Browser Back button listeners
+  const isPushedRef = useRef(false);
+
+  // 1. Keyboard ESC & Browser Back button listeners (Mobile Hardware Back support)
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      isPushedRef.current = false;
+      return;
+    }
+
+    if (!isPushedRef.current) {
+      window.history.pushState({ modalType: 'storyViewer' }, '');
+      isPushedRef.current = true;
+    }
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        handleDismiss();
       } else if (e.key === 'ArrowLeft') {
         if (currentIndex > 0) {
           setCurrentIndex((c) => c - 1);
@@ -49,12 +59,13 @@ export const StatusStoryViewer: React.FC<StatusStoryViewerProps> = ({
           setCurrentIndex((c) => c + 1);
           setProgress(0);
         } else {
-          onClose();
+          handleDismiss();
         }
       }
     };
 
     const handlePopState = () => {
+      isPushedRef.current = false;
       onClose();
     };
 
@@ -66,6 +77,15 @@ export const StatusStoryViewer: React.FC<StatusStoryViewerProps> = ({
       window.removeEventListener('popstate', handlePopState);
     };
   }, [isOpen, currentIndex, stories.length, onClose]);
+
+  const handleDismiss = () => {
+    if (isPushedRef.current) {
+      isPushedRef.current = false;
+      window.history.back();
+    } else {
+      onClose();
+    }
+  };
 
   // 2. Story Progress Timer
   useEffect(() => {
@@ -211,7 +231,7 @@ export const StatusStoryViewer: React.FC<StatusStoryViewerProps> = ({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onClose();
+                  handleDismiss();
                 }}
                 title="Close Story Viewer"
                 className="w-10 h-10 rounded-full bg-black/60 hover:bg-[#F97316] text-white flex items-center justify-center backdrop-blur-md transition-all cursor-pointer z-50 border border-white/20 active:scale-90"
