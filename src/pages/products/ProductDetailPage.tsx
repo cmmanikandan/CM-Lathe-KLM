@@ -96,20 +96,6 @@ export const ProductDetailPage: React.FC = () => {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  const handleShareClick = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: product?.name || 'MANIKANDAN LATHE Product',
-        text: `Check out ${product?.name} at MANIKANDAN LATHE!`,
-        url: window.location.href,
-      }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2500);
-    }
-  };
-
   // Reviews state synced with localStorage per product (no demo reviews)
   const reviewsStorageKey = `ml_reviews_${product?.id || 'default'}`;
   const [reviews, setReviews] = useState<Array<{
@@ -243,11 +229,14 @@ export const ProductDetailPage: React.FC = () => {
   const handleShareClick = () => {
     if (navigator.share) {
       navigator.share({
-        title: `${product.name} - MANIKANDAN LATHE`,
-        text: `Check out ${product.name} at MANIKANDAN LATHE Workshop Kallimandhayam`,
+        title: product?.name ? `${product.name} - MANIKANDAN LATHE` : 'MANIKANDAN LATHE',
+        text: product?.name ? `Check out ${product.name} at MANIKANDAN LATHE Workshop Kallimandhayam` : 'MANIKANDAN LATHE Workshop',
         url: window.location.href
-      });
+      }).catch(() => {});
     } else {
+      navigator.clipboard.writeText(window.location.href);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
       setShareModalOpen(true);
     }
   };
