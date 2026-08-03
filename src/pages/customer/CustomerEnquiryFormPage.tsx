@@ -41,7 +41,7 @@ export const CustomerEnquiryFormPage: React.FC = () => {
   const [orderQuantity, setOrderQuantity] = useState(1);
   const [customMeasurements, setCustomMeasurements] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
-  const [deliveryType, setDeliveryType] = useState<'Factory Pickup' | 'Workshop Delivery'>('Workshop Delivery');
+  const [deliveryType, setDeliveryType] = useState<'Home Delivery' | 'Pickup' | 'Installation'>('Home Delivery');
   const [paymentChoice, setPaymentChoice] = useState<'Pay Later' | 'Pay Advance Online'>('Pay Later');
 
   const [selectedVariantId, setSelectedVariantId] = useState<string>(() => {
@@ -171,6 +171,7 @@ export const CustomerEnquiryFormPage: React.FC = () => {
         quantity: orderQuantity,
         estimatedPrice: totalEstPrice,
         paymentOption: 'Pay Later',
+        advancePaid: 0,
         deliveryType,
       });
 
@@ -323,9 +324,9 @@ export const CustomerEnquiryFormPage: React.FC = () => {
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
-                      onClick={() => setDeliveryType('Workshop Delivery')}
+                      onClick={() => setDeliveryType('Home Delivery')}
                       className={`p-3 rounded-xl border-2 text-left font-bold text-xs transition-all ${
-                        deliveryType === 'Workshop Delivery'
+                        deliveryType === 'Home Delivery'
                           ? 'bg-orange-50 border-[#F97316] text-[#111111]'
                           : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
                       }`}
@@ -336,9 +337,9 @@ export const CustomerEnquiryFormPage: React.FC = () => {
 
                     <button
                       type="button"
-                      onClick={() => setDeliveryType('Factory Pickup')}
+                      onClick={() => setDeliveryType('Pickup')}
                       className={`p-3 rounded-xl border-2 text-left font-bold text-xs transition-all ${
-                        deliveryType === 'Factory Pickup'
+                        deliveryType === 'Pickup'
                           ? 'bg-orange-50 border-[#F97316] text-[#111111]'
                           : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
                       }`}

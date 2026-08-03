@@ -27,13 +27,13 @@ export const CustomerOrderStatusNotification: React.FC<CustomerOrderStatusNotifi
       const updatedOrder = orders.find((o) => {
         const lastSeenStatus = seenMap[o.id];
         return lastSeenStatus !== o.status && (
-          ['ACCEPTED', 'IN_PRODUCTION', 'READY', 'REJECTED', 'CANCELLED'].includes(o.status)
+          ['ACCEPTED', 'IN_PRODUCTION', 'READY', 'REJECTED'].includes(o.status)
         );
       });
 
       if (updatedOrder) {
         let type: 'ACCEPTED' | 'REJECTED' | 'PRODUCTION' = 'ACCEPTED';
-        if (updatedOrder.status === 'REJECTED' || updatedOrder.status === 'CANCELLED') {
+        if (updatedOrder.status === 'REJECTED') {
           type = 'REJECTED';
         } else if (['IN_PRODUCTION', 'READY'].includes(updatedOrder.status)) {
           type = 'PRODUCTION';
