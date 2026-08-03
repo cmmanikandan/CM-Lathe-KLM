@@ -636,32 +636,10 @@ export const ProductDetailPage: React.FC = () => {
               </div>
             )}
 
-            {/* Action Buttons: Order Now & WhatsApp */}
-            <div className="flex items-center gap-3 pt-2">
-              <button
-                onClick={() => navigate(`/customer/enquiry/new?productId=${product.id}`)}
-                className="flex-1 bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-sm py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer"
-              >
-                <ShoppingBag size={18} /> Submit Order Enquiry (₹{currentPrice.toLocaleString('en-IN')})
-              </button>
-
-              <a
-                href={createProductInquiryWhatsApp(product.name, product.category)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-[#25D366] hover:bg-[#20ba5a] text-white font-heading font-black text-sm px-4 py-4 rounded-2xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-98"
-                title="WhatsApp Inquiry"
-              >
-                <MessageCircle size={18} /> Inquiry
-              </a>
-
-              <button
-                onClick={handleShareClick}
-                className="bg-white hover:bg-gray-100 text-gray-800 border border-gray-200 font-heading font-black text-sm px-4 py-4 rounded-2xl shadow-xs flex items-center justify-center gap-1.5 transition-all active:scale-98 cursor-pointer"
-                title="Share Product"
-              >
-                <Share2 size={18} className="text-[#F97316]" /> Share
-              </button>
+            {/* Action Note */}
+            <div className="pt-1 text-[11px] font-mono text-gray-500 flex items-center gap-1.5">
+              <CheckCircle2 size={14} className="text-[#F97316]" />
+              <span>Click "Submit Order Enquiry" below to place custom fabrication order & dimensions.</span>
             </div>
           </div>
         </div>
@@ -965,11 +943,7 @@ export const ProductDetailPage: React.FC = () => {
         </a>
 
         <button
-          onClick={() => {
-            setEnquiryStep(1);
-            setEnquirySuccess(false);
-            setIsEnquiryModalOpen(true);
-          }}
+          onClick={() => navigate(`/customer/enquiry/new?productId=${product.id}`)}
           className="flex-1 bg-[#F97316] hover:bg-[#EA580C] text-white font-heading font-black text-xs sm:text-sm py-3.5 px-4 rounded-2xl shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
         >
           <ShoppingBag size={16} /> Submit Order Enquiry (₹{currentPrice.toLocaleString('en-IN')})
