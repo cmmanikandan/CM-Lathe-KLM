@@ -1,7 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../../context/ProductContext';
-import { Search, Mic, X, ChevronRight, Sparkles, Tag, Package } from 'lucide-react';
+import {
+  Search,
+  Mic,
+  X,
+  ChevronRight,
+  Sparkles,
+  Tag,
+  Package,
+  ArrowLeft,
+  Star,
+  CheckCircle2,
+  TrendingUp,
+  SlidersHorizontal
+} from 'lucide-react';
 
 interface FlipkartAutoSuggestSearchProps {
   placeholder?: string;
@@ -16,20 +29,10 @@ export const FlipkartAutoSuggestSearch: React.FC<FlipkartAutoSuggestSearchProps>
 }) => {
   const { products, searchQuery, setSearchQuery, setSelectedCategory } = useProducts();
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false);
+  
+  const [isFullScreenModal, setIsFullScreenModal] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // Close dropdown on click outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const query = (searchQuery || '').trim().toLowerCase();
 
@@ -37,7 +40,7 @@ export const FlipkartAutoSuggestSearch: React.FC<FlipkartAutoSuggestSearchProps>
   const allCategories = Array.from(new Set(products.map((p) => p.category).filter(Boolean)));
   const matchingCategories = query
     ? allCategories.filter((c) => c.toLowerCase().includes(query))
-    : allCategories.slice(0, 4);
+    : allCategories;
 
   // Products matching search query
   const matchingProducts = query
@@ -48,10 +51,18 @@ export const FlipkartAutoSuggestSearch: React.FC<FlipkartAutoSuggestSearchProps>
           (p.description && p.description.toLowerCase().includes(query)) ||
           (p.specifications?.material && p.specifications.material.toLowerCase().includes(query))
       )
-    : [];
+    : products.slice(0, 6); // Show top featured products when query is empty
 
-  // Popular / Trending Search Suggestions
-  const popularSearches = ['Tractor Kalappai', 'Main Gates', 'Window Grills', 'Steel Furniture', 'Lathe Shaft'];
+  // Trending Search Suggestions
+  const popularSearches = [
+    'Tractor Kalappai',
+    'Heavy Main Gates',
+    'Windows Grill',
+    'Steel Furniture',
+    'Lathe Shaft',
+    'Stainless Steel Doors',
+    'Custom CNC Fittings'
+  ];
 
   const voiceSearchHandler = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -59,19 +70,19 @@ export const FlipkartAutoSuggestSearch: React.FC<FlipkartAutoSuggestSearchProps>
     setTimeout(() => {
       setSearchQuery('Kalappai');
       setIsListening(false);
-      setIsOpen(true);
+      setIsFullScreenModal(true);
     }, 1200);
   };
 
   const handleSelectCategory = (cat: string) => {
     setSelectedCategory(cat);
     setSearchQuery('');
-    setIsOpen(false);
+    setIsFullScreenModal(false);
     navigate('/customer/products');
   };
 
   const handleSelectProductItem = (productId: string) => {
-    setIsOpen(false);
+    setIsFullScreenModal(false);
     if (onSelectProduct) {
       onSelectProduct(productId);
     } else {
@@ -81,37 +92,38 @@ export const FlipkartAutoSuggestSearch: React.FC<FlipkartAutoSuggestSearchProps>
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      setIsOpen(false);
+      setIsFullScreenModal(false);
       navigate('/customer/products');
     } else if (e.key === 'Escape') {
-      setIsOpen(false);
+      setIsFullScreenModal(false);
     }
   };
 
   return (
-    <div ref={containerRef} className={`relative w-full ${className}`}>
+    <div className={`w-full ${className}`}>
       
-      {/* Search Input Box */}
-      <div className="relative flex items-center">
+      {/* 1. COMPACT TRIGGER SEARCH BAR (Shown on Home / Products page) */}
+      <div
+        onClick={() => setIsFullScreenModal(true)}
+        className="relative flex items-center cursor-pointer group"
+      >
         <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#F97316]" />
         
         <input
           type="text"
+          readOnly
           placeholder={placeholder}
           value={searchQuery}
-          onFocus={() => setIsOpen(true)}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            if (!isOpen) setIsOpen(true);
-          }}
-          onKeyDown={handleKeyDown}
-          className="w-full bg-white text-xs sm:text-sm text-[#111111] pl-10 pr-16 py-3 rounded-2xl border border-gray-200 focus:border-[#F97316] focus:ring-2 focus:ring-[#F97316]/20 outline-none shadow-xs font-medium transition-all"
+          className="w-full bg-white text-xs sm:text-sm text-[#111111] pl-10 pr-16 py-3 rounded-2xl border border-gray-200 group-hover:border-[#F97316] outline-none shadow-xs font-medium cursor-pointer transition-all"
         />
 
         <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
           {searchQuery && (
             <button
-              onClick={() => setSearchQuery('')}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSearchQuery('');
+              }}
               className="p-1 rounded-full text-gray-400 hover:text-black hover:bg-gray-100 transition-colors"
               title="Clear Search"
             >
@@ -131,121 +143,190 @@ export const FlipkartAutoSuggestSearch: React.FC<FlipkartAutoSuggestSearchProps>
         </div>
       </div>
 
-      {/* Flipkart-Style Auto-Suggest Dropdown Panel */}
-      {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden animate-in fade-in duration-150 font-sans">
+      {/* 2. FULL-SCREEN FLIPKART-STYLE SEARCH TAKEOVER MODAL PAGE */}
+      {isFullScreenModal && (
+        <div className="fixed inset-0 z-50 bg-[#F8F9FA] flex flex-col font-sans animate-in fade-in duration-200">
           
-          {/* Section 1: Empty Query - Popular Trending Searches */}
-          {!query && (
-            <div className="p-3.5 space-y-2 border-b border-gray-100">
-              <div className="flex items-center gap-1.5 text-[11px] font-mono text-gray-500 font-bold uppercase tracking-wider">
-                <Sparkles size={13} className="text-[#F97316]" /> Popular Factory Searches
+          {/* Top Sticky Search Header */}
+          <div className="bg-white border-b border-gray-200 px-4 py-3 shadow-xs flex items-center gap-3 shrink-0">
+            <button
+              onClick={() => setIsFullScreenModal(false)}
+              className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-[#111111] transition-colors cursor-pointer shrink-0"
+              title="Back"
+            >
+              <ArrowLeft size={20} className="text-[#F97316]" />
+            </button>
+
+            <div className="relative flex-1 flex items-center">
+              <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#F97316]" />
+              
+              <input
+                ref={inputRef}
+                type="text"
+                autoFocus
+                placeholder="Search Gates, Kalappai, Windows Grill, Lathe..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="w-full bg-gray-50 text-sm text-[#111111] pl-10 pr-16 py-2.5 rounded-2xl border border-gray-300 focus:border-[#F97316] focus:bg-white outline-none font-medium"
+              />
+
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="p-1 rounded-full text-gray-400 hover:text-black transition-colors"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+
+                <button
+                  onClick={voiceSearchHandler}
+                  className={`p-1 rounded-lg ${isListening ? 'text-red-500 animate-pulse' : 'text-gray-400'}`}
+                >
+                  <Mic size={18} />
+                </button>
               </div>
-              <div className="flex flex-wrap gap-1.5">
+            </div>
+          </div>
+
+          {/* Scrollable Search Content Body */}
+          <div className="flex-1 overflow-y-auto max-w-4xl w-full mx-auto p-4 space-y-6">
+            
+            {/* Section 1: Popular & Trending Searches */}
+            <div className="bg-white p-4 rounded-[22px] border border-gray-200 shadow-xs space-y-3">
+              <div className="flex items-center justify-between text-xs font-mono font-bold text-gray-600 uppercase tracking-wider">
+                <span className="flex items-center gap-1.5 text-[#F97316]">
+                  <TrendingUp size={15} /> Trending Factory Searches
+                </span>
+                <span className="text-[10px] text-gray-400">Flipkart Live Sync</span>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
                 {popularSearches.map((term) => (
                   <button
                     key={term}
                     onClick={() => {
                       setSearchQuery(term);
-                      setIsOpen(true);
                     }}
-                    className="bg-gray-50 hover:bg-orange-50 hover:text-[#F97316] text-gray-700 text-xs font-medium px-3 py-1 rounded-full border border-gray-200 transition-colors cursor-pointer flex items-center gap-1"
+                    className="bg-orange-50/80 hover:bg-[#F97316] text-orange-950 hover:text-white text-xs font-heading font-extrabold px-3.5 py-1.5 rounded-full border border-orange-200 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
                   >
-                    <Tag size={12} className="text-gray-400" /> {term}
+                    <Tag size={13} className="opacity-70" /> {term}
                   </button>
                 ))}
               </div>
             </div>
-          )}
 
-          {/* Section 2: Matching Categories */}
-          {matchingCategories.length > 0 && (
-            <div className="p-3 space-y-1.5 border-b border-gray-100">
-              <div className="text-[10px] font-mono text-gray-400 uppercase font-bold tracking-wider px-1">
-                Categories
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {matchingCategories.map((cat) => {
-                  const count = products.filter((p) => p.category === cat).length;
-                  return (
-                    <button
-                      key={cat}
-                      onClick={() => handleSelectCategory(cat)}
-                      className="bg-orange-50 hover:bg-[#F97316] text-orange-950 hover:text-white text-xs font-bold px-3 py-1.5 rounded-xl border border-orange-200 transition-all flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <span>{cat}</span>
-                      <span className="text-[10px] font-mono opacity-80">({count})</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+            {/* Section 2: Matching Categories */}
+            {matchingCategories.length > 0 && (
+              <div className="bg-white p-4 rounded-[22px] border border-gray-200 shadow-xs space-y-3">
+                <span className="text-xs font-mono font-bold text-gray-400 uppercase tracking-wider block">
+                  Product Categories ({matchingCategories.length})
+                </span>
 
-          {/* Section 3: Product Matches */}
-          {query && (
-            <div className="max-h-72 overflow-y-auto divide-y divide-gray-100">
+                <div className="flex flex-wrap gap-2">
+                  {matchingCategories.map((cat) => {
+                    const count = products.filter((p) => p.category === cat).length;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => handleSelectCategory(cat)}
+                        className="bg-gray-100 hover:bg-[#111111] text-gray-800 hover:text-white text-xs font-bold px-3.5 py-2 rounded-xl border border-gray-200 transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+                      >
+                        <span>{cat}</span>
+                        <span className="text-[10px] font-mono opacity-60">({count})</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Section 3: Flipkart Product Result Cards */}
+            <div className="bg-white rounded-[26px] border border-gray-200 shadow-xs overflow-hidden divide-y divide-gray-100 space-y-1">
+              <div className="p-4 bg-gray-50/80 border-b border-gray-200 flex items-center justify-between">
+                <span className="text-xs font-mono font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <Package size={16} className="text-[#F97316]" /> Matching Products ({matchingProducts.length})
+                </span>
+                {query && (
+                  <button
+                    onClick={() => {
+                      setIsFullScreenModal(false);
+                      navigate('/customer/products');
+                    }}
+                    className="text-xs font-heading font-black text-[#F97316] hover:underline"
+                  >
+                    See All in Catalog →
+                  </button>
+                )}
+              </div>
+
               {matchingProducts.length > 0 ? (
-                matchingProducts.slice(0, 6).map((item) => (
+                matchingProducts.map((item) => (
                   <div
                     key={item.id}
                     onClick={() => handleSelectProductItem(item.id)}
-                    className="p-3 hover:bg-orange-50/70 transition-colors flex items-center justify-between gap-3 cursor-pointer group"
+                    className="p-4 hover:bg-orange-50/60 transition-colors flex items-center justify-between gap-4 cursor-pointer group"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-4 min-w-0">
                       <img
-                        src={item.images?.[0] || 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=150&q=80'}
+                        src={item.images?.[0] || 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=200&q=80'}
                         alt={item.name}
-                        className="w-11 h-11 rounded-xl object-contain bg-white border border-gray-200 p-1 shrink-0 group-hover:scale-105 transition-transform"
+                        className="w-16 h-16 rounded-2xl object-contain bg-white border border-gray-200 p-1.5 shrink-0 group-hover:scale-105 transition-transform shadow-xs"
                       />
-                      <div className="min-w-0">
-                        <span className="text-[10px] font-mono text-[#F97316] uppercase font-bold block truncate">
-                          {item.category}
+                      
+                      <div className="min-w-0 space-y-0.5">
+                        <span className="text-[10px] font-mono font-bold text-[#F97316] uppercase block truncate">
+                          {item.category} • Kallimandhayam Factory
                         </span>
-                        <h4 className="font-heading font-extrabold text-xs text-[#111111] truncate group-hover:text-[#F97316] transition-colors">
+
+                        <h4 className="font-heading font-extrabold text-sm text-[#111111] group-hover:text-[#F97316] transition-colors truncate">
                           {item.name}
                         </h4>
-                        <span className="text-[11px] font-mono font-black text-gray-900 block">
-                          ₹{(item.variants?.[0]?.price || item.price || 0).toLocaleString('en-IN')}
-                        </span>
+
+                        <div className="flex items-center gap-3">
+                          <span className="font-heading font-black text-sm text-[#111111]">
+                            ₹{(item.variants?.[0]?.price || item.price || 0).toLocaleString('en-IN')}
+                          </span>
+
+                          <div className="flex items-center gap-1 bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                            <Star size={12} className="fill-amber-400 text-amber-400" />
+                            <span>{(item.rating || 5.0).toFixed(1)}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    <ChevronRight size={16} className="text-gray-400 group-hover:text-[#F97316] shrink-0" />
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="hidden sm:inline text-xs font-heading font-black bg-[#111111] text-white px-3 py-1.5 rounded-xl group-hover:bg-[#F97316] transition-colors">
+                        View Product
+                      </span>
+                      <ChevronRight size={18} className="text-gray-400 group-hover:text-[#F97316]" />
+                    </div>
                   </div>
                 ))
               ) : (
-                <div className="p-6 text-center text-xs text-gray-500 space-y-2">
-                  <Package size={24} className="mx-auto text-gray-300" />
-                  <p>No products found for "{searchQuery}".</p>
+                <div className="p-10 text-center space-y-3">
+                  <Package size={36} className="mx-auto text-gray-300" />
+                  <h4 className="font-heading font-black text-sm text-[#111111]">No matching products found</h4>
+                  <p className="text-xs text-gray-500">Try searching for "Kalappai", "Gate", "Grill", or "Lathe".</p>
                   <button
                     onClick={() => {
                       setSearchQuery('');
                       setSelectedCategory('All');
+                      setIsFullScreenModal(false);
                       navigate('/customer/products');
                     }}
-                    className="text-[11px] text-[#F97316] font-bold hover:underline"
+                    className="bg-[#F97316] text-white font-heading font-black text-xs px-5 py-2.5 rounded-xl shadow-md"
                   >
-                    View All Factory Products →
+                    Explore Entire Product Catalog
                   </button>
                 </div>
               )}
             </div>
-          )}
 
-          {/* Footer View All Search Results */}
-          {query && matchingProducts.length > 0 && (
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                navigate('/customer/products');
-              }}
-              className="w-full bg-gray-50 hover:bg-gray-100 text-[#111111] text-xs font-heading font-black py-2.5 px-4 text-center border-t border-gray-200 transition-colors flex items-center justify-center gap-1"
-            >
-              See All ({matchingProducts.length}) Results for "{searchQuery}" <ChevronRight size={14} className="text-[#F97316]" />
-            </button>
-          )}
-
+          </div>
         </div>
       )}
 
